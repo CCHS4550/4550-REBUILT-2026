@@ -1,7 +1,10 @@
 package frc.robot.Subsystems.Drive;
 
+import static edu.wpi.first.units.Units.Volts;
+
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
@@ -13,9 +16,13 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constant.Constants;
 import frc.robot.Util.SubsystemDataProcessor;
+import frc.robot.Util.SysIdMechanism;
 import java.util.Optional;
 import org.littletonrobotics.junction.Logger;
 
@@ -98,48 +105,50 @@ public class SwerveSubsystem extends SubsystemBase {
   private double rotationVelocityCoefficient = 1.0;
   private double maximumAngularVelocityForDriveToPoint = Double.NaN;
 
-  // private final SysIdRoutine translationSysIdRoutine = new SysIdRoutine(
-  //         new SysIdRoutine.Config(
-  //                 Constants.SysIdConstants.TRANSLATION_RAMP_RATE,
-  //                 Constants.SysIdConstants.TRANSLATION_STEP_RATE,
-  //                 Constants.SysIdConstants.TRANSLATION_TIMEOUT,
-  //                 state -> SignalLogger.writeString("SysIdTranslation_State",
-  // state.toString())),
-  //         new SysIdRoutine.Mechanism(
-  //                 output ->
-  // io.setSwerveState(translationCharacterization.withVolts(output)), null, this));
+  private final SysIdRoutine translationSysIdRoutine =
+      new SysIdRoutine(
+          new SysIdRoutine.Config(
+              Constants.SysIdConstants.TRANSLATION_RAMP_RATE,
+              Constants.SysIdConstants.TRANSLATION_STEP_RATE,
+              Constants.SysIdConstants.TRANSLATION_TIMEOUT,
+              state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())),
+          new SysIdRoutine.Mechanism(
+              output -> io.setSwerveState(translationCharacterization.withVolts(output)),
+              null,
+              this));
 
   /*
    * SysId routine for characterizing rotation.
    * This is used to find PID gains for the FieldCentricFacingAngle HeadingController.
    */
-  // private final SysIdRoutine rotationSysIdRoutine = new SysIdRoutine(
-  //         new SysIdRoutine.Config(
-  //                 Constants.SysIdConstants.ROTATION_RAMP_RATE,
-  //                 Constants.SysIdConstants.ROTATION_STEP_RATE,
-  //                 Constants.SysIdConstants.ROTATION_TIMEOUT,
-  //                 state -> SignalLogger.writeString("SysIdRotation_State",
-  // state.toString())),
-  //         new SysIdRoutine.Mechanism(
-  //                 output -> {
-  //                     /* output is actually radians per second, but SysId only supports
-  // "volts" */
-  //
-  // io.setSwerveState(rotationCharacterization.withRotationalRate(output.in(Volts)));
-  //                     /* also log the requested output for SysId */
-  //                     SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
-  //                 },
-  //                 null,
-  //                 this));
+  private final SysIdRoutine rotationSysIdRoutine =
+      new SysIdRoutine(
+          new SysIdRoutine.Config(
+              Constants.SysIdConstants.ROTATION_RAMP_RATE,
+              Constants.SysIdConstants.ROTATION_STEP_RATE,
+              Constants.SysIdConstants.ROTATION_TIMEOUT,
+              state -> SignalLogger.writeString("SysIdRotation_State", state.toString())),
+          new SysIdRoutine.Mechanism(
+              output -> {
+                /* output is actually radians per second, but SysId only supports
+                "volts" */
 
-  // private final SysIdRoutine steerSysIdRoutine = new SysIdRoutine(
-  //         new SysIdRoutine.Config(
-  //                 Constants.SysIdConstants.STEER_RAMP_RATE,
-  //                 Constants.SysIdConstants.STEER_STEP_RATE,
-  //                 Constants.SysIdConstants.STEER_TIMEOUT,
-  //                 state -> SignalLogger.writeString("SysIdSteer_State", state.toString())),
-  //         new SysIdRoutine.Mechanism(volts ->
-  // io.setSwerveState(steerCharacterization.withVolts(volts)), null, this));
+                io.setSwerveState(rotationCharacterization.withRotationalRate(output.in(Volts)));
+                /* also log the requested output for SysId */
+                SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
+              },
+              null,
+              this));
+
+  private final SysIdRoutine steerSysIdRoutine =
+      new SysIdRoutine(
+          new SysIdRoutine.Config(
+              Constants.SysIdConstants.STEER_RAMP_RATE,
+              Constants.SysIdConstants.STEER_STEP_RATE,
+              Constants.SysIdConstants.STEER_TIMEOUT,
+              state -> SignalLogger.writeString("SysIdSteer_State", state.toString())),
+          new SysIdRoutine.Mechanism(
+              volts -> io.setSwerveState(steerCharacterization.withVolts(volts)), null, this));
 
   public SwerveSubsystem(
       SwerveIO io,
@@ -175,19 +184,18 @@ public class SwerveSubsystem extends SubsystemBase {
    * @param direction Direction of the quasi-static SysId test
    * @return Command to run
    */
-  // public Command sysIdQuasistatic(SysIdMechanism mechanism, SysIdRoutine.Direction
-  // direction) {
-  //     final SysIdRoutine routine =
-  //             switch (mechanism) {
-  //                 case SWERVE_TRANSLATION -> translationSysIdRoutine;
-  //                 case SWERVE_ROTATION -> rotationSysIdRoutine;
-  //                 case SWERVE_STEER -> steerSysIdRoutine;
-  //                 default -> throw new IllegalArgumentException(
-  //                         String.format("Mechanism %s is not supported.", mechanism));
-  //             };
+  public Command sysIdQuasistatic(SysIdMechanism mechanism, SysIdRoutine.Direction direction) {
+    final SysIdRoutine routine =
+        switch (mechanism) {
+          case SWERVE_TRANSLATION -> translationSysIdRoutine;
+          case SWERVE_ROTATION -> rotationSysIdRoutine;
+          case SWERVE_STEER -> steerSysIdRoutine;
+          default -> throw new IllegalArgumentException(
+              String.format("Mechanism %s is not supported.", mechanism));
+        };
 
-  //     return routine.quasistatic(direction);
-  // }
+    return routine.quasistatic(direction);
+  }
 
   /**
    * Runs the dynamic SysId test in the given direction for the given mechanism.
@@ -196,18 +204,18 @@ public class SwerveSubsystem extends SubsystemBase {
    * @param direction Direction of the dynamic SysId test
    * @return Command to run
    */
-  // public Command sysIdDynamic(SysIdMechanism mechanism, SysIdRoutine.Direction direction) {
-  //     final SysIdRoutine routine =
-  //             switch (mechanism) {
-  //                 case SWERVE_TRANSLATION -> translationSysIdRoutine;
-  //                 case SWERVE_ROTATION -> rotationSysIdRoutine;
-  //                 case SWERVE_STEER -> steerSysIdRoutine;
-  //                 default -> throw new IllegalArgumentException(
-  //                         String.format("Mechanism %s is not supported.", mechanism));
-  //             };
+  public Command sysIdDynamic(SysIdMechanism mechanism, SysIdRoutine.Direction direction) {
+    final SysIdRoutine routine =
+        switch (mechanism) {
+          case SWERVE_TRANSLATION -> translationSysIdRoutine;
+          case SWERVE_ROTATION -> rotationSysIdRoutine;
+          case SWERVE_STEER -> steerSysIdRoutine;
+          default -> throw new IllegalArgumentException(
+              String.format("Mechanism %s is not supported.", mechanism));
+        };
 
-  //     return routine.dynamic(direction);
-  // }
+    return routine.dynamic(direction);
+  }
 
   @Override
   public void periodic() {
