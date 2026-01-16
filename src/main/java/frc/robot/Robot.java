@@ -7,6 +7,7 @@
 
 package frc.robot;
 
+import frc.robot.Constant.Constants;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
