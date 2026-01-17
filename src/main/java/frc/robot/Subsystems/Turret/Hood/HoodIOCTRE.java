@@ -10,6 +10,8 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.ControlModeValue;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -30,13 +32,21 @@ public class HoodIOCTRE implements HoodIO{
         hoodMotor = new TalonFX(hoodID, canBusString); // creates motor
         hoodEncoder = new CANcoder(canCoderId); // creates CANCoder, which should be connected to the motor electrically
 
+        // I should probably set up these constants in like RobotConfig, but I just want to try and complete this out
         hoodConfig = new TalonFXConfiguration();
         hoodConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         hoodConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         hoodConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
         hoodConfig.CurrentLimits.StatorCurrentLimit = 90.0;
 
-        hoodConfig.Slot0.kP = 
+        hoodConfig.Slot0.kP = 0.0;
+        hoodConfig.Slot0.kI = 0.0;
+        hoodConfig.Slot0.kD = 0.0;
+
+        hoodConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        hoodConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
+        hoodConfig.MotionMagic.MotionMagicCruiseVelocity = 0.4;
         hoodConfig.MotionMagic.MotionMagicAcceleration = 0.3; // some constant idk
 
 
@@ -46,6 +56,10 @@ public class HoodIOCTRE implements HoodIO{
        
 
 
+    }
+
+    public void setDutyCycle(double dutyCycle){
+        hoodMotor
     }
 
     @Override
