@@ -25,10 +25,11 @@ public class HoodIOCTRE implements HoodIO{
     private TalonFX hoodMotor;
     private CANcoder hoodEncoder;
     private TalonFXConfiguration hoodConfig;
-    private MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0.0).withSlot(0);
+    private MotionMagicVoltage motionMagicVoltage;
 
 
     public HoodIOCTRE (int hoodID, int canCoderId, String canBusString){
+        motionMagicVoltage = new MotionMagicVoltage(getMotorAngle().getRadians()).withSlot(0);
         hoodMotor = new TalonFX(hoodID, canBusString); // creates motor
         hoodEncoder = new CANcoder(canCoderId); // creates CANCoder, which should be connected to the motor electrically
 
@@ -58,24 +59,29 @@ public class HoodIOCTRE implements HoodIO{
 
     }
 
-    public void setDutyCycle(double dutyCycle){
-        hoodMotor
-    }
+    
 
     @Override
     public void updateInputs (HoodIOInputs inputs){
+        inputs.hoodVoltage = getMotorVoltage().getValueAsDouble();
         inputs.hoodVelocityRotPerSec = getMotorVelocity().getValueAsDouble();
         inputs.hoodVelocityRadPerSec = Units.rotationsToRadians(getMotorVelocity().getValueAsDouble());
+        inputs.hoodAngle = getMotorAngle();
 
 
     }
 
+    @Override
+    public Rotation2d getMotorAngle(){
+        return new Rotation2d (hoodEncoder.getPosition().getValueAsDouble());
+    }
 
-   
+   @Override
     public StatusSignal<Voltage> getMotorVoltage (){
         return hoodMotor.getMotorVoltage();
     }
 
+    @Override
     public StatusSignal<AngularVelocity> getMotorVelocity (){
         return hoodMotor.getVelocity();
     }

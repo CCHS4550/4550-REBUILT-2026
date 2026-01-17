@@ -5,6 +5,7 @@ import com.ctre.phoenix6.StatusSignal;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 
 
 public interface HoodIO {
@@ -30,6 +31,12 @@ public interface HoodIO {
     default void setHoodAngle (Rotation2d angle) {}
 
     default void setVoltage (double voltage){}
+
+    default Rotation2d getMotorAngle () {}
+
+    default StatusSignal<Voltage> getMotorVoltage() {}
+    
+    default StatusSignal<AngularVelocity> getMotorVelocity() {}
 
 
 
