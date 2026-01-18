@@ -1,17 +1,13 @@
 package frc.robot.Subsystems.Drive;
 
-import static edu.wpi.first.units.Units.Second;
-import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
 import choreo.trajectory.SwerveSample;
 import choreo.trajectory.Trajectory;
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
-import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
-
-import edu.wpi.first.*;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -20,11 +16,13 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constant.Constants;
 import frc.robot.Util.SubsystemDataProcessor;
+import frc.robot.Util.SysIdMechanism;
 import java.util.Optional;
 import org.littletonrobotics.junction.Logger;
 
@@ -89,9 +87,6 @@ public class SwerveSubsystem extends SubsystemBase {
 
   private Pose2d desiredPoseForDriveToPoint = new Pose2d();
 
-  private PathPlannerTrajectory pathPlannerTrajectory;
-  private Timer pathPlannerTimer = new Timer();
-
   final SwerveIOInputsAutoLogged swerveInputs = new SwerveIOInputsAutoLogged();
   ModuleIOInputsAutoLogged frontLeftInputs = new ModuleIOInputsAutoLogged();
   ModuleIOInputsAutoLogged frontRightInputs = new ModuleIOInputsAutoLogged();
@@ -110,80 +105,50 @@ public class SwerveSubsystem extends SubsystemBase {
   private double rotationVelocityCoefficient = 1.0;
   private double maximumAngularVelocityForDriveToPoint = Double.NaN;
 
-  public void setPathPlannerTrajectory(PathPlannerTrajectory trajectory) {
-    this.pathPlannerTrajectory = trajectory;
-    this.pathPlannerTimer.reset();
-    this.setWantedState(WantedState.CHOREO_PATH); //Reuse
-  }
-
-  private SysIdRoutine wheelRadiuSysIdRoutine =
+  private final SysIdRoutine translationSysIdRoutine =
       new SysIdRoutine(
           new SysIdRoutine.Config(
-              Volts.per(Second).of(1),
-              Volts.of(5),
-              Seconds.of(5),
-              (state) -> Logger.recordOutput("SysID Wheel Routine State", state.toString())),
+              Constants.SysIdConstants.TRANSLATION_RAMP_RATE,
+              Constants.SysIdConstants.TRANSLATION_STEP_RATE,
+              Constants.SysIdConstants.TRANSLATION_TIMEOUT,
+              state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())),
           new SysIdRoutine.Mechanism(
-              volts -> {
-                io.setSwerveState(translationCharacterization.withVolts(volts));
-              },
-              log -> {
-                double omega = 0.0;
-                for (double rps : io.getWheelVelocitiesRPS()) {
-                  omega += (rps / Constants.SysIdConstants.DRIVE_GEAR_RATIO) * 2.0 * Math.PI;
-                }
-                omega /= 4.0;
-
-                ChassisSpeeds speeds = io.getChassisSpeeds();
-                double v = speeds.vxMetersPerSecond;
-
-                double wheelRadius = v / omega;
-                Logger.recordOutput("SysID/WheelRadiusMeters", wheelRadius);
-              },
+              output -> io.setSwerveState(translationCharacterization.withVolts(output)),
+              null,
               this));
-
-  // private final SysIdRoutine translationSysIdRoutine = new SysIdRoutine(
-  //         new SysIdRoutine.Config(
-  //                 Constants.SysIdConstants.TRANSLATION_RAMP_RATE,
-  //                 Constants.SysIdConstants.TRANSLATION_STEP_RATE,
-  //                 Constants.SysIdConstants.TRANSLATION_TIMEOUT,
-  //                 state -> SignalLogger.writeString("SysIdTranslation_State",
-  // state.toString())),
-  //         new SysIdRoutine.Mechanism(
-  //                 output ->
-  // io.setSwerveState(translationCharacterization.withVolts(output)), null, this));
 
   /*
    * SysId routine for characterizing rotation.
    * This is used to find PID gains for the FieldCentricFacingAngle HeadingController.
    */
-  // private final SysIdRoutine rotationSysIdRoutine = new SysIdRoutine(
-  //         new SysIdRoutine.Config(
-  //                 Constants.SysIdConstants.ROTATION_RAMP_RATE,
-  //                 Constants.SysIdConstants.ROTATION_STEP_RATE,
-  //                 Constants.SysIdConstants.ROTATION_TIMEOUT,
-  //                 state -> SignalLogger.writeString("SysIdRotation_State",
-  // state.toString())),
-  //         new SysIdRoutine.Mechanism(
-  //                 output -> {
-  //                     /* output is actually radians per second, but SysId only supports
-  // "volts" */
-  //
-  // io.setSwerveState(rotationCharacterization.withRotationalRate(output.in(Volts)));
-  //                     /* also log the requested output for SysId */
-  //                     SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
-  //                 },
-  //                 null,
-  //                 this));
+  private final SysIdRoutine rotationSysIdRoutine =
+      new SysIdRoutine(
+          new SysIdRoutine.Config(
+              Constants.SysIdConstants.ROTATION_RAMP_RATE,
+              Constants.SysIdConstants.ROTATION_STEP_RATE,
+              Constants.SysIdConstants.ROTATION_TIMEOUT,
+              state -> SignalLogger.writeString("SysIdRotation_State", state.toString())),
+          new SysIdRoutine.Mechanism(
+              output -> {
+                /* output is actually radians per second, but SysId only supports
+                "volts" */
 
-  // private final SysIdRoutine steerSysIdRoutine = new SysIdRoutine(
-  //         new SysIdRoutine.Config(
-  //                 Constants.SysIdConstants.STEER_RAMP_RATE,
-  //                 Constants.SysIdConstants.STEER_STEP_RATE,
-  //                 Constants.SysIdConstants.STEER_TIMEOUT,
-  //                 state -> SignalLogger.writeString("SysIdSteer_State", state.toString())),
-  //         new SysIdRoutine.Mechanism(volts ->
-  // io.setSwerveState(steerCharacterization.withVolts(volts)), null, this));
+                io.setSwerveState(rotationCharacterization.withRotationalRate(output.in(Volts)));
+                /* also log the requested output for SysId */
+                SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
+              },
+              null,
+              this));
+
+  private final SysIdRoutine steerSysIdRoutine =
+      new SysIdRoutine(
+          new SysIdRoutine.Config(
+              Constants.SysIdConstants.STEER_RAMP_RATE,
+              Constants.SysIdConstants.STEER_STEP_RATE,
+              Constants.SysIdConstants.STEER_TIMEOUT,
+              state -> SignalLogger.writeString("SysIdSteer_State", state.toString())),
+          new SysIdRoutine.Mechanism(
+              volts -> io.setSwerveState(steerCharacterization.withVolts(volts)), null, this));
 
   public SwerveSubsystem(
       SwerveIO io,
@@ -219,19 +184,18 @@ public class SwerveSubsystem extends SubsystemBase {
    * @param direction Direction of the quasi-static SysId test
    * @return Command to run
    */
-  // public Command sysIdQuasistatic(SysIdMechanism mechanism, SysIdRoutine.Direction
-  // direction) {
-  //     final SysIdRoutine routine =
-  //             switch (mechanism) {
-  //                 case SWERVE_TRANSLATION -> translationSysIdRoutine;
-  //                 case SWERVE_ROTATION -> rotationSysIdRoutine;
-  //                 case SWERVE_STEER -> steerSysIdRoutine;
-  //                 default -> throw new IllegalArgumentException(
-  //                         String.format("Mechanism %s is not supported.", mechanism));
-  //             };
+  public Command sysIdQuasistatic(SysIdMechanism mechanism, SysIdRoutine.Direction direction) {
+    final SysIdRoutine routine =
+        switch (mechanism) {
+          case SWERVE_TRANSLATION -> translationSysIdRoutine;
+          case SWERVE_ROTATION -> rotationSysIdRoutine;
+          case SWERVE_STEER -> steerSysIdRoutine;
+          default -> throw new IllegalArgumentException(
+              String.format("Mechanism %s is not supported.", mechanism));
+        };
 
-  //     return routine.quasistatic(direction);
-  // }
+    return routine.quasistatic(direction);
+  }
 
   /**
    * Runs the dynamic SysId test in the given direction for the given mechanism.
@@ -240,18 +204,18 @@ public class SwerveSubsystem extends SubsystemBase {
    * @param direction Direction of the dynamic SysId test
    * @return Command to run
    */
-  // public Command sysIdDynamic(SysIdMechanism mechanism, SysIdRoutine.Direction direction) {
-  //     final SysIdRoutine routine =
-  //             switch (mechanism) {
-  //                 case SWERVE_TRANSLATION -> translationSysIdRoutine;
-  //                 case SWERVE_ROTATION -> rotationSysIdRoutine;
-  //                 case SWERVE_STEER -> steerSysIdRoutine;
-  //                 default -> throw new IllegalArgumentException(
-  //                         String.format("Mechanism %s is not supported.", mechanism));
-  //             };
+  public Command sysIdDynamic(SysIdMechanism mechanism, SysIdRoutine.Direction direction) {
+    final SysIdRoutine routine =
+        switch (mechanism) {
+          case SWERVE_TRANSLATION -> translationSysIdRoutine;
+          case SWERVE_ROTATION -> rotationSysIdRoutine;
+          case SWERVE_STEER -> steerSysIdRoutine;
+          default -> throw new IllegalArgumentException(
+              String.format("Mechanism %s is not supported.", mechanism));
+        };
 
-  //     return routine.dynamic(direction);
-  // }
+    return routine.dynamic(direction);
+  }
 
   @Override
   public void periodic() {
@@ -275,7 +239,7 @@ public class SwerveSubsystem extends SubsystemBase {
     return switch (wantedState) {
       case SYS_ID -> SystemState.SYS_ID;
       case TELEOP_DRIVE -> SystemState.TELEOP_DRIVE;
-      /*case CHOREO_PATH -> {
+      case CHOREO_PATH -> {
         if (systemState != SystemState.CHOREO_PATH) {
           choreoTimer.restart();
           choreoSampleToBeApplied = desiredChoreoTrajectory.sampleAt(choreoTimer.get(), false);
@@ -284,21 +248,7 @@ public class SwerveSubsystem extends SubsystemBase {
           choreoSampleToBeApplied = desiredChoreoTrajectory.sampleAt(choreoTimer.get(), false);
           yield SystemState.CHOREO_PATH;
         }
-      }*/
-      case CHOREO_PATH -> {
-        if (pathPlannerTrajectory != null) {
-            pathPlannerTimer.start();
-            yield SystemState.CHOREO_PATH;
-        } else if (systemState != SystemState.CHOREO_PATH) {
-            choreoTimer.restart();
-            choreoSampleToBeApplied = desiredChoreoTrajectory.sampleAt(choreoTimer.get(), false);
-            yield SystemState.CHOREO_PATH;
-        } else {
-            choreoSampleToBeApplied = desiredChoreoTrajectory.sampleAt(choreoTimer.get(), false);
-            yield SystemState.CHOREO_PATH;
-        }
       }
-
       case ROTATION_LOCK -> SystemState.ROTATION_LOCK;
       case DRIVE_TO_POINT -> SystemState.DRIVE_TO_POINT;
       default -> SystemState.IDLE;
@@ -306,8 +256,7 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   private void applyStates() {
-    switch (systemState) { // case something something the very basic python things -- shirly 2026
-        // (i was held hostage mb)
+    switch (systemState) {
       default:
       case SYS_ID:
         break;
@@ -317,59 +266,41 @@ public class SwerveSubsystem extends SubsystemBase {
                 .withSpeeds(calculateSpeedsBasedOnJoystickInputs())
                 .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage));
         break;
-      case CHOREO_PATH: {
-        if (pathPlannerTrajectory != null) {
-            /*double time = pathPlannerTimer.get();
-            var state = pathPlannerTrajectory.sample(time); // Trajectory.State
+      case CHOREO_PATH:
+        {
+          if (choreoSampleToBeApplied.isPresent()) {
+            var sample = choreoSampleToBeApplied.get();
+            Logger.recordOutput("Subsystems/Drive/Choreo/Timer Value", choreoTimer.get());
+            Logger.recordOutput(
+                "Subsystems/Drive/Choreo/Traj Name", desiredChoreoTrajectory.name());
+            Logger.recordOutput(
+                "Subsystems/Drive/Choreo/Total time", desiredChoreoTrajectory.getTotalTime());
+            Logger.recordOutput("Subsystems/Drive/Choreo/sample/Desired Pose", sample.getPose());
+            Logger.recordOutput(
+                "Subsystems/Drive/Choreo/sample/Desired Chassis Speeds", sample.getChassisSpeeds());
+            Logger.recordOutput(
+                "Subsystems/Drive/Choreo/sample/Module Forces X", sample.moduleForcesX());
+            Logger.recordOutput(
+                "Subsystems/Drive/Choreo/sample/Module Forces Y", sample.moduleForcesY());
+            synchronized (swerveInputs) {
+              var pose = swerveInputs.Pose;
 
-            //Compute field-relative chassis speeds
-            double vx = state.velocityMetersPerSecond * state.poseMeters.getRotation().getCos();
-            double vy = state.velocityMetersPerSecond * state.poseMeters.getRotation().getSin();
-            double omega = state.curvatureRadPerMeter * state.velocityMetersPerSecond; //Angular velocity
+              var targetSpeeds = sample.getChassisSpeeds();
+              targetSpeeds.vxMetersPerSecond += choreoXController.calculate(pose.getX(), sample.x);
+              targetSpeeds.vyMetersPerSecond += choreoYController.calculate(pose.getY(), sample.y);
+              targetSpeeds.omegaRadiansPerSecond +=
+                  choreoThetaController.calculate(pose.getRotation().getRadians(), sample.heading);
 
-            ChassisSpeeds targetSpeeds = new ChassisSpeeds(vx, vy, omega);
-
-            io.setSwerveState(
-                new SwerveRequest.ApplyFieldSpeeds()
-                    .withSpeeds(targetSpeeds)
-                    .withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
-            );*/
-        } else if (choreoSampleToBeApplied.isPresent()) {
-            if (choreoSampleToBeApplied.isPresent()) {
-              var sample = choreoSampleToBeApplied.get();
-              Logger.recordOutput("Subsystems/Drive/Choreo/Timer Value", choreoTimer.get());
-              Logger.recordOutput(
-                  "Subsystems/Drive/Choreo/Traj Name", desiredChoreoTrajectory.name());
-              Logger.recordOutput(
-                  "Subsystems/Drive/Choreo/Total time", desiredChoreoTrajectory.getTotalTime());
-              Logger.recordOutput("Subsystems/Drive/Choreo/sample/Desired Pose", sample.getPose());
-              Logger.recordOutput(
-                  "Subsystems/Drive/Choreo/sample/Desired Chassis Speeds", sample.getChassisSpeeds());
-              Logger.recordOutput(
-                  "Subsystems/Drive/Choreo/sample/Module Forces X", sample.moduleForcesX());
-              Logger.recordOutput(
-                  "Subsystems/Drive/Choreo/sample/Module Forces Y", sample.moduleForcesY());
-              synchronized (swerveInputs) {
-                var pose = swerveInputs.Pose;
-
-                var targetSpeeds = sample.getChassisSpeeds();
-                targetSpeeds.vxMetersPerSecond += choreoXController.calculate(pose.getX(), sample.x);
-                targetSpeeds.vyMetersPerSecond += choreoYController.calculate(pose.getY(), sample.y);
-                targetSpeeds.omegaRadiansPerSecond +=
-                    choreoThetaController.calculate(pose.getRotation().getRadians(), sample.heading);
-
-                io.setSwerveState(
-                    new SwerveRequest.ApplyFieldSpeeds()
-                        .withSpeeds(targetSpeeds)
-                        .withWheelForceFeedforwardsX(sample.moduleForcesX())
-                        .withWheelForceFeedforwardsY(sample.moduleForcesY())
-                        .withDriveRequestType(SwerveModule.DriveRequestType.Velocity));
-              }
+              io.setSwerveState(
+                  new SwerveRequest.ApplyFieldSpeeds()
+                      .withSpeeds(targetSpeeds)
+                      .withWheelForceFeedforwardsX(sample.moduleForcesX())
+                      .withWheelForceFeedforwardsY(sample.moduleForcesY())
+                      .withDriveRequestType(SwerveModule.DriveRequestType.Velocity));
             }
+          }
+          break;
         }
-        break;
-      }
-
       case ROTATION_LOCK:
         io.setSwerveState(
             driveAtAngle

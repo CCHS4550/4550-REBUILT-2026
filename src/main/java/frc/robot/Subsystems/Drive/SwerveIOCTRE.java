@@ -76,20 +76,6 @@ public class SwerveIOCTRE extends SwerveDrivetrain implements SwerveIO {
     inputs.logState(state);
   }
 
-  public double[] getWheelVelocitiesRPS() {
-    double[] velocities = new double[4];
-    for (int i = 0; i < 4; i++) {
-      var moduleMap = signalsMap.get(i);
-      velocities[i] = moduleMap.get("driveVelocityRPS").getValueAsDouble();
-    }
-    return velocities;
-  }
-
-  public ChassisSpeeds getChassisSpeeds() {
-    var state = this.getStateCopy();
-    return state.Speeds; // vx, vy, omega of the robot
-  }
-
   @Override
   public void setSwerveState(SwerveRequest request) {
     this.setControl(request);
