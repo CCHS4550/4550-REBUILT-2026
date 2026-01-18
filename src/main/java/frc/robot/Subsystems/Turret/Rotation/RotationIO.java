@@ -15,7 +15,7 @@ public interface RotationIO {
         public double rotationVelocityRotPerSec = 0.0;
         public double rotationAccelRotPerSecSquared = 0.0;
         public double rotationVelocityRadPerSec = 0.0;
-        public double rotationAccelRotPerSecSquared = 0.0;
+        public double rotationAccelRadPerSecSquared = 0.0;
 
         public Rotation2d rotationAngle = Rotation2d.kZero;
 
