@@ -72,4 +72,10 @@ public interface SwerveIO extends SubsystemDataProcessor.IODataRefresher {
 
   @Override
   default void refreshData() {}
+
+  default double[] getWheelVelocitiesRPS() {}
+  ;
+
+  default ChassisSpeeds getChassisSpeeds() {}
+  ;
 }
