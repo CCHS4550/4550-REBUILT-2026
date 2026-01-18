@@ -46,8 +46,6 @@ public final class Constants {
     public static final Voltage ROTATION_STEP_RATE = Units.Volts.of(Math.PI);
     public static final Time ROTATION_TIMEOUT = Units.Seconds.of(5);
 
-    public static final double DRIVE_GEAR_RATIO = 6.88;
-
     public static final Velocity<VoltageUnit> STEER_RAMP_RATE = null;
     public static final Voltage STEER_STEP_RATE = Units.Volts.of(7);
     public static final Time STEER_TIMEOUT = null;
