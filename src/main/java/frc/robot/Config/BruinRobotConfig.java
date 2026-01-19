@@ -41,6 +41,7 @@ public class BruinRobotConfig {
   public final CanDeviceID SHOOTER_MOTOR = new CanDeviceID(-1, CANIVORE_CANBUS);
 
   public final CanDeviceID ELEVATION_CANCODER = new CanDeviceID(-1, CANIVORE_CANBUS);
+  public final CanDeviceID ROTATION_CANCODER = new CanDeviceID(-1, CANIVORE_CANBUS);
 
   /**
    * Wheel radius in meters. Accuracy in these measurements affects wheel odometry which measures
