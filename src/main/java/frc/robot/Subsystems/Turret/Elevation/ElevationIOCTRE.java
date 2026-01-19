@@ -21,8 +21,6 @@ import frc.robot.Config.BruinRobotConfig;
 import frc.robot.Constant.Constants;
 import frc.robot.Util.Phoenix6Util;
 
-
-
 public class ElevationIOCTRE implements ElevationIO {
   private TalonFX elevationMotor;
   private CANcoder elevationEncoder;
@@ -39,10 +37,15 @@ public class ElevationIOCTRE implements ElevationIO {
 
   public ElevationIOCTRE(BruinRobotConfig bruinRobotConfig) {
     motionMagicVoltage = new MotionMagicVoltage(0.0);
-    elevationMotor = new TalonFX(bruinRobotConfig.ELEVATION_MOTOR.getDeviceNumber(), bruinRobotConfig.ELEVATION_MOTOR.getBus()); // creates motor
+    elevationMotor =
+        new TalonFX(
+            bruinRobotConfig.ELEVATION_MOTOR.getDeviceNumber(),
+            bruinRobotConfig.ELEVATION_MOTOR.getBus()); // creates motor
     elevationEncoder =
         new CANcoder(
-            bruinRobotConfig.ELEVATION_CANCODER.getDeviceNumber(), bruinRobotConfig.ELEVATION_CANCODER.getBus()); // creates CANCoder, which should be connected to the motor electrically
+            bruinRobotConfig.ELEVATION_CANCODER.getDeviceNumber(),
+            bruinRobotConfig.ELEVATION_CANCODER
+                .getBus()); // creates CANCoder, which should be connected to the motor electrically
 
     // I should probably set up these constants in like RobotConfig, but I just want to try and
     // complete this out
@@ -64,8 +67,12 @@ public class ElevationIOCTRE implements ElevationIO {
     Phoenix6Util.applyAndCheckConfiguration(elevationMotor, elevationConfig, 5);
 
     encoderConfig = new CANcoderConfiguration();
-    encoderConfig.MagnetSensor.withAbsoluteSensorDiscontinuityPoint(0.82).withMagnetOffset(0.0).withSensorDirection(SensorDirectionValue.Clockwise_Positive);
-    elevationEncoder.getConfigurator().apply(encoderConfig); 
+    encoderConfig
+        .MagnetSensor
+        .withAbsoluteSensorDiscontinuityPoint(0.82)
+        .withMagnetOffset(0.0)
+        .withSensorDirection(SensorDirectionValue.Clockwise_Positive);
+    elevationEncoder.getConfigurator().apply(encoderConfig);
 
     elevationAngleRotations = elevationEncoder.getAbsolutePosition();
     elevationAppliedVolts = elevationMotor.getMotorVoltage();
@@ -74,33 +81,41 @@ public class ElevationIOCTRE implements ElevationIO {
     elevationVelocityRotationsPerSec = elevationEncoder.getVelocity();
     elevationAccelerationRotationsPerSecSquared = elevationMotor.getAcceleration();
     elevationMotorTemp = elevationMotor.getDeviceTemp();
-
   }
 
   @Override
   public void updateInputs(elevationIOInputs inputs) {
-    BaseStatusSignal.refreshAll(elevationAppliedVolts, elevationSupplyCurrentAmps, elevationStatorCurrentAmps, elevationAccelerationRotationsPerSecSquared, elevationMotorTemp);
+    BaseStatusSignal.refreshAll(
+        elevationAppliedVolts,
+        elevationSupplyCurrentAmps,
+        elevationStatorCurrentAmps,
+        elevationAccelerationRotationsPerSecSquared,
+        elevationMotorTemp);
     BaseStatusSignal.refreshAll(elevationAngleRotations, elevationVelocityRotationsPerSec);
     inputs.elevationVoltage = elevationAppliedVolts.getValueAsDouble();
     inputs.elevationSupplyCurrent = elevationSupplyCurrentAmps.getValueAsDouble();
     inputs.elevationStatorCurrent = elevationStatorCurrentAmps.getValueAsDouble();
     inputs.elevationTemperature = elevationMotorTemp.getValueAsDouble();
 
-    inputs.elevationVelocityRadPerSec = elevationVelocityRotationsPerSec.getValueAsDouble() * Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT ;
-    inputs.elevationAccelRadPerSecSquared = elevationAccelerationRotationsPerSecSquared.getValueAsDouble() * Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT ;
+    inputs.elevationVelocityRadPerSec =
+        elevationVelocityRotationsPerSec.getValueAsDouble()
+            * Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT;
+    inputs.elevationAccelRadPerSecSquared =
+        elevationAccelerationRotationsPerSecSquared.getValueAsDouble()
+            * Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT;
 
     inputs.elevationAngle = Rotation2d.fromRotations(elevationAngleRotations.getValueAsDouble());
-
-
   }
 
   @Override
   public void setElevationAngle(Rotation2d angle) {
-    elevationMotor.setControl(motionMagicVoltage.withPosition(angle.getRadians() / Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT));
+    elevationMotor.setControl(
+        motionMagicVoltage.withPosition(
+            angle.getRadians() / Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT));
   }
 
   @Override
-  public void setVoltage(double volts){
+  public void setVoltage(double volts) {
     elevationMotor.setVoltage(volts);
   }
 }

@@ -22,23 +22,23 @@ public class BruinRobotConfig {
 
   public final CanDeviceID FRONT_LEFT_DRIVE_MOTOR = new CanDeviceID(-1);
   public final CanDeviceID FRONT_LEFT_STEER_MOTOR = new CanDeviceID(-1);
-  public  final CanDeviceID FRONT_LEFT_STEER_ENCODER = new CanDeviceID(-1);
+  public final CanDeviceID FRONT_LEFT_STEER_ENCODER = new CanDeviceID(-1);
 
   public final CanDeviceID FRONT_RIGHT_DRIVE_MOTOR = new CanDeviceID(-1);
-  public  final CanDeviceID FRONT_RIGHT_STEER_MOTOR = new CanDeviceID(-1);
-  public  final CanDeviceID FRONT_RIGHT_STEER_ENCODER = new CanDeviceID(-1);
+  public final CanDeviceID FRONT_RIGHT_STEER_MOTOR = new CanDeviceID(-1);
+  public final CanDeviceID FRONT_RIGHT_STEER_ENCODER = new CanDeviceID(-1);
 
-  public  final CanDeviceID BACK_LEFT_DRIVE_MOTOR = new CanDeviceID(-1);
-  public  final CanDeviceID BACK_LEFT_STEER_MOTOR = new CanDeviceID(-1);
-  public  final CanDeviceID BACK_LEFT_STEER_ENCODER = new CanDeviceID(-1);
+  public final CanDeviceID BACK_LEFT_DRIVE_MOTOR = new CanDeviceID(-1);
+  public final CanDeviceID BACK_LEFT_STEER_MOTOR = new CanDeviceID(-1);
+  public final CanDeviceID BACK_LEFT_STEER_ENCODER = new CanDeviceID(-1);
 
-  public  final CanDeviceID BACK_RIGHT_DRIVE_MOTOR = new CanDeviceID(-1);
-  public  final CanDeviceID BACK_RIGHT_STEER_MOTOR = new CanDeviceID(-1);
-  public  final CanDeviceID BACK_RIGHT_STEER_ENCODER = new CanDeviceID(-1);
+  public final CanDeviceID BACK_RIGHT_DRIVE_MOTOR = new CanDeviceID(-1);
+  public final CanDeviceID BACK_RIGHT_STEER_MOTOR = new CanDeviceID(-1);
+  public final CanDeviceID BACK_RIGHT_STEER_ENCODER = new CanDeviceID(-1);
 
-  public  final CanDeviceID ROTATION_MOTOR = new CanDeviceID(-1, CANIVORE_CANBUS);
-  public  final CanDeviceID ELEVATION_MOTOR = new CanDeviceID(-1, CANIVORE_CANBUS);
-  public  final CanDeviceID SHOOTER_MOTOR = new CanDeviceID(-1, CANIVORE_CANBUS);
+  public final CanDeviceID ROTATION_MOTOR = new CanDeviceID(-1, CANIVORE_CANBUS);
+  public final CanDeviceID ELEVATION_MOTOR = new CanDeviceID(-1, CANIVORE_CANBUS);
+  public final CanDeviceID SHOOTER_MOTOR = new CanDeviceID(-1, CANIVORE_CANBUS);
 
   public final CanDeviceID ELEVATION_CANCODER = new CanDeviceID(-1, CANIVORE_CANBUS);
 
@@ -48,17 +48,17 @@ public class BruinRobotConfig {
    */
 
   // TODO: find and fill
-  private  final double WHEEL_RADIUS_METERS = 99999999;
+  private final double WHEEL_RADIUS_METERS = 99999999;
 
   /** Ratio between the drive motor shaft and the output shaft the wheel is mounted on. */
 
   // TODO: find and fill
-  private  final double DRIVE_GEAR_RATIO = 9999999999.999;
+  private final double DRIVE_GEAR_RATIO = 9999999999.999;
 
   /** Ratio between the steer motor shaft and the steer output shaft. */
 
   // TODO: find and fill
-  private  final double STEER_GEAR_RATIO = 99999999999999.9999999999;
+  private final double STEER_GEAR_RATIO = 99999999999999.9999999999;
 
   /**
    * The coupled gear ratio between the CanCoder and the drive motor. Every 1 rotation of the steer
@@ -66,7 +66,7 @@ public class BruinRobotConfig {
    */
 
   // TODO: find and fill
-  private  final double COUPLING_GEAR_RATIO = 0.0;
+  private final double COUPLING_GEAR_RATIO = 0.0;
 
   /**
    * Wheelbase length is the distance between the front and back wheels. Positive x values represent
@@ -74,7 +74,7 @@ public class BruinRobotConfig {
    */
 
   // TODO: find and fill
-  private  final double WHEELBASE_LENGTH_METERS = 9999999999.99999;
+  private final double WHEELBASE_LENGTH_METERS = 9999999999.99999;
 
   /**
    * Wheel track width is the distance between the left and right wheels. Positive y values
@@ -82,24 +82,24 @@ public class BruinRobotConfig {
    */
 
   // TODO: find and fill
-  private  final double WHEEL_TRACK_WIDTH_METERS = 9999999999999999.9999;
+  private final double WHEEL_TRACK_WIDTH_METERS = 9999999999999999.9999;
 
   /** The maximum speed of the robot in meters per second. */
 
   // TODO: find and fill
-  private  final double MAX_SPEED_METERS_PER_SECOND = 999.9999;
+  private final double MAX_SPEED_METERS_PER_SECOND = 999.9999;
 
   // CANcoder offsets of the swerve modules
 
   // TODO: find and fill
-  private  final double FRONT_LEFT_STEER_OFFSET_ROTATIONS = 0.0;
-  private  final double FRONT_RIGHT_STEER_OFFSET_ROTATIONS = 0.0;
-  private  final double BACK_LEFT_STEER_OFFSET_ROTATIONS = 0.0;
-  private  final double BACK_RIGHT_STEER_OFFSET_ROTATIONS = 0.0;
+  private final double FRONT_LEFT_STEER_OFFSET_ROTATIONS = 0.0;
+  private final double FRONT_RIGHT_STEER_OFFSET_ROTATIONS = 0.0;
+  private final double BACK_LEFT_STEER_OFFSET_ROTATIONS = 0.0;
+  private final double BACK_RIGHT_STEER_OFFSET_ROTATIONS = 0.0;
 
   // TODO: find and fill
-  private  final int GYRO_MOUNTING_ANGLE = 0;
-  private  final double GYRO_ERROR = 1.6;
+  private final int GYRO_MOUNTING_ANGLE = 0;
+  private final double GYRO_ERROR = 1.6;
 
   // Robot configuration
   private final SwerveDrivetrainConstants swerveDrivetrainConstants;
@@ -111,10 +111,10 @@ public class BruinRobotConfig {
   private final TurretConfig turretConfig;
 
   // PathPlanner config constants
-  private  final double ROBOT_MASS_KG = 99999999999999.99999;
-  private  final double ROBOT_MOI = 999999.99999999;
-  private  final double WHEEL_COF = 1.2;
-  private  RobotConfig PP_CONFIG;
+  private final double ROBOT_MASS_KG = 99999999999999.99999;
+  private final double ROBOT_MOI = 999999.99999999;
+  private final double WHEEL_COF = 1.2;
+  private RobotConfig PP_CONFIG;
 
   @SuppressWarnings("unchecked")
   public BruinRobotConfig() {
@@ -288,8 +288,17 @@ public class BruinRobotConfig {
             .withWidthOffset(Units.inchesToMeters(0));
 
     // Turret Constants
-    turretConfig = new TurretConfig().withRotationKp(0.0).withRotationKi(0).withRotationKd(0).withElevationKp(0).withElevationKi(0).withElevationKd(0).withShooterKp(0).withShooterKi(0).withShooterKd(0);
-
+    turretConfig =
+        new TurretConfig()
+            .withRotationKp(0.0)
+            .withRotationKi(0)
+            .withRotationKd(0)
+            .withElevationKp(0)
+            .withElevationKi(0)
+            .withElevationKd(0)
+            .withShooterKp(0)
+            .withShooterKi(0)
+            .withShooterKd(0);
   }
 
   public SwerveDrivetrainConstants getSwerveDrivetrainConstants() {
@@ -309,7 +318,7 @@ public class BruinRobotConfig {
     return List.of(photonVisionConfig, questNavConfig);
   }
 
-  public TurretConfig getTurretConfig(){
+  public TurretConfig getTurretConfig() {
     return turretConfig;
   }
 

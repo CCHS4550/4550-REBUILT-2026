@@ -28,7 +28,7 @@ public class CanDeviceID {
     return bus.toString();
   }
 
-  public CANBus getBus(){
+  public CANBus getBus() {
     return bus;
   }
 

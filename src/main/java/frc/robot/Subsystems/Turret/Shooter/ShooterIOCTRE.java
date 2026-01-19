@@ -4,9 +4,5 @@ import com.ctre.phoenix6.hardware.TalonFX;
 
 public class ShooterIOCTRE implements ShooterIO {
 
-    private TalonFX shooterMotor;
-    
-
-
-
+  private TalonFX shooterMotor;
 }
