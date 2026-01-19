@@ -1,24 +1,34 @@
 package frc.robot.Util;
 
+import com.ctre.phoenix6.CANBus;
+
 public class CanDeviceID {
   private final int deviceNumber;
-  private final String bus;
+  private final CANBus bus;
 
-  public CanDeviceID(int deviceNumber, String bus) {
+  public CanDeviceID(int deviceNumber, CANBus bus) {
     this.deviceNumber = deviceNumber;
     this.bus = bus;
   }
 
   // Use the default bus name "rio".
   public CanDeviceID(int deviceNumber) {
-    this(deviceNumber, "rio");
+    this(deviceNumber, CANBus.roboRIO());
   }
 
   public int getDeviceNumber() {
     return deviceNumber;
   }
 
-  public String getBus() {
+  public String getBusName() {
+    return bus.getName();
+  }
+
+  public String getBusString() {
+    return bus.toString();
+  }
+
+  public CANBus getBus(){
     return bus;
   }
 

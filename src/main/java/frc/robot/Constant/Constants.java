@@ -52,4 +52,9 @@ public final class Constants {
     public static final Voltage STEER_STEP_RATE = Units.Volts.of(7);
     public static final Time STEER_TIMEOUT = null;
   }
+
+  public static final class TurretConstants{
+    public static final double ELEVATION_GEAR_RATIO = (60.0 / 12.0) * (60.0 / 16.0) * (58.0 / 9.0);
+    public static final double ELEVATION_POSITION_COEFFICIENT = 2 * Math.PI * ELEVATION_GEAR_RATIO;
+  }
 }
