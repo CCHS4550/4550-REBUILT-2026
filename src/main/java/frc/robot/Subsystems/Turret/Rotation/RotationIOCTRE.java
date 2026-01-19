@@ -10,7 +10,6 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
@@ -37,15 +36,19 @@ public class RotationIOCTRE implements RotationIO {
   private final StatusSignal<AngularAcceleration> rotationAccelerationRotationsPerSecSquared;
   private final StatusSignal<Temperature> rotationMotorTemp;
 
-  public RotationIOCTRE(BruinRobotConfig bruinRobotConfig){
+  public RotationIOCTRE(BruinRobotConfig bruinRobotConfig) {
     motionMagicVoltage = new MotionMagicVoltage(0.0).withSlot(0);
 
-    rotationMotor = new TalonFX(bruinRobotConfig.ROTATION_MOTOR.getDeviceNumber(), bruinRobotConfig.ROTATION_MOTOR.getBus()); // creates motor
-    
+    rotationMotor =
+        new TalonFX(
+            bruinRobotConfig.ROTATION_MOTOR.getDeviceNumber(),
+            bruinRobotConfig.ROTATION_MOTOR.getBus()); // creates motor
 
     rotationEncoder =
         new CANcoder(
-            bruinRobotConfig.ROTATION_CANCODER.getDeviceNumber(), bruinRobotConfig.ROTATION_CANCODER.getBus()); // creates CANCoder, which should be connected to the motor electrically
+            bruinRobotConfig.ROTATION_CANCODER.getDeviceNumber(),
+            bruinRobotConfig.ROTATION_CANCODER
+                .getBus()); // creates CANCoder, which should be connected to the motor electrically
 
     // I should probably set up these constants in like RobotConfig, but I just want to try and
     // complete this out
@@ -67,8 +70,12 @@ public class RotationIOCTRE implements RotationIO {
     Phoenix6Util.applyAndCheckConfiguration(rotationMotor, rotationConfig, 5);
 
     encoderConfig = new CANcoderConfiguration();
-    encoderConfig.MagnetSensor.withAbsoluteSensorDiscontinuityPoint(0.82).withMagnetOffset(0.0).withSensorDirection(SensorDirectionValue.Clockwise_Positive);
-    rotationEncoder.getConfigurator().apply(encoderConfig); 
+    encoderConfig
+        .MagnetSensor
+        .withAbsoluteSensorDiscontinuityPoint(0.82)
+        .withMagnetOffset(0.0)
+        .withSensorDirection(SensorDirectionValue.Clockwise_Positive);
+    rotationEncoder.getConfigurator().apply(encoderConfig);
 
     rotationAngleRotations = rotationEncoder.getAbsolutePosition();
     rotationAppliedVolts = rotationMotor.getMotorVoltage();
@@ -81,32 +88,37 @@ public class RotationIOCTRE implements RotationIO {
 
   @Override
   public void updateInputs(RotationIOInputs inputs) {
-    BaseStatusSignal.refreshAll(rotationAppliedVolts, rotationSupplyCurrentAmps, rotationStatorCurrentAmps, rotationAccelerationRotationsPerSecSquared, rotationMotorTemp);
+    BaseStatusSignal.refreshAll(
+        rotationAppliedVolts,
+        rotationSupplyCurrentAmps,
+        rotationStatorCurrentAmps,
+        rotationAccelerationRotationsPerSecSquared,
+        rotationMotorTemp);
     BaseStatusSignal.refreshAll(rotationAngleRotations, rotationVelocityRotationsPerSec);
     inputs.rotationVoltage = rotationAppliedVolts.getValueAsDouble();
     inputs.rotationSupplyCurrent = rotationSupplyCurrentAmps.getValueAsDouble();
     inputs.rotationStatorCurrent = rotationStatorCurrentAmps.getValueAsDouble();
     inputs.rotationTemperature = rotationMotorTemp.getValueAsDouble();
 
-    inputs.rotationVelocityRadPerSec = rotationVelocityRotationsPerSec.getValueAsDouble() * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT ;
-    inputs.rotationAccelRadPerSecSquared = rotationAccelerationRotationsPerSecSquared.getValueAsDouble() * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT ;
+    inputs.rotationVelocityRadPerSec =
+        rotationVelocityRotationsPerSec.getValueAsDouble()
+            * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT;
+    inputs.rotationAccelRadPerSecSquared =
+        rotationAccelerationRotationsPerSecSquared.getValueAsDouble()
+            * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT;
 
     inputs.rotationAngle = Rotation2d.fromRotations(rotationAngleRotations.getValueAsDouble());
-
-
   }
 
-  
   @Override
   public void setRotationAngle(Rotation2d angle) {
-    rotationMotor.setControl(motionMagicVoltage.withPosition(angle.getRadians() / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT));
+    rotationMotor.setControl(
+        motionMagicVoltage.withPosition(
+            angle.getRadians() / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT));
   }
 
   @Override
-  public void setVoltage(double volts){
+  public void setVoltage(double volts) {
     rotationMotor.setVoltage(volts);
   }
-
-
-
 }

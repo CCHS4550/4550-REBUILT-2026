@@ -6,7 +6,7 @@ import org.littletonrobotics.junction.AutoLog;
 public interface ElevationIO {
 
   @AutoLog
-  public class elevationIOInputs {
+  public class ElevationIOInputs {
     public double elevationVoltage = 0.0;
     public double elevationSupplyCurrent = 0.0;
     public double elevationStatorCurrent = 0.0;
@@ -18,7 +18,7 @@ public interface ElevationIO {
     public Rotation2d elevationAngle = Rotation2d.kZero;
   }
 
-  default void updateInputs(elevationIOInputs inputs) {}
+  default void updateInputs(ElevationIOInputs inputs) {}
 
   default void setElevationAngle(Rotation2d angle) {}
 

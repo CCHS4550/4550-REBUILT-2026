@@ -84,7 +84,7 @@ public class ElevationIOCTRE implements ElevationIO {
   }
 
   @Override
-  public void updateInputs(elevationIOInputs inputs) {
+  public void updateInputs(ElevationIOInputs inputs) {
     BaseStatusSignal.refreshAll(
         elevationAppliedVolts,
         elevationSupplyCurrentAmps,
