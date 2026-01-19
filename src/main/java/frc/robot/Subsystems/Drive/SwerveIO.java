@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import frc.robot.Robotstate;
 import frc.robot.Util.SubsystemDataProcessor;
 import org.littletonrobotics.junction.AutoLog;
 
@@ -36,18 +37,20 @@ public interface SwerveIO extends SubsystemDataProcessor.IODataRefresher {
       this.FailedDaqs = state.FailedDaqs;
       this.OdometryPeriod = state.OdometryPeriod;
       this.Timestamp = state.OdometryPeriod;
-      // RobotState.getInstance().addPoseObservation(new
-      // RobotState.SwerveDriveObservation(this.Pose, this.Speeds));
+      Robotstate.getInstance()
+          .addPoseObservation(new Robotstate.SwerveDriveObservation(this.Pose, this.Speeds));
     }
   }
 
   @AutoLog
   class ModuleIOInputs {
+    public double driveVelocityRotationsPerSecond = 0.0;
     public double driveSupplyCurrentAmps = 0.0;
     public double driveStatorCurrentAmps = 0.0;
     public double driveAppliedVolts = 0.0;
     public double driveTemperature = 0.0;
 
+    public double steerVelocityRotationsPerSecond = 0.0;
     public double steerSupplyCurrentAmps = 0.0;
     public double steerStatorCurrentAmps = 0.0;
     public double steerAppliedVolts = 0.0;

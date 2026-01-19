@@ -12,6 +12,8 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import frc.robot.Constant.FieldConstants;
+import frc.robot.Robot;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +33,7 @@ public class SwerveIOCTRE extends SwerveDrivetrain implements SwerveIO {
       SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>...
           moduleConstants) {
     super(TalonFX::new, TalonFX::new, CANcoder::new, constants, moduleConstants);
-    // this.resetRotation(FieldConstants.isBlueAlliance() ? Rotation2d.kZero : Rotation2d.k180deg);
+    this.resetRotation(FieldConstants.isBlueAlliance() ? Rotation2d.kZero : Rotation2d.k180deg);
 
     signalsMap.put(0, frontLeftSignals);
     signalsMap.put(1, frontRightSignals);
@@ -44,11 +46,13 @@ public class SwerveIOCTRE extends SwerveDrivetrain implements SwerveIO {
 
       var moduleMap = signalsMap.get(i);
 
+      moduleMap.put("driveVelocityRotationsPerSecond", (driveMotor.getVelocity()));
       moduleMap.put("driveSupplyCurrentAmps", driveMotor.getSupplyCurrent());
       moduleMap.put("driveStatorCurrentAmps", driveMotor.getStatorCurrent());
       moduleMap.put("driveAppliedVolts", driveMotor.getMotorVoltage());
       moduleMap.put("driveTemperature", driveMotor.getDeviceTemp());
 
+      moduleMap.put("steerVelocityRotationsPerSecond", steerMotor.getVelocity());
       moduleMap.put("steerSupplyCurrentAmps", steerMotor.getSupplyCurrent());
       moduleMap.put("steerStatorCurrentAmps", steerMotor.getStatorCurrent());
       moduleMap.put("steerAppliedVolts", steerMotor.getMotorVoltage());
@@ -83,7 +87,7 @@ public class SwerveIOCTRE extends SwerveDrivetrain implements SwerveIO {
 
   @Override
   public void resetRotation() {
-    // this.resetRotation(FieldConstants.isBlueAlliance() ? Rotation2d.kZero : Rotation2d.k180deg);
+    this.resetRotation(FieldConstants.isBlueAlliance() ? Rotation2d.kZero : Rotation2d.k180deg);
   }
 
   @Override
@@ -98,18 +102,22 @@ public class SwerveIOCTRE extends SwerveDrivetrain implements SwerveIO {
 
   @Override
   public void updateSimState() {
-    // this.updateSimState(Robot.defaultPeriodSecs, 13.00);
+    this.updateSimState(Robot.defaultPeriodSecs, 13.00);
   }
 
   public void updateModuleInputs(ModuleIOInputs... inputs) {
     for (int i = 0; i < 4; i++) {
       var moduleMap = signalsMap.get(i);
 
+      inputs[i].driveVelocityRotationsPerSecond =
+          moduleMap.get("driveVelocityRotationsPerSecond").getValueAsDouble();
       inputs[i].driveSupplyCurrentAmps = moduleMap.get("driveSupplyCurrentAmps").getValueAsDouble();
       inputs[i].driveStatorCurrentAmps = moduleMap.get("driveStatorCurrentAmps").getValueAsDouble();
       inputs[i].driveAppliedVolts = moduleMap.get("driveAppliedVolts").getValueAsDouble();
       inputs[i].driveTemperature = moduleMap.get("driveTemperature").getValueAsDouble();
 
+      inputs[i].steerVelocityRotationsPerSecond =
+          moduleMap.get("steerVelocityRotationsPerSecond").getValueAsDouble();
       inputs[i].steerSupplyCurrentAmps = moduleMap.get("steerSupplyCurrentAmps").getValueAsDouble();
       inputs[i].steerStatorCurrentAmps = moduleMap.get("steerStatorCurrentAmps").getValueAsDouble();
       inputs[i].steerAppliedVolts = moduleMap.get("steerAppliedVolts").getValueAsDouble();

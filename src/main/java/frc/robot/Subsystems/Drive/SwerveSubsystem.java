@@ -1,13 +1,21 @@
 package frc.robot.Subsystems.Drive;
 
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
-import choreo.trajectory.SwerveSample;
-import choreo.trajectory.Trajectory;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveRequest.ApplyRobotSpeeds;
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.pathfinding.Pathfinding;
+import com.pathplanner.lib.util.DriveFeedforwards;
+import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -15,32 +23,27 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constant.Constants;
+import frc.robot.Constant.FieldConstants;
+import frc.robot.Util.LocalADStarAK;
 import frc.robot.Util.SubsystemDataProcessor;
 import frc.robot.Util.SysIdMechanism;
-import java.util.Optional;
 import org.littletonrobotics.junction.Logger;
 
 public class SwerveSubsystem extends SubsystemBase {
   private static final double CONTROLLER_DEADBAND = 0.1;
-  public static final double TRANSLATION_ERROR_MARGIN_FOR_RELEASING_PIECE_METERS =
-      Units.inchesToMeters(0.5);
-  public static final double TRANSLATION_ERROR_MARGIN_FOR_RELEASING_PIECE_METERS_DRIVE_TO_POINT =
+  public static final double TRANSLATION_ERROR_MARGIN_METERS_DRIVE_TO_POINT =
       Units.inchesToMeters(1.0);
   public static final double DRIVE_TO_POINT_STATIC_FRICTION_CONSTANT = 0.02;
 
   public static final double ROTATION_ERROR_MARGIN_FOR_ROTATION_LOCK_DEGREES = 10.0;
 
   public double maxVelocityOutputForDriveToPoint = Units.feetToMeters(10.0);
-
-  private final PIDController choreoXController = new PIDController(7, 0, 0);
-  private final PIDController choreoYController = new PIDController(7, 0, 0);
-  private final PIDController choreoThetaController = new PIDController(7, 0, 0);
 
   private final PIDController autoDriveToPointController = new PIDController(3.0, 0, 0.1);
   private final PIDController teleopDriveToPointController = new PIDController(3.6, 0, 0.1);
@@ -56,12 +59,15 @@ public class SwerveSubsystem extends SubsystemBase {
       new SwerveRequest.FieldCentricFacingAngle()
           .withDriveRequestType(SwerveModule.DriveRequestType.Velocity);
 
+  private final SwerveRequest.ApplyRobotSpeeds acceptRelativeSpeeds =
+      new ApplyRobotSpeeds().withDriveRequestType(SwerveModule.DriveRequestType.Velocity);
+
   private static final double SKEW_COMPENSATION_SCALAR = -0.03;
 
   public enum WantedState {
     SYS_ID,
     TELEOP_DRIVE,
-    CHOREO_PATH,
+    AUTOPATH_FOLLOWER,
     ROTATION_LOCK,
     DRIVE_TO_POINT,
     IDLE
@@ -70,7 +76,7 @@ public class SwerveSubsystem extends SubsystemBase {
   public enum SystemState {
     SYS_ID,
     TELEOP_DRIVE,
-    CHOREO_PATH,
+    AUTOPATH_FOLLOWER,
     ROTATION_LOCK,
     DRIVE_TO_POINT,
     IDLE
@@ -80,10 +86,6 @@ public class SwerveSubsystem extends SubsystemBase {
   private WantedState wantedState = WantedState.TELEOP_DRIVE;
 
   private Rotation2d desiredRotationForRotationLockState;
-
-  private Trajectory<SwerveSample> desiredChoreoTrajectory;
-  private final Timer choreoTimer = new Timer();
-  private Optional<SwerveSample> choreoSampleToBeApplied;
 
   private Pose2d desiredPoseForDriveToPoint = new Pose2d();
 
@@ -104,6 +106,51 @@ public class SwerveSubsystem extends SubsystemBase {
   private double teleopVelocityCoefficient = 1.0;
   private double rotationVelocityCoefficient = 1.0;
   private double maximumAngularVelocityForDriveToPoint = Double.NaN;
+
+  private SysIdRoutine wheelRadiuSysIdRoutine =
+      new SysIdRoutine(
+          new SysIdRoutine.Config(
+              Volts.per(Second).of(1),
+              Volts.of(5),
+              Seconds.of(5),
+              (state) -> Logger.recordOutput("SysID Wheel Routine State", state.toString())),
+          new SysIdRoutine.Mechanism(
+              volts -> {
+                io.setSwerveState(translationCharacterization.withVolts(volts));
+              },
+              log -> {
+                double omega = 0.0;
+
+                omega +=
+                    ((frontLeftInputs.driveVelocityRotationsPerSecond * Math.PI * 2)
+                            / Constants.SysIdConstants.DRIVE_GEAR_RATIO)
+                        * 2.0
+                        * Math.PI;
+                omega +=
+                    ((frontRightInputs.driveVelocityRotationsPerSecond * Math.PI * 2)
+                            / Constants.SysIdConstants.DRIVE_GEAR_RATIO)
+                        * 2.0
+                        * Math.PI;
+                omega +=
+                    ((backLeftInputs.driveVelocityRotationsPerSecond * Math.PI * 2)
+                            / Constants.SysIdConstants.DRIVE_GEAR_RATIO)
+                        * 2.0
+                        * Math.PI;
+                omega +=
+                    ((backRightInputs.driveVelocityRotationsPerSecond * Math.PI * 2)
+                            / Constants.SysIdConstants.DRIVE_GEAR_RATIO)
+                        * 2.0
+                        * Math.PI;
+
+                omega /= 4.0;
+
+                ChassisSpeeds speeds = swerveInputs.Speeds;
+                double v = speeds.vxMetersPerSecond;
+
+                double wheelRadius = v / omega;
+                Logger.recordOutput("SysID/WheelRadiusMeters", wheelRadius);
+              },
+              this));
 
   private final SysIdRoutine translationSysIdRoutine =
       new SysIdRoutine(
@@ -152,6 +199,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public SwerveSubsystem(
       SwerveIO io,
+      RobotConfig PP_Config,
       CommandXboxController controller,
       double maxVelocity,
       double maxAngularVelocity) {
@@ -165,7 +213,26 @@ public class SwerveSubsystem extends SubsystemBase {
 
     driveAtAngle.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
 
-    choreoThetaController.enableContinuousInput(-Math.PI, Math.PI);
+    // Configure AutoBuilder for PathPlanner
+    AutoBuilder.configure(
+        this::getPose2d,
+        this::resetTranslationAndRotation,
+        this::getChassisSpeeds,
+        this::runVelo,
+        new PPHolonomicDriveController(
+            new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
+        PP_Config,
+        () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+        this);
+    Pathfinding.setPathfinder(new LocalADStarAK());
+    PathPlannerLogging.setLogActivePathCallback(
+        (activePath) -> {
+          Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[0]));
+        });
+    PathPlannerLogging.setLogTargetPoseCallback(
+        (targetPose) -> {
+          Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
+        });
 
     SubsystemDataProcessor.createAndStartSubsystemDataProcessor(
         () -> {
@@ -239,16 +306,9 @@ public class SwerveSubsystem extends SubsystemBase {
     return switch (wantedState) {
       case SYS_ID -> SystemState.SYS_ID;
       case TELEOP_DRIVE -> SystemState.TELEOP_DRIVE;
-      case CHOREO_PATH -> {
-        if (systemState != SystemState.CHOREO_PATH) {
-          choreoTimer.restart();
-          choreoSampleToBeApplied = desiredChoreoTrajectory.sampleAt(choreoTimer.get(), false);
-          yield SystemState.CHOREO_PATH;
-        } else {
-          choreoSampleToBeApplied = desiredChoreoTrajectory.sampleAt(choreoTimer.get(), false);
-          yield SystemState.CHOREO_PATH;
-        }
-      }
+
+      case AUTOPATH_FOLLOWER -> SystemState.AUTOPATH_FOLLOWER;
+
       case ROTATION_LOCK -> SystemState.ROTATION_LOCK;
       case DRIVE_TO_POINT -> SystemState.DRIVE_TO_POINT;
       default -> SystemState.IDLE;
@@ -256,7 +316,8 @@ public class SwerveSubsystem extends SubsystemBase {
   }
 
   private void applyStates() {
-    switch (systemState) {
+    switch (systemState) { // case something something the very basic python things -- shirly 2026
+        // (i was held hostage mb)
       default:
       case SYS_ID:
         break;
@@ -266,41 +327,9 @@ public class SwerveSubsystem extends SubsystemBase {
                 .withSpeeds(calculateSpeedsBasedOnJoystickInputs())
                 .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage));
         break;
-      case CHOREO_PATH:
-        {
-          if (choreoSampleToBeApplied.isPresent()) {
-            var sample = choreoSampleToBeApplied.get();
-            Logger.recordOutput("Subsystems/Drive/Choreo/Timer Value", choreoTimer.get());
-            Logger.recordOutput(
-                "Subsystems/Drive/Choreo/Traj Name", desiredChoreoTrajectory.name());
-            Logger.recordOutput(
-                "Subsystems/Drive/Choreo/Total time", desiredChoreoTrajectory.getTotalTime());
-            Logger.recordOutput("Subsystems/Drive/Choreo/sample/Desired Pose", sample.getPose());
-            Logger.recordOutput(
-                "Subsystems/Drive/Choreo/sample/Desired Chassis Speeds", sample.getChassisSpeeds());
-            Logger.recordOutput(
-                "Subsystems/Drive/Choreo/sample/Module Forces X", sample.moduleForcesX());
-            Logger.recordOutput(
-                "Subsystems/Drive/Choreo/sample/Module Forces Y", sample.moduleForcesY());
-            synchronized (swerveInputs) {
-              var pose = swerveInputs.Pose;
+      case AUTOPATH_FOLLOWER:
+        break;
 
-              var targetSpeeds = sample.getChassisSpeeds();
-              targetSpeeds.vxMetersPerSecond += choreoXController.calculate(pose.getX(), sample.x);
-              targetSpeeds.vyMetersPerSecond += choreoYController.calculate(pose.getY(), sample.y);
-              targetSpeeds.omegaRadiansPerSecond +=
-                  choreoThetaController.calculate(pose.getRotation().getRadians(), sample.heading);
-
-              io.setSwerveState(
-                  new SwerveRequest.ApplyFieldSpeeds()
-                      .withSpeeds(targetSpeeds)
-                      .withWheelForceFeedforwardsX(sample.moduleForcesX())
-                      .withWheelForceFeedforwardsY(sample.moduleForcesY())
-                      .withDriveRequestType(SwerveModule.DriveRequestType.Velocity));
-            }
-          }
-          break;
-        }
       case ROTATION_LOCK:
         io.setSwerveState(
             driveAtAngle
@@ -371,12 +400,6 @@ public class SwerveSubsystem extends SubsystemBase {
     this.wantedState = state;
   }
 
-  public void setDesiredChoreoTrajectory(Trajectory<SwerveSample> trajectory) {
-    this.desiredChoreoTrajectory = trajectory;
-    this.wantedState = WantedState.CHOREO_PATH;
-    choreoTimer.reset();
-  }
-
   public void setDesiredPoseForDriveToPoint(Pose2d pose) {
     this.desiredPoseForDriveToPoint = pose;
     this.wantedState = WantedState.DRIVE_TO_POINT;
@@ -416,19 +439,19 @@ public class SwerveSubsystem extends SubsystemBase {
     double xMagnitude = MathUtil.applyDeadband(controller.getLeftY(), CONTROLLER_DEADBAND);
     double yMagnitude = MathUtil.applyDeadband(controller.getLeftX(), CONTROLLER_DEADBAND);
     double angularMagnitude = MathUtil.applyDeadband(controller.getRightX(), CONTROLLER_DEADBAND);
-    //
-    //        xMagnitude = Math.copySign(xMagnitude * xMagnitude, xMagnitude);
-    //        yMagnitude = Math.copySign(yMagnitude * yMagnitude, yMagnitude);
+
+    xMagnitude = Math.copySign(xMagnitude * xMagnitude, xMagnitude);
+    yMagnitude = Math.copySign(yMagnitude * yMagnitude, yMagnitude);
     angularMagnitude = Math.copySign(angularMagnitude * angularMagnitude, angularMagnitude);
 
-    double xVelocity = // (FieldConstants.isBlueAlliance() ? -xMagnitude * maxVelocity :
-        // xMagnitude * maxVelocity)
-        // * teleopVelocityCoefficient;
-        5;
-    double yVelocity = // (FieldConstants.isBlueAlliance() ? -yMagnitude * maxVelocity :
-        // yMagnitude * maxVelocity)
-        // * teleopVelocityCoefficient;
-        5;
+    double xVelocity =
+        (FieldConstants.isBlueAlliance() ? -xMagnitude * maxVelocity : xMagnitude * maxVelocity)
+            * teleopVelocityCoefficient;
+
+    double yVelocity =
+        (FieldConstants.isBlueAlliance() ? -yMagnitude * maxVelocity : yMagnitude * maxVelocity)
+            * teleopVelocityCoefficient;
+
     double angularVelocity = angularMagnitude * maxAngularVelocity * rotationVelocityCoefficient;
 
     Rotation2d skewCompensationFactor =
@@ -440,6 +463,17 @@ public class SwerveSubsystem extends SubsystemBase {
             new ChassisSpeeds(xVelocity, yVelocity, -angularVelocity),
             swerveInputs.Pose.getRotation()),
         swerveInputs.Pose.getRotation().plus(skewCompensationFactor));
+  }
+
+  private void runVelo(ChassisSpeeds speeds, DriveFeedforwards ff) {
+    double[] ffX = ff.robotRelativeForcesXNewtons();
+    double[] ffY = ff.robotRelativeForcesYNewtons();
+
+    io.setSwerveState(
+        acceptRelativeSpeeds
+            .withSpeeds(speeds)
+            .withWheelForceFeedforwardsX(ffX)
+            .withWheelForceFeedforwardsY(ffY));
   }
 
   public void resetTranslationAndRotation(Pose2d pose2d) {
@@ -475,8 +509,7 @@ public class SwerveSubsystem extends SubsystemBase {
             .minus(swerveInputs.Pose.getTranslation())
             .getNorm();
     Logger.recordOutput("Subsystems/Drive/DriveToPoint/distanceFromEndpoint", distance);
-    return MathUtil.isNear(
-        0.0, distance, TRANSLATION_ERROR_MARGIN_FOR_RELEASING_PIECE_METERS_DRIVE_TO_POINT);
+    return MathUtil.isNear(0.0, distance, TRANSLATION_ERROR_MARGIN_METERS_DRIVE_TO_POINT);
   }
 
   public boolean isAtDesiredRotation() {
@@ -486,49 +519,6 @@ public class SwerveSubsystem extends SubsystemBase {
   public boolean isAtDesiredRotation(double tolerance) {
     return driveAtAngle.HeadingController.getPositionError() < tolerance;
   }
-
-  public boolean isAtChoreoSetpoint() {
-    if (systemState != SystemState.CHOREO_PATH) {
-      return false;
-    }
-    return MathUtil.isNear(
-            desiredChoreoTrajectory.getFinalPose(false).get().getX(),
-            swerveInputs.Pose.getX(),
-            TRANSLATION_ERROR_MARGIN_FOR_RELEASING_PIECE_METERS)
-        && MathUtil.isNear(
-            desiredChoreoTrajectory.getFinalPose(false).get().getY(),
-            swerveInputs.Pose.getY(),
-            TRANSLATION_ERROR_MARGIN_FOR_RELEASING_PIECE_METERS);
-  }
-
-  public boolean isAtEndOfChoreoTrajectoryOrDriveToPoint() {
-    if (desiredChoreoTrajectory != null) {
-      return (MathUtil.isNear(
-                  desiredChoreoTrajectory.getFinalPose(false).get().getX(),
-                  swerveInputs.Pose.getX(),
-                  TRANSLATION_ERROR_MARGIN_FOR_RELEASING_PIECE_METERS)
-              && MathUtil.isNear(
-                  desiredChoreoTrajectory.getFinalPose(false).get().getY(),
-                  swerveInputs.Pose.getY(),
-                  TRANSLATION_ERROR_MARGIN_FOR_RELEASING_PIECE_METERS))
-          || isAtDriveToPointSetpoint();
-    } else {
-      return isAtDriveToPointSetpoint();
-    }
-  }
-
-  // public double getRobotDistanceFromChoreoEndpoint() {
-  //     Logger.recordOutput(
-  //             "Choreo/FinalPose", desiredChoreoTrajectory.getFinalPose(false).get());
-  //     var distance = Math.abs(desiredChoreoTrajectory
-  //             .getFinalPose(false)
-  //             .get()
-  //             .minus(RobotState.getInstance().getRobotPoseFromSwerveDriveOdometry())
-  //             .getTranslation()
-  //             .getNorm());
-  //     Logger.recordOutput("Choreo/DistanceFromEndpoint", distance);
-  //     return distance;
-  // }
 
   public double getDistanceFromDriveToPointSetpoint() {
     var diff =
@@ -546,5 +536,13 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public void setRotationVelocityCoefficient(double rotationVelocityCoefficient) {
     this.rotationVelocityCoefficient = rotationVelocityCoefficient;
+  }
+
+  public ChassisSpeeds getChassisSpeeds() {
+    return swerveInputs.Speeds;
+  }
+
+  public Pose2d getPose2d() {
+    return swerveInputs.Pose;
   }
 }

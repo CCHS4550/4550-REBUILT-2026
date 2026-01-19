@@ -7,7 +7,16 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.SignalLogger;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.IterativeRobotBase;
+import edu.wpi.first.wpilibj.Watchdog;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constant.Constants;
+import frc.robot.Util.DummyLogReceiver;
+import java.lang.reflect.Field;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -22,6 +31,8 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
  * project.
  */
 public class Robot extends LoggedRobot {
+  private RobotContainer robotContainer;
+
   public Robot() {
     // Record metadata
     Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
@@ -58,14 +69,37 @@ public class Robot extends LoggedRobot {
         Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
         break;
     }
+    SignalLogger.enableAutoLogging(false);
+
+    Logger.addDataReceiver(new DummyLogReceiver());
 
     // Start AdvantageKit logger
     Logger.start();
+
+    // Adjust loop overrun warning timeout
+    try {
+      Field watchdogField = IterativeRobotBase.class.getDeclaredField("m_watchdog");
+      watchdogField.setAccessible(true);
+      Watchdog watchdog = (Watchdog) watchdogField.get(this);
+      watchdog.setTimeout(0.2);
+    } catch (Exception e) {
+      DriverStation.reportWarning("Failed to disable loop overrun warnings.", false);
+    }
+    CommandScheduler.getInstance().setPeriod(0.2);
+
+    robotContainer = new RobotContainer();
   }
 
   /** This function is called periodically during all modes. */
   @Override
-  public void robotPeriodic() {}
+  public void robotPeriodic() {
+    CommandScheduler.getInstance().run();
+    SmartDashboard.updateValues();
+    Shuffleboard.update();
+    if (Robot.isSimulation()) {
+      DriverStation.silenceJoystickConnectionWarning(true);
+    }
+  }
 
   /** This function is called once when the robot is disabled. */
   @Override
@@ -75,7 +109,7 @@ public class Robot extends LoggedRobot {
   @Override
   public void disabledPeriodic() {}
 
-  /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
+  /** This autonomous runs the autonomous command selected by your {@link Robotstate} class. */
   @Override
   public void autonomousInit() {}
 
@@ -105,5 +139,7 @@ public class Robot extends LoggedRobot {
 
   /** This function is called periodically whilst in simulation. */
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+    robotContainer.getSwerveSubsystem().simulationPeriodic();
+  }
 }
