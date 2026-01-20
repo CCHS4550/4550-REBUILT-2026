@@ -8,20 +8,20 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class IntakeHardware implements IntakeIO{
-    private TalonFX leftIntakeMotor;
-    private TalonFX rightIntakeMotor;
-    private CANcoder leftIntakeEncoder;
-    private CANcoder rightIntakeEncoder;
+    private TalonFX horizontalIntakeMotor;
+    private TalonFX verticalintakeMotor;
+    private CANcoder horizontalIntakeEncoder;
+    private CANcoder verticalintakeEncoder;
     private TalonFXConfiguration intakeConfig;
     private CANcoderConfiguration encoderConfig;
     private MotionMagicVelocityVoltage intakeController;
 
-    public IntakeHardware(int leftIntakeID, int leftEncoderID, int rightIntakeID, int rightEncoderID, String canBusString){
-        leftIntakeMotor = new TalonFX(leftIntakeID, canBusString);
-        leftIntakeEncoder = new CANcoder(leftEncoderID);
+    public IntakeHardware(int horizontalIntakeID, int horizontalEncoderID, int verticalintakeID, int verticalEncoderID, String canBusString){
+        horizontalIntakeMotor = new TalonFX(horizontalIntakeID, canBusString);
+        horizontalIntakeEncoder = new CANcoder(horizontalEncoderID);
 
-        rightIntakeMotor = new TalonFX(rightIntakeID, canBusString);
-        rightIntakeEncoder = new CANcoder(rightEncoderID);
+        verticalintakeMotor = new TalonFX(verticalintakeID, canBusString);
+        verticalintakeEncoder = new CANcoder(verticalEncoderID);
         
         intakeConfig = new TalonFXConfiguration();
         intakeConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -38,13 +38,13 @@ public class IntakeHardware implements IntakeIO{
         intakeConfig.MotionMagic.MotionMagicCruiseVelocity = 0.0;
         intakeConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
-        leftIntakeMotor.getConfigurator().apply(intakeConfig);
-        rightIntakeMotor.getConfigurator().apply(intakeConfig);
+        horizontalIntakeMotor.getConfigurator().apply(intakeConfig);
+        verticalintakeMotor.getConfigurator().apply(intakeConfig);
 
         encoderConfig = new CANcoderConfiguration();
         //Config should do something
-        leftIntakeEncoder.getConfigurator().apply(encoderConfig);
-        rightIntakeEncoder.getConfigurator().apply(encoderConfig);
+        horizontalIntakeEncoder.getConfigurator().apply(encoderConfig);
+        verticalintakeEncoder.getConfigurator().apply(encoderConfig);
     }
 
     @Override
