@@ -4,6 +4,8 @@ import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -16,11 +18,15 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.PathPlannerLogging;
+
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -30,12 +36,12 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constant.Constants;
 import frc.robot.Constant.FieldConstants;
+import frc.robot.Subsystems.QuestNav.QuestNav;
 import frc.robot.Util.LocalADStarAK;
 import frc.robot.Util.SubsystemDataProcessor;
 import frc.robot.Util.SysIdMechanism;
-import org.littletonrobotics.junction.Logger;
 
-public class SwerveSubsystem extends SubsystemBase {
+public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestConsumer {
   private static final double CONTROLLER_DEADBAND = 0.1;
   public static final double TRANSLATION_ERROR_MARGIN_METERS_DRIVE_TO_POINT =
       Units.inchesToMeters(1.0);
@@ -544,5 +550,14 @@ public class SwerveSubsystem extends SubsystemBase {
 
   public Pose2d getPose2d() {
     return swerveInputs.Pose;
+  }
+
+  /** Adds a new timestamped vision measurement. */
+  @Override
+  public void accept(
+      Pose2d questRobotPoseMeters,
+      double timestampSeconds,
+      Matrix<N3, N1> questMeasurementStdDevs) {
+    io.addQuestPose(questRobotPoseMeters, timestampSeconds, questMeasurementStdDevs);
   }
 }
