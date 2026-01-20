@@ -88,12 +88,7 @@ public class ShooterIOCTRE implements ShooterIO {
   }
 
   @Override
-  public void setRadPerSec(AngularVelocity radPerSec) {
-    shooterMotor.setControl(motionMagicVelocityVoltage.withVelocity(radPerSec));
-  }
-
-  @Override
-  public void setRotPerSec(AngularVelocity rotPerSec) {
-    shooterMotor.setControl(motionMagicVelocityVoltage.withVelocity(rotPerSec));
+  public void setVelo(AngularVelocity velo) {
+    shooterMotor.setControl(motionMagicVelocityVoltage.withVelocity(velo));
   }
 }

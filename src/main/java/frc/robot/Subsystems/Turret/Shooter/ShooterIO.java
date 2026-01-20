@@ -21,9 +21,7 @@ public interface ShooterIO {
 
   public default void updateInputs(ShooterIOInputs inputs) {}
 
-  public default void setRadPerSec(AngularVelocity radPerSec) {}
-
-  public default void setRotPerSec(AngularVelocity rotPerSec) {}
+  public default void setVelo(AngularVelocity Velo) {}
 
   public default void setVoltage(double voltage) {}
 }

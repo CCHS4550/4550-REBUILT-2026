@@ -3,101 +3,97 @@ package frc.robot.Subsystems.Turret;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Config.BruinRobotConfig;
-import frc.robot.Constant.Constants;
 import frc.robot.Subsystems.Turret.Elevation.*;
 import frc.robot.Subsystems.Turret.Rotation.*;
 import frc.robot.Subsystems.Turret.Shooter.*;
-import frc.robot.Util.TurretState;
+import frc.robot.Util.TurretMeasurables;
 
 public class Turret extends SubsystemBase {
   // system states, wanted states -> tracking target?, idle, passing over, etc.
   // TurretState -> how fast shooter is going, rotation angle, and hood angle
 
-  private BruinRobotConfig bruinRobotConfig;
   private ElevationIO elevationIO;
   private RotationIO rotationIO;
   private ShooterIO shooterIO;
 
-  private TurretState currentTurretState;
-  private TurretState wantedTurretState;
+  private TurretMeasurables currentTurretMeasurables;
+  private TurretMeasurables wantedTurretMeasurables;
 
   private boolean atGoal;
 
-  private ElevationIOInputsAutoLogged elevationIOInputsAutoLogged;
-  private RotationIOInputsAutoLogged rotationIOInputsAutoLogged;
-  private ShooterIOInputsAutoLogged shooterIOInputsAutoLogged;
+  private ElevationIOInputsAutoLogged elevationInputs = new ElevationIOInputsAutoLogged();
+  private RotationIOInputsAutoLogged rotationInputs = new RotationIOInputsAutoLogged();
+  private ShooterIOInputsAutoLogged shooterInputs = new ShooterIOInputsAutoLogged();
 
   public enum TurretSystemState {
     TRACKING_TARGET,
     IDLE,
     ACTIVE_SHOOTING,
-    PASSING
+    ACTIVE_PASSING
   };
 
   public enum TurretWantedState {
-    TRACKING_TARGET,
     IDLE,
-    ACTIVE_SHOOTING,
-    PASSING
+    SHOOT_SCORE,
+    PASS_TO_ALLIANCE,
+    PASSIVE_TRACK
   };
 
-  private TurretSystemState systemState;
-  private TurretWantedState wantedState;
+  private TurretSystemState systemState = TurretSystemState.IDLE;
+  private TurretWantedState wantedState = TurretWantedState.IDLE;
 
   public Turret(ElevationIO elevationIO, RotationIO rotationIO, ShooterIO shooterIO) {
-    switch (Constants.currentMode) {
-      case REAL:
-        elevationIO = new ElevationIOCTRE(bruinRobotConfig);
-        rotationIO = new RotationIOCTRE(bruinRobotConfig);
-        shooterIO = new ShooterIOCTRE(bruinRobotConfig);
-        break;
+    
+        this.elevationIO = elevationIO;
+        this.rotationIO = rotationIO;
+        this.shooterIO = shooterIO;
 
-      case SIM:
-        // TBD
-        break;
-
-      default:
-    }
-    currentTurretState = new TurretState(null, null, null, null, null, 0.0);
-    wantedTurretState = new TurretState(null, null, null, null, null, 0.0);
+    currentTurretMeasurables = new TurretMeasurables(null, null, 0);
+    wantedTurretMeasurables = new TurretMeasurables(null, null);
 
     atGoal = true;
   }
 
   @Override
   public void periodic() {
-    elevationIO.updateInputs(elevationIOInputsAutoLogged);
-    rotationIO.updateInputs(rotationIOInputsAutoLogged);
-    shooterIO.updateInputs(shooterIOInputsAutoLogged);
-
-    currentTurretState =
-        new TurretState(
-            elevationIOInputsAutoLogged.elevationAngle,
-            RadiansPerSecond.of(elevationIOInputsAutoLogged.elevationVelocityRadPerSec),
-            rotationIOInputsAutoLogged.rotationAngle,
-            RadiansPerSecond.of(rotationIOInputsAutoLogged.rotationVelocityRadPerSec),
-            RadiansPerSecond.of(shooterIOInputsAutoLogged.shooterVelocityRadPerSec),
-            Timer.getFPGATimestamp());
+    elevationIO.updateInputs(elevationInputs);
+    rotationIO.updateInputs(rotationInputs);
+    shooterIO.updateInputs(shooterInputs);
 
     systemState = handleStateTransitions();
+    applyStates();
+
+    currentTurretMeasurables = new TurretMeasurables(elevationInputs.elevationAngle, rotationInputs.rotationAngle, shooterInputs.shooterVelocityRadPerSec);
     atGoal = atSetpoint();
   }
-
+  
   public TurretSystemState handleStateTransitions() {
-    return switch (wantedState) {
-      case IDLE -> TurretSystemState.IDLE;
-      case TRACKING_TARGET -> TurretSystemState.TRACKING_TARGET;
+     switch (wantedState) {
+      case IDLE: return TurretSystemState.IDLE;
 
-      case PASSING -> TurretSystemState.PASSING;
+      case SHOOT_SCORE: if(atSetpoint()){
+        return TurretSystemState.ACTIVE_SHOOTING;
+      }
+      else{
+        return TurretSystemState.TRACKING_TARGET;
+      }
 
-      default -> TurretSystemState.IDLE;
-    };
+      case PASS_TO_ALLIANCE: if(atSetpoint()){
+        return TurretSystemState.ACTIVE_PASSING;
+      }
+      else{
+        return TurretSystemState.TRACKING_TARGET;
+      }
+      case PASSIVE_TRACK: return TurretSystemState.TRACKING_TARGET;
+
+      default: return TurretSystemState.IDLE;
   }
+
+}
 
   public void applyStates() {
     switch (systemState) {
@@ -105,60 +101,66 @@ public class Turret extends SubsystemBase {
         atGoal = true;
         break;
       case TRACKING_TARGET:
-        atGoal = atSetpoint();
-
-        if (!atGoal) {
-          applyTurretState(wantedTurretState);
-        } else {
-          applyTurretState(currentTurretState);
-        }
+        Rotation2d calculatedAngle = findFieldCentricAngleToTarget(new Pose2d()).plus(findAngleAdjustmentForRobotInertia());
+        convertFieldCentricAngletoRobotCentric(calculatedAngle);
+        findElevationAngleToTarget(new Pose2d());
+        goToWantedState();
         break;
-      case PASSING:
-        // this is basically just TRACKING_TARGET, but the target is somewhere else.
-        // basically the TurretState will come from the ShotCalculator, which will return a
-        // TurretState based on the
-        // position of the bot, turret, etc., and will determine the target based on the WantedState
-        // of the Turret Class
-        // ex. if we're tracking, it'll shoot out angles, but not shoot velo, and so one from there
+      case ACTIVE_SHOOTING:
+        calculatedAngle = findFieldCentricAngleToTarget(new Pose2d()).plus(findAngleAdjustmentForRobotInertia());
+        convertFieldCentricAngletoRobotCentric(calculatedAngle);
+        findElevationAngleToTarget(new Pose2d());
+        goToWantedState();
+        break;
+      case ACTIVE_PASSING:
+        calculatedAngle = findFieldCentricAngleToTarget(new Pose2d()).plus(findAngleAdjustmentForRobotInertia());
+        convertFieldCentricAngletoRobotCentric(calculatedAngle);
+        findElevationAngleToTarget(new Pose2d());
+        goToWantedState();
         break;
       default:
         break;
     }
   }
-
-  public Command applyTurretState(TurretState wantedTurretState) {
-    return new RunCommand(
-        () -> {
-          elevationIO.setElevationAngle(wantedTurretState.getElevationAngle());
-          rotationIO.setRotationAngle(wantedTurretState.getRotationAngle());
-          shooterIO.setRadPerSec(wantedTurretState.getShooterAngularVelocity());
-        },
-        this);
+  // formal targets will be found and declared through field constants
+  public void setFieldRelativeTarget(TurretMeasurables wantedMeasurables) {
+    this.wantedTurretMeasurables = wantedMeasurables;
   }
 
-  public void setFieldRelativeTarget(TurretState wantedState) {
-    this.wantedTurretState = wantedState;
+  private void goToWantedState(){
+    rotationIO.setRotationAngle(wantedTurretMeasurables.rotationAngle);
+    elevationIO.setElevationAngle(wantedTurretMeasurables.elevationAngle);
+    shooterIO.setVelo(AngularVelocity.ofBaseUnits(wantedTurretMeasurables.shooterRadiansPerSec, RadiansPerSecond));
   }
 
-  public boolean atSetpoint() {
+  private boolean atSetpoint() {
     // change tolerance!
-    double currentShooterAngVelo =
-        currentTurretState.getShooterAngularVelocity().in(RadiansPerSecond);
-    double wantedShooterAngVelo =
-        wantedTurretState.getShooterAngularVelocity().in(RadiansPerSecond);
-
     return MathUtil.isNear(
-            currentTurretState.getElevationAngle().getRadians(),
-            wantedTurretState.getElevationAngle().getRadians(),
+            currentTurretMeasurables.elevationAngle.getRadians(),
+            wantedTurretMeasurables.elevationAngle.getRadians(),
             2.0)
         && MathUtil.isNear(
-            currentTurretState.getRotationAngle().getRadians(),
-            wantedTurretState.getRotationAngle().getRadians(),
+            currentTurretMeasurables.rotationAngle.getRadians(),
+            wantedTurretMeasurables.rotationAngle.getRadians(),
             2.0)
-        && MathUtil.isNear(currentShooterAngVelo, wantedShooterAngVelo, 2.0);
+        && MathUtil.isNear(currentTurretMeasurables.shooterRadiansPerSec, wantedTurretMeasurables.shooterRadiansPerSec, 2.0);
   }
 
   public void setWantedState(TurretWantedState wantedState) {
     this.wantedState = wantedState;
   }
+
+  public boolean getAtGoal(){
+    return atGoal;
+  }
+
+  private Rotation2d findFieldCentricAngleToTarget(Pose2d target){return new Rotation2d();}
+
+  private Rotation2d findAngleAdjustmentForRobotInertia(){return new Rotation2d();}
+
+  //This will mutate wantedturretstate
+  private void convertFieldCentricAngletoRobotCentric(Rotation2d FieldCentricFacingAngle){}
+
+  //This will mutate wantedturretstate
+  private void findElevationAngleToTarget(Pose2d target){}
 }

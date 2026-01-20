@@ -59,5 +59,7 @@ public final class Constants {
 
     public static final double ROTATION_GEAR_RATIO = 0.0;
     public static final double ROTATION_POSITION_COEFFICIENT = 0.0;
+
+    public static final double SHOOTER_MAX_RADIANS_PER_SEC = 0.0;
   }
 }
