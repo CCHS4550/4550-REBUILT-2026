@@ -42,6 +42,11 @@ public class BruinRobotConfig {
 
   public final CanDeviceID ELEVATION_CANCODER = new CanDeviceID(-1, CANIVORE_CANBUS);
 
+  public final CanDeviceID CLIMBER_LEFT_MOTOR = new CanDeviceID(-1);
+  public final CanDeviceID CLIMBER_LEFT_CANCODER = new CanDeviceID(-1);
+  public final CanDeviceID CLIMBER_RIGHT_MOTOR = new CanDeviceID(-1);
+  public final CanDeviceID CLIMBER_RIGHT_CANCODER = new CanDeviceID(-1);
+
   /**
    * Wheel radius in meters. Accuracy in these measurements affects wheel odometry which measures
    * distance as a function of the number of rotations * wheel circumference.
@@ -109,6 +114,7 @@ public class BruinRobotConfig {
   private final VisionConfig photonVisionConfig;
   private final VisionConfig questNavConfig;
   private final TurretConfig turretConfig;
+  private final ClimberConfig climberConfig;
 
   // PathPlanner config constants
   private final double ROBOT_MASS_KG = 99999999999999.99999;
@@ -299,13 +305,20 @@ public class BruinRobotConfig {
             .withShooterKp(0)
             .withShooterKi(0)
             .withShooterKd(0);
+
+    //Climber Constants
+    climberConfig = 
+      new ClimberConfig()
+        .withclimberKp(0)
+        .withclimberKi(0)
+        .withclimberKd(0);
   }
 
   public SwerveDrivetrainConstants getSwerveDrivetrainConstants() {
     return swerveDrivetrainConstants;
   }
 
-  public RobotConfig geRobotConfig() {
+  public RobotConfig getRobotConfig() {
     return PP_CONFIG;
   }
 
@@ -320,6 +333,10 @@ public class BruinRobotConfig {
 
   public TurretConfig getTurretConfig() {
     return turretConfig;
+  }
+
+  public ClimberConfig getClimberConfig() {
+    return climberConfig;
   }
 
   public Translation2d[] getModuleTranslations() {
