@@ -2,7 +2,6 @@ package frc.robot.Subsystems.Drive;
 
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -77,7 +76,8 @@ public interface SwerveIO extends SubsystemDataProcessor.IODataRefresher {
 
   default void resetRobotTranslation(Translation2d translation2d) {}
 
-  default void addQuestPose(Pose2d pose, double timestamp, Matrix<N3, N1> visionMeasurementStdDevs) {}
+  default void addQuestPose(
+      Pose2d pose, double timestamp, Matrix<N3, N1> visionMeasurementStdDevs) {}
 
   @Override
   default void refreshData() {}

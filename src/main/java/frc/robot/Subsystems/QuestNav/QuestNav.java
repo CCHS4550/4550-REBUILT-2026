@@ -19,8 +19,7 @@ import org.littletonrobotics.junction.Logger;
 
 // this class listens to Vision and robot state for occasionally forced pose resets
 // this class implements drive as a listener to periodically update
-public class QuestNav extends SubsystemBase
-    implements Vision.VisionConsumer {
+public class QuestNav extends SubsystemBase implements Vision.VisionConsumer {
   private final QuestConsumer consumer;
 
   // logging and interaction with the hardware

@@ -18,23 +18,23 @@ public class BruinRobotConfig {
   private static final CANBus CANIVORE_CANBUS = new CANBus("CANivore");
 
   // Insert can ID's
-  public final CanDeviceID GYRO = new CanDeviceID(-1);
+  public final CanDeviceID GYRO = new CanDeviceID(13, CANIVORE_CANBUS);
 
-  public final CanDeviceID FRONT_LEFT_DRIVE_MOTOR = new CanDeviceID(-1);
-  public final CanDeviceID FRONT_LEFT_STEER_MOTOR = new CanDeviceID(-1);
-  public final CanDeviceID FRONT_LEFT_STEER_ENCODER = new CanDeviceID(-1);
+  public final CanDeviceID FRONT_LEFT_DRIVE_MOTOR = new CanDeviceID(1);
+  public final CanDeviceID FRONT_LEFT_STEER_MOTOR = new CanDeviceID(2);
+  public final CanDeviceID FRONT_LEFT_STEER_ENCODER = new CanDeviceID(3);
 
-  public final CanDeviceID FRONT_RIGHT_DRIVE_MOTOR = new CanDeviceID(-1);
-  public final CanDeviceID FRONT_RIGHT_STEER_MOTOR = new CanDeviceID(-1);
-  public final CanDeviceID FRONT_RIGHT_STEER_ENCODER = new CanDeviceID(-1);
+  public final CanDeviceID FRONT_RIGHT_DRIVE_MOTOR = new CanDeviceID(4);
+  public final CanDeviceID FRONT_RIGHT_STEER_MOTOR = new CanDeviceID(5);
+  public final CanDeviceID FRONT_RIGHT_STEER_ENCODER = new CanDeviceID(6);
 
-  public final CanDeviceID BACK_LEFT_DRIVE_MOTOR = new CanDeviceID(-1);
-  public final CanDeviceID BACK_LEFT_STEER_MOTOR = new CanDeviceID(-1);
-  public final CanDeviceID BACK_LEFT_STEER_ENCODER = new CanDeviceID(-1);
+  public final CanDeviceID BACK_LEFT_DRIVE_MOTOR = new CanDeviceID(7);
+  public final CanDeviceID BACK_LEFT_STEER_MOTOR = new CanDeviceID(8);
+  public final CanDeviceID BACK_LEFT_STEER_ENCODER = new CanDeviceID(9);
 
-  public final CanDeviceID BACK_RIGHT_DRIVE_MOTOR = new CanDeviceID(-1);
-  public final CanDeviceID BACK_RIGHT_STEER_MOTOR = new CanDeviceID(-1);
-  public final CanDeviceID BACK_RIGHT_STEER_ENCODER = new CanDeviceID(-1);
+  public final CanDeviceID BACK_RIGHT_DRIVE_MOTOR = new CanDeviceID(10);
+  public final CanDeviceID BACK_RIGHT_STEER_MOTOR = new CanDeviceID(11);
+  public final CanDeviceID BACK_RIGHT_STEER_ENCODER = new CanDeviceID(12);
 
   public final CanDeviceID ROTATION_MOTOR = new CanDeviceID(-1, CANIVORE_CANBUS);
   public final CanDeviceID ELEVATION_MOTOR = new CanDeviceID(-1, CANIVORE_CANBUS);
