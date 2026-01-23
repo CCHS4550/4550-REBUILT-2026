@@ -22,6 +22,13 @@ public class Turret extends SubsystemBase {
 
   private TurretMeasurables currentTurretMeasurables;
   private TurretMeasurables wantedTurretMeasurables;
+  
+  
+  private Pose2d turretPose;
+  //Will be held in constants
+  private double turretHeight = 0.5;
+  private Transform2d TurretOffset;
+  private double maxBallHeight = 5.4864;
 
   private boolean atGoal;
 
@@ -63,6 +70,8 @@ public class Turret extends SubsystemBase {
     elevationIO.updateInputs(elevationInputs);
     rotationIO.updateInputs(rotationInputs);
     shooterIO.updateInputs(shooterInputs);
+
+    turretPose = Robotstate.getInstance().getRobotPoseFromSwerveDriveOdometry();
 
     systemState = handleStateTransitions();
     applyStates();
@@ -162,5 +171,9 @@ public class Turret extends SubsystemBase {
   private void convertFieldCentricAngletoRobotCentric(Rotation2d FieldCentricFacingAngle){}
 
   //This will mutate wantedturretstate
-  private void findElevationAngleToTarget(Pose2d target){}
+  private void findElevationAngleToTarget(Pose2d target, double targetHeight){
+    double dst = turretPose.getTranslation().getDistance(target.getTranslation());
+    double maxHeightDiff = maxBallHeight-turretHeight;
+    wantedTurretMeasurables.elevationAngle = new MutAngle(Math.atan2(maxHeightDiff * dst + Math.sqrt(Math.pow(maxHeightDiff * dst,2) - 2 * dst * dst * maxHeightDiff * (targetHeight-turretHeight)),dst * dst),1,Radian);
+  }
 }
