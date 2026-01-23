@@ -25,4 +25,6 @@ public interface ClimberIO {
     public default void setVoltage(double voltage) {}
 
     public default void setHeight(double height){}
+
+    public default void goToPosition(ClimberState pos){}
 }

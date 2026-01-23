@@ -19,6 +19,8 @@ public class ClimberIOCTRE implements ClimberIO{
     private final StatusSignal<Temperature> rightMotorTemp;
 
     private CANcoderConfiguration encoderConfig;
+    private double climberHeightMeters;
+    private double climberVelocityMetersPerSec;
 
     public ClimberIOCTRE(BruinRobotConfig bruinRobotConfig){
         leftMotionMagicVoltage = new MotionMagicVoltage(0.0);
@@ -76,12 +78,12 @@ public class ClimberIOCTRE implements ClimberIO{
         rightConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         rightConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
         rightConfig.CurrentLimits.StatorCurrentLimit = 90.0;
-
-        rightConfig.Slot0.kI = bruinRobotConfig.getClimberConfig().climberKi;
-        rightConfig.Slot0.kP = bruinRobotConfig.getClimberConfig().climberKp;
-        rightConfig.Slot0.kD = bruinRobotConfig.getClimberConfig().climberKd;
         rightConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         rightConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
+        rightConfig.Slot0.kP = bruinRobotConfig.getClimberConfig().climberKp;
+        rightConfig.Slot0.kI = bruinRobotConfig.getClimberConfig().climberKi;
+        rightConfig.Slot0.kD = bruinRobotConfig.getClimberConfig().climberKd;
 
         rightConfig.MotionMagic.MotionMagicCruiseVelocity = 0.4;
         rightConfig.MotionMagic.MotionMagicAcceleration = 0.3;
@@ -100,6 +102,9 @@ public class ClimberIOCTRE implements ClimberIO{
         rightSupplyCurrentAmps = rightMotor.getSupplyCurrent();
         rightStatorCurrentAmps = rightMotor.getStatorCurrent();
         rightMotorTemp = rightMotor.getDeviceTemp();
+
+        //Not sure if this line needs to be in a seperate function
+        leftMotor.setControl(new Follower(rightMotor.getDeviceID(),true));
     }
 
     @Override
@@ -124,18 +129,34 @@ public class ClimberIOCTRE implements ClimberIO{
         inputs.climberRightStatorCurrent = rightStatorCurrentAmps.getValueAsDouble();
         inputs.climberRightTemperature = rightMotorTemp.getValueAsDouble();
 
-        inputs.climberVelocityMetersPerSec = 0.0; //Not sure how to do these yet
-        inputs.climberHeightMeters = 0.0;
+        inputs.climberVelocityMetersPerSec = climberVelocityMetersPerSec; //Not sure how to do these yet
+        inputs.climberHeightMeters = climberHeightMeters;
+    }
+    public double heightToRotations(double height){
+        return height; //math for gear ratio and stuff
     }
 
     @Override
     public void setVoltage(double voltage){
-        leftMotor.setVoltage(voltage);
         rightMotor.setVoltage(voltage);
     }
 
     @Override
     public void setHeight(double height){
-        //Don't know this one either
+        rightMotor.setControl(new MotionMagicVoltage(heightToRotations(height)));
+    }
+
+    @Override
+    public void goToPosition(ClimberState pos){
+        switch(pos){
+            case EXTENDED:
+                rightMotor.setControl(new MotionMagicVoltage(heightToRotations(1)));
+                //replace 1 with extended length
+                break;
+            case RETRACTED:
+                rightMotor.setControl(new MotionMagicVoltage(heightToRotations(0)));
+                //replace 0 with retracted length
+                break;
+        }
     }
 }
