@@ -28,7 +28,9 @@ public interface IntakeIO {
 
     public default void setRotPerSec(double rotPerSec) {}
 
-    public default void setVoltage(double voltage) {}
+    public default void setSpinnerVoltage(double voltage) {}
+
+    public default void setExtensionVoltage(double voltage) {}
 
     public default void setSpeed(double speed) {}
 }
