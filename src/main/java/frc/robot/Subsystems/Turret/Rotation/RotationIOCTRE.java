@@ -11,6 +11,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -29,6 +30,7 @@ public class RotationIOCTRE implements RotationIO {
   private CANcoderConfiguration encoderConfig;
   private MotionMagicVoltage motionMagicVoltage;
   private final StatusSignal<Angle> rotationAngleRotations;
+  private final StatusSignal<Angle> totalRotationsUnwrapped;
   private final StatusSignal<Voltage> rotationAppliedVolts;
   private final StatusSignal<Current> rotationSupplyCurrentAmps;
   private final StatusSignal<Current> rotationStatorCurrentAmps;
@@ -77,6 +79,7 @@ public class RotationIOCTRE implements RotationIO {
         .withSensorDirection(SensorDirectionValue.Clockwise_Positive);
     rotationEncoder.getConfigurator().apply(encoderConfig);
 
+    rotationMotor.setPosition(0.0);
     rotationAngleRotations = rotationEncoder.getAbsolutePosition();
     rotationAppliedVolts = rotationMotor.getMotorVoltage();
     rotationSupplyCurrentAmps = rotationMotor.getSupplyCurrent();
@@ -84,6 +87,7 @@ public class RotationIOCTRE implements RotationIO {
     rotationVelocityRotationsPerSec = rotationEncoder.getVelocity();
     rotationAccelerationRotationsPerSecSquared = rotationMotor.getAcceleration();
     rotationMotorTemp = rotationMotor.getDeviceTemp();
+    totalRotationsUnwrapped = rotationMotor.getPosition();
   }
 
   @Override
@@ -93,12 +97,14 @@ public class RotationIOCTRE implements RotationIO {
         rotationSupplyCurrentAmps,
         rotationStatorCurrentAmps,
         rotationAccelerationRotationsPerSecSquared,
-        rotationMotorTemp);
+        rotationMotorTemp, 
+        totalRotationsUnwrapped);
     BaseStatusSignal.refreshAll(rotationAngleRotations, rotationVelocityRotationsPerSec);
     inputs.rotationVoltage = rotationAppliedVolts.getValueAsDouble();
     inputs.rotationSupplyCurrent = rotationSupplyCurrentAmps.getValueAsDouble();
     inputs.rotationStatorCurrent = rotationStatorCurrentAmps.getValueAsDouble();
     inputs.rotationTemperature = rotationMotorTemp.getValueAsDouble();
+    inputs.totalRotationsUnwrapped = totalRotationsUnwrapped.getValueAsDouble();
 
     inputs.rotationVelocityRadPerSec =
         rotationVelocityRotationsPerSec.getValueAsDouble()

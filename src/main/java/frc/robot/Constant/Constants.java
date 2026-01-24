@@ -7,6 +7,7 @@
 
 package frc.robot.Constant;
 
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Time;
@@ -61,5 +62,17 @@ public final class Constants {
     public static final double ROTATION_POSITION_COEFFICIENT = 0.0;
 
     public static final double SHOOTER_MAX_RADIANS_PER_SEC = 0.0;
+
+    public static final double TURRET_HEIGHT_METERS = 0.0;
+
+    public static final Transform2d TURRET_TRANSFORM = new Transform2d();
+
+    public static final double MAX_BALL_HEIGHT_METERS = 5.4864;
+
+    public static final double FORWARD_ROTATION_LIMIT_RADIANS = 0.0;
+
+    public static final double BACKWARDS_ROTATION_LIMIT_RADIANS = 0.0;
+
+
   }
 }
