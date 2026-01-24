@@ -21,7 +21,7 @@ public class RobotContainer {
     swerveSubsystem =
         new SwerveSubsystem(
             new SwerveIOCTRE(config.getSwerveDrivetrainConstants(), config.getModuleConstants()),
-            config.geRobotConfig(),
+            config.getRobotConfig(),
             controller,
             moduleConstants[0].SpeedAt12Volts,
             moduleConstants[0].SpeedAt12Volts

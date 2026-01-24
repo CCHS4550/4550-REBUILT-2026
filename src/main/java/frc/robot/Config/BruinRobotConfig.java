@@ -306,12 +306,8 @@ public class BruinRobotConfig {
             .withShooterKi(0)
             .withShooterKd(0);
 
-    //Climber Constants
-    climberConfig = 
-      new ClimberConfig()
-        .withclimberKp(0)
-        .withclimberKi(0)
-        .withclimberKd(0);
+    // Climber Constants
+    climberConfig = new ClimberConfig().withclimberKp(0).withclimberKi(0).withclimberKd(0);
   }
 
   public SwerveDrivetrainConstants getSwerveDrivetrainConstants() {
