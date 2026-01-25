@@ -18,14 +18,21 @@ public class RobotContainer {
     SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>[]
         moduleConstants = config.getModuleConstants();
 
+    // swerveSubsystem =
+    //     new SwerveSubsystem(
+    //         new SwerveIOCTRE(config.getSwerveDrivetrainConstants(), config.getModuleConstants()),
+    //         config.geRobotConfig(),
+    //         controller,
+    //         moduleConstants[0].SpeedAt12Volts,
+    //         moduleConstants[0].SpeedAt12Volts
+    //             / Math.hypot(moduleConstants[0].LocationX, moduleConstants[0].LocationY));
     swerveSubsystem =
         new SwerveSubsystem(
             new SwerveIOCTRE(config.getSwerveDrivetrainConstants(), config.getModuleConstants()),
             config.geRobotConfig(),
             controller,
-            moduleConstants[0].SpeedAt12Volts,
-            moduleConstants[0].SpeedAt12Volts
-                / Math.hypot(moduleConstants[0].LocationX, moduleConstants[0].LocationY));
+            1.5,
+            1.5 / Math.hypot(moduleConstants[0].LocationX, moduleConstants[0].LocationY));
   }
 
   public SwerveSubsystem getSwerveSubsystem() {
