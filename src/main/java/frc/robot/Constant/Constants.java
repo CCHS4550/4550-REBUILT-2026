@@ -72,7 +72,21 @@ public final class Constants {
     public static final double FORWARD_ROTATION_LIMIT_RADIANS = 0.0;
 
     public static final double BACKWARDS_ROTATION_LIMIT_RADIANS = 0.0;
+  }
 
+  public static final class VisionConstants {
+    public static final double linearStdDevBaseline = 0.02;
+    public static final double angularStdDevBaseline = 0.06;
+    public static final double maxAmbiguity = 0.1;
+    public static final double maxZError = 0.75;
+  }
+
+  public static final class ShooterCalculationConstants {
+    public static final double GRAVITATION_CONSTANT = 9.81;
+    public static final double TIME_DELAY = 0.03;
+    public static final double GEOMETRY_VELOCITY = 6.7;
+    public static final double TURRET_HEIGHT = 0.12;
+    // public static final Pose2d HUB_POSITION = new Pose2d(4.625594,4.034663,new Rotation2d());
 
   }
 }

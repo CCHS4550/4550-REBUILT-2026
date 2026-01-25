@@ -11,7 +11,6 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -97,7 +96,7 @@ public class RotationIOCTRE implements RotationIO {
         rotationSupplyCurrentAmps,
         rotationStatorCurrentAmps,
         rotationAccelerationRotationsPerSecSquared,
-        rotationMotorTemp, 
+        rotationMotorTemp,
         totalRotationsUnwrapped);
     BaseStatusSignal.refreshAll(rotationAngleRotations, rotationVelocityRotationsPerSec);
     inputs.rotationVoltage = rotationAppliedVolts.getValueAsDouble();
