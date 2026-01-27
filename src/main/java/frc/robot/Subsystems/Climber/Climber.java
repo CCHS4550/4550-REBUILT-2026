@@ -58,7 +58,7 @@ public class Climber extends SubsystemBase {
 
       Make sure to wait until the climber actually reaches the target height before changing the state
    */
-  public boolean isMoving() {
+  public boolean isAtTarget() {
     return atGoal;
   }
   public void setState(ClimberWantedState state){
