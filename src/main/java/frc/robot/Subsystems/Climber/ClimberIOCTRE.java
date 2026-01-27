@@ -9,7 +9,6 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.*;
 import frc.robot.Config.BruinRobotConfig;
-import frc.robot.Subsystems.Climber.Climber.ClimberState;
 import frc.robot.Util.Phoenix6Util;
 
 public class ClimberIOCTRE implements ClimberIO {
@@ -124,24 +123,12 @@ public class ClimberIOCTRE implements ClimberIO {
   @Override
   public void setVoltage(double voltage) {
     rightMotor.setVoltage(voltage);
+    leftMotor.setVoltage(voltage);
   }
 
   @Override
   public void setHeight(double height) {
     rightMotor.setControl(new MotionMagicVoltage(heightToRotations(height)));
-  }
-
-  @Override
-  public void goToPosition(ClimberState pos) {
-    switch (pos) {
-      case EXTENDED:
-        rightMotor.setControl(new MotionMagicVoltage(heightToRotations(1)));
-        // replace 1 with extended length
-        break;
-      case RETRACTED:
-        rightMotor.setControl(new MotionMagicVoltage(heightToRotations(0)));
-        // replace 0 with retracted length
-        break;
-    }
+    leftMotor.setControl(new MotionMagicVoltage(heightToRotations(height)));
   }
 }
