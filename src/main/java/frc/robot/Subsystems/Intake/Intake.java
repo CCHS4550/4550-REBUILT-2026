@@ -1,49 +1,71 @@
 package frc.robot.Subsystems.Intake;
 
-public class Intake {
-    public enum WantedState {
-        INTAKING,
-        MOVINGUP,
-        MOVINGDOWN,
-        IDLE
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+public class Intake extends SubsystemBase {
+  public enum WantedState {
+    INTAKING,
+    MOVINGUP,
+    MOVINGDOWN,
+    IDLE
+  }
+
+  public enum SystemState {
+    INTAKING,
+    MOVINGUP,
+    MOVINGDOWN,
+    IDLE
+  }
+
+  private SystemState systemState = SystemState.IDLE;
+  private WantedState wantedState = WantedState.IDLE;
+
+  private final IntakeIO intakeIO;
+
+  private IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
+
+  public Intake(IntakeIO intakeIO) {
+    this.intakeIO = intakeIO;
+  }
+
+  private SystemState handleStateTransition() {
+    return switch (wantedState) {
+      case MOVINGUP -> SystemState.MOVINGUP;
+      case MOVINGDOWN -> SystemState.MOVINGDOWN;
+      case INTAKING -> SystemState.INTAKING;
+
+      default -> SystemState.IDLE;
+    };
+  }
+
+  private void applyStates() {
+    switch (systemState) {
+      default:
+        // case IDLE:
+        // break;
+      case INTAKING:
+        intakeIO.setSpinnerVoltage(10.0);
+        break;
+        // Make the intake (extension) rotate
+
+      case MOVINGUP:
+        intakeIO.setExtensionVoltage(10.0);
+        break;
+      case MOVINGDOWN:
+        intakeIO.setExtensionVoltage(-10.0);
+        break;
     }
+  }
 
-    public enum SystemState {
-        INTAKING,
-        MOVINGUP,
-        MOVINGDOWN,
-        IDLE
-    }
+  public void setState(WantedState state) {
+    this.wantedState = state;
+  }
 
-    private SystemState handleStateTransition() {
-      return switch (wantedState) {
-        case MOVINGUP -> SystemState.MOVINGUP;
-        case MOVINGDOWN-> SystemState.MOVINGDOWN;
-        case INTAKING -> SystemState.INTAKING;
+  @Override
+  public void periodic() {
+    intakeIO.updateInputs(inputs);
+    systemState = handleStateTransition();
 
-        default -> SystemState.IDLE;
-        };
-    }
-
-    private void applyStates() {
-        switch (systemState) {
-        default:
-        //case IDLE:
-            //break;
-        case INTAKING:
-            //Make the intake (extension) rotate
-
-        case MOVINGUP:
-            //Make spinning motor move up
-        case MOVINGDOWN:
-            //Make spinning moter move down
-        }
-    }
-
-    public void setState(WantedState state) {
-        this.wantedState = state;
-    }
-
-    private SystemState systemState = SystemState.IDLE;
-    private WantedState wantedState = WantedState.IDLE;
+    applyStates();
+  }
 }
