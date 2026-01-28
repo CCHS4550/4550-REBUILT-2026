@@ -11,12 +11,12 @@ public class Kicker extends SubsystemBase {
 
   public enum KickerSystemState {
     IDLE,
-    KICK
+    RUNNING
   }
 
   public enum KickerWantedState {
     IDLE,
-    KICK
+    RUNNING
   }
 
   private KickerSystemState systemState = KickerSystemState.IDLE;
@@ -31,14 +31,18 @@ public class Kicker extends SubsystemBase {
   @Override
   public void periodic() {
     kickerIO.updateInputs(kickerInputs);
+
+    systemState = handleStateTransitions();
+
+    applyStates();
   }
 
   public KickerSystemState handleStateTransitions() {
     switch (wantedState) {
       case IDLE:
         return KickerSystemState.IDLE;
-      case KICK:
-        return KickerSystemState.KICK;
+      case RUNNING:
+        return KickerSystemState.RUNNING;
       default:
         return KickerSystemState.IDLE;
     }
@@ -49,11 +53,17 @@ public class Kicker extends SubsystemBase {
       case IDLE:
         atGoal = true;
         break;
-      case KICK:
+      case RUNNING:
         // kicking logic
+        kickerIO.setVoltage(9); // change to reasonable voltage
         break;
+
       default:
         break;
     }
+  }
+
+  public void setWantedState(KickerWantedState wantedState) {
+    this.wantedState = wantedState;
   }
 }
