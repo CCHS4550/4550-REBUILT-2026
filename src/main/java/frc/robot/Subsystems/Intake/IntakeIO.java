@@ -26,13 +26,11 @@ public interface IntakeIO {
 
   public default void updateInputs(IntakeIOInputs inputs) {}
 
-  public default void setRadPerSec(double radPerSec) {}
-
-  public default void setRotPerSec(double rotPerSec) {}
+  public default void setExtensionMotorPositionRad(double rad) {}
 
   public default void setSpinnerVoltage(double voltage) {}
 
-  public default void setExtensionVoltage(double voltage) {}
+  public default void setSpinnerSpeed(double speedRadPerSec) {}
 
-  public default void setSpeed(double speed) {}
+  public default void setExtensionVoltage(double voltage) {}
 }
