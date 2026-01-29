@@ -1,5 +1,6 @@
 package frc.robot.Subsystems.Kicker;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -65,6 +66,17 @@ public class KickerIOCTRE implements KickerIO {
 
   @Override
   public void updateInputs(KickerIOInputs inputs) {
+    BaseStatusSignal.refreshAll(
+      kickerAppliedVolts,
+      kickerSupplyCurrentAmps,
+      kickerStatorCurrentAmps,
+      kickerVelocityRotPerSec,
+      kickerAccelerationRotPerSecSquared,
+      kickerMotorTemp
+    );
+
+
+
     inputs.kickerVoltage = kickerAppliedVolts.getValueAsDouble();
     inputs.kickerSupplyCurrent = kickerSupplyCurrentAmps.getValueAsDouble();
     inputs.kickerStatorCurrent = kickerStatorCurrentAmps.getValueAsDouble();
