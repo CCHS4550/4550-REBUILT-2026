@@ -88,10 +88,10 @@ public class BruinRobotConfig {
   // CANcoder offsets of the swerve modules
 
   // TODO: find and fill
-  private final double FRONT_LEFT_STEER_OFFSET_ROTATIONS = 0.14697265625;
-  private final double FRONT_RIGHT_STEER_OFFSET_ROTATIONS = -0.382080078125;
-  private final double BACK_LEFT_STEER_OFFSET_ROTATIONS = -0.312744140625;
-  private final double BACK_RIGHT_STEER_OFFSET_ROTATIONS = 0.020263671875;
+  private final double FRONT_LEFT_STEER_OFFSET_ROTATIONS = 0.141845703125;
+  private final double FRONT_RIGHT_STEER_OFFSET_ROTATIONS = -0.37451171875;
+  private final double BACK_LEFT_STEER_OFFSET_ROTATIONS = -0.310302734375;
+  private final double BACK_RIGHT_STEER_OFFSET_ROTATIONS = 0.022705078125;
 
   // TODO: find and fill
   private final int GYRO_MOUNTING_ANGLE = 0;
@@ -135,7 +135,7 @@ public class BruinRobotConfig {
             .withDriveMotorGearRatio(DRIVE_GEAR_RATIO)
             .withSteerMotorGearRatio(STEER_GEAR_RATIO)
             .withCouplingGearRatio(COUPLING_GEAR_RATIO)
-            .withDriveMotorInverted(true)
+            .withDriveMotorInverted(true) // true
             .withSteerMotorInverted(false)
             .withEncoderInverted(false)
             .withEncoderOffset(FRONT_LEFT_STEER_OFFSET_ROTATIONS)
@@ -144,7 +144,7 @@ public class BruinRobotConfig {
             .withDriveMotorClosedLoopOutput(SwerveModuleConstants.ClosedLoopOutputType.Voltage)
             .withSteerMotorClosedLoopOutput(SwerveModuleConstants.ClosedLoopOutputType.Voltage)
             .withDriveMotorGains(new ConfigureSlot0Gains(0.1, 0, 0, 0.11464878310546875, 0))
-            .withSteerMotorGains(new ConfigureSlot0Gains(100.0, 0.0, 0.5, 0.1, 0.3))
+            .withSteerMotorGains(new ConfigureSlot0Gains(70.0, 0.0, 0.5, 0.1, 0.3))
             .withDriveMotorType(SwerveModuleConstants.DriveMotorArrangement.TalonFX_Integrated)
             .withSteerMotorType(SwerveModuleConstants.SteerMotorArrangement.TalonFX_Integrated)
             .withDriveMotorInitialConfigs(new TalonFXConfiguration())
@@ -177,7 +177,7 @@ public class BruinRobotConfig {
             .withDriveMotorClosedLoopOutput(SwerveModuleConstants.ClosedLoopOutputType.Voltage)
             .withSteerMotorClosedLoopOutput(SwerveModuleConstants.ClosedLoopOutputType.Voltage)
             .withDriveMotorGains(new ConfigureSlot0Gains(0.1, 0, 0, 0.11464878310546875, 0))
-            .withSteerMotorGains(new ConfigureSlot0Gains(100.0, 0.0, 0.5, 0.1, 0.3))
+            .withSteerMotorGains(new ConfigureSlot0Gains(70.0, 0.0, 0.5, 0.1, 0.3))
             .withDriveMotorType(SwerveModuleConstants.DriveMotorArrangement.TalonFX_Integrated)
             .withSteerMotorType(SwerveModuleConstants.SteerMotorArrangement.TalonFX_Integrated)
             .withDriveMotorInitialConfigs(new TalonFXConfiguration())
@@ -201,7 +201,7 @@ public class BruinRobotConfig {
             .withDriveMotorGearRatio(DRIVE_GEAR_RATIO)
             .withSteerMotorGearRatio(STEER_GEAR_RATIO)
             .withCouplingGearRatio(COUPLING_GEAR_RATIO)
-            .withDriveMotorInverted(true)
+            .withDriveMotorInverted(true) // true
             .withSteerMotorInverted(false)
             .withEncoderInverted(false)
             .withEncoderOffset(BACK_LEFT_STEER_OFFSET_ROTATIONS)
@@ -210,7 +210,7 @@ public class BruinRobotConfig {
             .withDriveMotorClosedLoopOutput(SwerveModuleConstants.ClosedLoopOutputType.Voltage)
             .withSteerMotorClosedLoopOutput(SwerveModuleConstants.ClosedLoopOutputType.Voltage)
             .withDriveMotorGains(new ConfigureSlot0Gains(0.1, 0, 0, 0.11464878310546875, 0))
-            .withSteerMotorGains(new ConfigureSlot0Gains(100.0, 0.0, 0.5, 0.1, 0.3))
+            .withSteerMotorGains(new ConfigureSlot0Gains(70.0, 0.0, 0.5, 0.1, 0.3))
             .withDriveMotorType(SwerveModuleConstants.DriveMotorArrangement.TalonFX_Integrated)
             .withSteerMotorType(SwerveModuleConstants.SteerMotorArrangement.TalonFX_Integrated)
             .withDriveMotorInitialConfigs(new TalonFXConfiguration())
@@ -243,7 +243,7 @@ public class BruinRobotConfig {
             .withDriveMotorClosedLoopOutput(SwerveModuleConstants.ClosedLoopOutputType.Voltage)
             .withSteerMotorClosedLoopOutput(SwerveModuleConstants.ClosedLoopOutputType.Voltage)
             .withDriveMotorGains(new ConfigureSlot0Gains(0.1, 0, 0, 0.11464878310546875, 0))
-            .withSteerMotorGains(new ConfigureSlot0Gains(100.0, 0.0, 0.5, 0.1, 0.3))
+            .withSteerMotorGains(new ConfigureSlot0Gains(70.0, 0.0, 0.5, 0.1, 0.3))
             .withDriveMotorType(SwerveModuleConstants.DriveMotorArrangement.TalonFX_Integrated)
             .withSteerMotorType(SwerveModuleConstants.SteerMotorArrangement.TalonFX_Integrated)
             .withDriveMotorInitialConfigs(new TalonFXConfiguration())

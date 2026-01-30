@@ -340,8 +340,8 @@ public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestCons
                 .withVelocityX(calculateSpeedsBasedOnJoystickInputs().vxMetersPerSecond)
                 .withVelocityY(calculateSpeedsBasedOnJoystickInputs().vyMetersPerSecond)
                 .withTargetDirection(desiredRotationForRotationLockState)
-                .withDeadband(1.0)
-                .withHeadingPID(0.1, 0.0, 0.0)
+                .withHeadingPID(0.2, 0.0, 0.0)
+                .withTargetRateFeedforward(0.5)
                 .withMaxAbsRotationalRate(0.5));
         break;
       case DRIVE_TO_POINT:
