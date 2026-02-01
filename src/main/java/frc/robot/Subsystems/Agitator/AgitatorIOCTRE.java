@@ -13,6 +13,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Config.BruinRobotConfig;
+import frc.robot.Util.Phoenix6Util;
 
 public class AgitatorIOCTRE implements AgitatorIO {
   private TalonFX agitatorMotor;
@@ -37,7 +38,7 @@ public class AgitatorIOCTRE implements AgitatorIO {
     agitatorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     agitatorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
-    agitatorMotor.getConfigurator().apply(agitatorConfig);
+    Phoenix6Util.applyAndCheckConfiguration(agitatorMotor, agitatorConfig, 5);
 
     agitatorMotor.setPosition(0.0);
     agitatorPositionRotations = agitatorMotor.getPosition();
