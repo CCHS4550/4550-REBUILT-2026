@@ -2,12 +2,10 @@ package frc.robot.Subsystems.Intake;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
@@ -26,12 +24,7 @@ public class IntakeIOCTRE implements IntakeIO {
   private TalonFXConfiguration spinnerConfig;
   private TalonFXConfiguration extensionConfig;
 
-  private TalonFXConfiguration intakeConfig;
-  private MotionMagicConfigs motionMagicConfigSpinner;
-  private MotionMagicConfigs motionMagicConfigExtension;
-  private CANcoderConfiguration encoderConfig;
-  private MotionMagicVelocityVoltage spinnerController;
-  private MotionMagicVoltage extensionController;
+  private MotionMagicVoltage extensionController = new MotionMagicVoltage(0).withSlot(0);
 
   private final StatusSignal<Voltage> spinnerAppliedVolts;
   private final StatusSignal<Current> spinnerSupplyCurrentAmps;
@@ -62,15 +55,6 @@ public class IntakeIOCTRE implements IntakeIO {
     spinnerConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
     spinnerConfig.CurrentLimits.StatorCurrentLimit = 90.0;
 
-    // do we really need PID for a roller idk
-    spinnerConfig.Slot0.kP = 0.0;
-    spinnerConfig.Slot0.kI = 0.0;
-    spinnerConfig.Slot0.kD = 0.0;
-
-    spinnerConfig.MotionMagic.MotionMagicCruiseVelocity = 2000;
-    spinnerConfig.MotionMagic.MotionMagicAcceleration = 100;
-    motionMagicConfigSpinner = spinnerConfig.MotionMagic;
-
     spinnerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     spinnerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
@@ -80,9 +64,15 @@ public class IntakeIOCTRE implements IntakeIO {
     extensionConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
     extensionConfig.CurrentLimits.StatorCurrentLimit = 90.0;
 
+    extensionConfig.Slot0.kP = 0.0;
+    extensionConfig.Slot0.kI = 0.0;
+    extensionConfig.Slot0.kD = 0.0;
+    extensionConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
+    extensionConfig.Slot0.kS = 0.0;
+    extensionConfig.Slot0.kA = 0.0;
+    extensionConfig.Slot0.kG = 0.0;
     extensionConfig.MotionMagic.MotionMagicCruiseVelocity = 1000;
     extensionConfig.MotionMagic.MotionMagicAcceleration = 100;
-    motionMagicConfigExtension = extensionConfig.MotionMagic;
 
     extensionConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     extensionConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
@@ -90,7 +80,7 @@ public class IntakeIOCTRE implements IntakeIO {
     Phoenix6Util.applyAndCheckConfiguration(spinnerIntakeMotor, spinnerConfig, 5);
     Phoenix6Util.applyAndCheckConfiguration(extensionIntakeMotor, extensionConfig, 5);
 
-    // spinnerIntakeMotor.setPosition(0.0);
+    spinnerIntakeMotor.setPosition(0.0);
     spinnerAppliedVolts = spinnerIntakeMotor.getMotorVoltage();
     spinnerSupplyCurrentAmps = spinnerIntakeMotor.getSupplyCurrent();
     spinnerStatorCurrentAmps = spinnerIntakeMotor.getStatorCurrent();
@@ -98,7 +88,7 @@ public class IntakeIOCTRE implements IntakeIO {
     spinnerAccelerationRotationsPerSecSquared = spinnerIntakeMotor.getAcceleration();
     spinnerMotorTemp = spinnerIntakeMotor.getDeviceTemp();
 
-    // extensionIntakeMotor.setPosition(0.0);
+    extensionIntakeMotor.setPosition(0.0);
     extensionAppliedVolts = extensionIntakeMotor.getMotorVoltage();
     extensionSupplyCurrentAmps = extensionIntakeMotor.getSupplyCurrent();
     extensionStatorCurrentAmps = extensionIntakeMotor.getStatorCurrent();
@@ -139,30 +129,30 @@ public class IntakeIOCTRE implements IntakeIO {
     inputs.spinnerIntakeSupplyCurrent = spinnerSupplyCurrentAmps.getValueAsDouble();
     inputs.spinnerIntakeStatorCurrent = spinnerStatorCurrentAmps.getValueAsDouble();
     inputs.spinnerIntakeVelocityRadPerSec =
-        Units.rotationsToRadians(spinnerVelocityRotationsPerSec.getValueAsDouble()); // Update with constant
+        Units.rotationsToRadians(
+            spinnerVelocityRotationsPerSec.getValueAsDouble()); // Update with constant
     inputs.spinnerIntakeAccelRadPerSecSquared =
         Units.rotationsToRadians(spinnerAccelerationRotationsPerSecSquared.getValueAsDouble());
     inputs.spinnerIntakeTemperature = spinnerMotorTemp.getValueAsDouble();
   }
 
-  // Rotations
+  @Override
   public void setExtensionMotorPositionRad(double rad) {
-
-    extensionIntakeMotor.setControl(extensionConfig.withPosition(Units.radiansToRotations(rad)));
-  }
-
-  @Override
-  public void setSpinnerSpeed(double speedRadPerSec) {
-    spinnerIntakeMotor.setControl(spinnerController.withVelocity(speedRadPerSec));
-  }
-
-  @Override
-  public void setSpinnerVoltage(double voltage) {
-    spinnerIntakeMotor.setVoltage(voltage);
+    extensionIntakeMotor.setControl(extensionController.withPosition(rad));
   }
 
   @Override
   public void setExtensionVoltage(double voltage) {
     extensionIntakeMotor.setVoltage(voltage);
+  }
+
+  @Override
+  public void tareExtensionEncoder() {
+    extensionIntakeMotor.setPosition(0);
+  }
+
+  @Override
+  public void setSpinnerVoltage(double voltage) {
+    spinnerIntakeMotor.setVoltage(voltage);
   }
 }

@@ -4,13 +4,15 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Intake extends SubsystemBase {
   public enum WantedState {
-    INTAKING,
+    EXTENDED_INTAKING,
+    EXTENDED_PASSIVE,
     STOWED,
     IDLE
   }
 
   public enum SystemState {
-    INTAKING,
+    EXTENDED_INTAKING,
+    EXTENDED_PASSIVE,
     STOWED,
     IDLE
   }
@@ -30,7 +32,8 @@ public class Intake extends SubsystemBase {
     return switch (wantedState) {
       case IDLE -> SystemState.IDLE;
       case STOWED -> SystemState.STOWED;
-      case INTAKING -> SystemState.INTAKING;
+      case EXTENDED_INTAKING -> SystemState.EXTENDED_INTAKING;
+      case EXTENDED_PASSIVE -> SystemState.EXTENDED_PASSIVE;
 
       default -> SystemState.IDLE;
     };
@@ -42,21 +45,16 @@ public class Intake extends SubsystemBase {
         intakeIO.setSpinnerVoltage(0);
         intakeIO.setExtensionVoltage(0);
         break;
-
-      case INTAKING:
+      case EXTENDED_INTAKING:
         intakeIO.setExtensionMotorPositionRad((Math.PI / 2));
-        intakeIO.setSpinnerSpeed(1500);
+        intakeIO.setSpinnerVoltage(3);
         break;
-        // Make the intake (extension) rotate
-
+      case EXTENDED_PASSIVE:
+        intakeIO.setExtensionMotorPositionRad((Math.PI) / 2);
+        intakeIO.setSpinnerVoltage(0);
       case STOWED:
         intakeIO.setExtensionMotorPositionRad(0);
-        intakeIO.setSpinnerSpeed(0);
-        break;
-
-      default:
         intakeIO.setSpinnerVoltage(0);
-        intakeIO.setExtensionVoltage(0);
         break;
     }
   }

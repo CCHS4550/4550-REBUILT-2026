@@ -28,9 +28,9 @@ public interface IntakeIO {
 
   public default void setExtensionMotorPositionRad(double rad) {}
 
-  public default void setSpinnerVoltage(double voltage) {}
-
-  public default void setSpinnerSpeed(double speedRadPerSec) {}
-
   public default void setExtensionVoltage(double voltage) {}
+
+  public default void tareExtensionEncoder() {}
+
+  public default void setSpinnerVoltage(double voltage) {}
 }
