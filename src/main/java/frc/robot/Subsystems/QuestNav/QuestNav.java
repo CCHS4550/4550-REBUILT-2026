@@ -11,7 +11,6 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robotstate;
-import frc.robot.Subsystems.Vision.Vision;
 import gg.questnav.questnav.PoseFrame;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,7 +18,7 @@ import org.littletonrobotics.junction.Logger;
 
 // this class listens to Vision and robot state for occasionally forced pose resets
 // this class implements drive as a listener to periodically update
-public class QuestNav extends SubsystemBase implements Vision.VisionConsumer {
+public class QuestNav extends SubsystemBase {
   private final QuestConsumer consumer;
 
   // logging and interaction with the hardware
@@ -125,15 +124,5 @@ public class QuestNav extends SubsystemBase implements Vision.VisionConsumer {
         Pose2d questRobotPoseMeters,
         double timestampSeconds,
         Matrix<N3, N1> questMeasurementStdDevs);
-  }
-
-  @Override
-  public void accept(
-      Pose2d visionRobotPoseMeters,
-      double timestampSeconds,
-      Matrix<N3, N1> visionMeasurementStdDevs) {
-    Pose3d transformedPose = new Pose3d(visionRobotPoseMeters).transformBy(inputs.robotToQuest);
-
-    setPose(transformedPose.toPose2d());
   }
 }
