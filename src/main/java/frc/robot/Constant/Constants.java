@@ -57,4 +57,11 @@ public final class Constants {
     public static final double ELEVATION_GEAR_RATIO = (60.0 / 12.0) * (60.0 / 16.0) * (58.0 / 9.0);
     public static final double ELEVATION_POSITION_COEFFICIENT = 2 * Math.PI * ELEVATION_GEAR_RATIO;
   }
+
+  public static final class VisionConstants {
+    public static final double linearStdDevBaseline = 0.02;
+    public static final double angularStdDevBaseline = 0.06;
+    public static final double maxAmbiguity = 0.1;
+    public static final double maxZError = 0.75;
+  }
 }
