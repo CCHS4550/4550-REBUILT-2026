@@ -44,6 +44,9 @@ public class BruinRobotConfig {
 
   public final CanDeviceID ELEVATION_CANCODER = new CanDeviceID(-1, CANIVORE_CANBUS);
 
+  public final CanDeviceID INTAKE_ROLLER = new CanDeviceID(-1, CANIVORE_CANBUS);
+  public final CanDeviceID INTAKE_EXTENSION = new CanDeviceID(-1, CANIVORE_CANBUS);
+
   /**
    * Wheel radius in meters. Accuracy in these measurements affects wheel odometry which measures
    * distance as a function of the number of rotations * wheel circumference.
