@@ -48,6 +48,7 @@ public class ClimberIOCTRE implements ClimberIO {
     leftConfig.Slot0.kD = bruinRobotConfig.getClimberConfig().climberKd;
     leftConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     leftConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    
 
     leftConfig.MotionMagic.MotionMagicCruiseVelocity = 0.4;
     leftConfig.MotionMagic.MotionMagicAcceleration = 0.3;
@@ -117,13 +118,13 @@ public class ClimberIOCTRE implements ClimberIO {
   }
 
   public double heightToRotations(double height) {
-    return height; // math for gear ratio and stuff
+    
   }
 
   @Override
-  public void setVoltage(double voltage) {
-    rightMotor.setVoltage(voltage);
-    leftMotor.setVoltage(voltage);
+  public void setVoltage(Voltage voltage) {
+    rightMotor.setVoltage(voltage.baseUnitMagnitude());
+    leftMotor.setVoltage(voltage.baseUnitMagnitude());
   }
 
   @Override

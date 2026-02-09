@@ -1,12 +1,16 @@
 package frc.robot.Subsystems.Climber;
 
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Subsystems.Climber.ClimberIO;
 
 public class Climber extends SubsystemBase {
   private ClimberIO climberIO;
 
   private ClimberIOInputsAutoLogged climberInputs = new ClimberIOInputsAutoLogged();
+  
+  private final SysIdRoutine rotationToHeightConv;
 
   public enum ClimberWantedState {
     L1,
@@ -27,6 +31,17 @@ public class Climber extends SubsystemBase {
 
   public Climber(ClimberIO io){
     climberIO = io;
+
+    rotationToHeightConv = 
+      new SysIdRoutine(
+        new SysIdRoutine.Config(),
+        new SysIdRoutine.Mechanism(
+            climberIO::setVoltage,
+            log -> {},
+            this
+        )
+    );
+
   }
 
   @Override

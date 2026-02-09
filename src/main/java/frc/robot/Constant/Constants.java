@@ -51,6 +51,7 @@ public final class Constants {
     public static final Time STEER_TIMEOUT = null;
 
     public static final double DRIVE_GEAR_RATIO = 6.38;
+    public static final double CLIMB_GEAR_RATIO = 0.00;
   }
 
   public static final class TurretConstants {
