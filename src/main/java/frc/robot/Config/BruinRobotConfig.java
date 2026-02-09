@@ -18,23 +18,25 @@ public class BruinRobotConfig {
   private static final CANBus CANIVORE_CANBUS = new CANBus("CANivore");
 
   // Insert can ID's
-  public final CanDeviceID GYRO = new CanDeviceID(-1);
+  public final CanDeviceID GYRO = new CanDeviceID(13);
 
-  public final CanDeviceID FRONT_LEFT_DRIVE_MOTOR = new CanDeviceID(-1);
-  public final CanDeviceID FRONT_LEFT_STEER_MOTOR = new CanDeviceID(-1);
-  public final CanDeviceID FRONT_LEFT_STEER_ENCODER = new CanDeviceID(-1);
+  public final CanDeviceID FRONT_LEFT_DRIVE_MOTOR = new CanDeviceID(1);
+  public final CanDeviceID FRONT_LEFT_STEER_MOTOR = new CanDeviceID(2);
+  public final CanDeviceID FRONT_LEFT_STEER_ENCODER = new CanDeviceID(3);
 
-  public final CanDeviceID FRONT_RIGHT_DRIVE_MOTOR = new CanDeviceID(-1);
-  public final CanDeviceID FRONT_RIGHT_STEER_MOTOR = new CanDeviceID(-1);
-  public final CanDeviceID FRONT_RIGHT_STEER_ENCODER = new CanDeviceID(-1);
+  public final CanDeviceID FRONT_RIGHT_DRIVE_MOTOR = new CanDeviceID(4);
+  public final CanDeviceID FRONT_RIGHT_STEER_MOTOR = new CanDeviceID(5);
+  public final CanDeviceID FRONT_RIGHT_STEER_ENCODER = new CanDeviceID(6);
 
-  public final CanDeviceID BACK_LEFT_DRIVE_MOTOR = new CanDeviceID(-1);
-  public final CanDeviceID BACK_LEFT_STEER_MOTOR = new CanDeviceID(-1);
-  public final CanDeviceID BACK_LEFT_STEER_ENCODER = new CanDeviceID(-1);
+  public final CanDeviceID BACK_LEFT_DRIVE_MOTOR = new CanDeviceID(7);
+  public final CanDeviceID BACK_LEFT_STEER_MOTOR = new CanDeviceID(8);
+  public final CanDeviceID BACK_LEFT_STEER_ENCODER = new CanDeviceID(9);
 
-  public final CanDeviceID BACK_RIGHT_DRIVE_MOTOR = new CanDeviceID(-1);
-  public final CanDeviceID BACK_RIGHT_STEER_MOTOR = new CanDeviceID(-1);
-  public final CanDeviceID BACK_RIGHT_STEER_ENCODER = new CanDeviceID(-1);
+  public final CanDeviceID BACK_RIGHT_DRIVE_MOTOR = new CanDeviceID(10);
+  public final CanDeviceID BACK_RIGHT_STEER_MOTOR = new CanDeviceID(11);
+  public final CanDeviceID BACK_RIGHT_STEER_ENCODER = new CanDeviceID(12);
+
+  public final CanDeviceID KICKER_MOTOR = new CanDeviceID(-1);
 
   public final CanDeviceID ROTATION_MOTOR = new CanDeviceID(-1, CANIVORE_CANBUS);
   public final CanDeviceID ELEVATION_MOTOR = new CanDeviceID(-1, CANIVORE_CANBUS);
@@ -43,23 +45,20 @@ public class BruinRobotConfig {
   public final CanDeviceID ELEVATION_CANCODER = new CanDeviceID(-1, CANIVORE_CANBUS);
   public final CanDeviceID ROTATION_CANCODER = new CanDeviceID(-1, CANIVORE_CANBUS);
 
+  public final CanDeviceID INTAKE_ROLLER = new CanDeviceID(-1, CANIVORE_CANBUS);
+  public final CanDeviceID INTAKE_EXTENSION = new CanDeviceID(-1, CANIVORE_CANBUS);
+
   /**
    * Wheel radius in meters. Accuracy in these measurements affects wheel odometry which measures
    * distance as a function of the number of rotations * wheel circumference.
    */
-
-  // TODO: find and fill
-  private final double WHEEL_RADIUS_METERS = 99999999;
+  private final double WHEEL_RADIUS_METERS = Units.inchesToMeters(2);
 
   /** Ratio between the drive motor shaft and the output shaft the wheel is mounted on. */
-
-  // TODO: find and fill
-  private final double DRIVE_GEAR_RATIO = 9999999999.999;
+  private final double DRIVE_GEAR_RATIO = 6.026785714285714;
 
   /** Ratio between the steer motor shaft and the steer output shaft. */
-
-  // TODO: find and fill
-  private final double STEER_GEAR_RATIO = 99999999999999.9999999999;
+  private final double STEER_GEAR_RATIO = 26;
 
   /**
    * The coupled gear ratio between the CanCoder and the drive motor. Every 1 rotation of the steer
@@ -69,13 +68,15 @@ public class BruinRobotConfig {
   // TODO: find and fill
   private final double COUPLING_GEAR_RATIO = 0.0;
 
+  // 3.857142857142857
+
   /**
    * Wheelbase length is the distance between the front and back wheels. Positive x values represent
    * moving towards the front of the robot
    */
 
   // TODO: find and fill
-  private final double WHEELBASE_LENGTH_METERS = 9999999999.99999;
+  private final double WHEELBASE_LENGTH_METERS = Units.inchesToMeters(27.25);
 
   /**
    * Wheel track width is the distance between the left and right wheels. Positive y values
@@ -83,20 +84,20 @@ public class BruinRobotConfig {
    */
 
   // TODO: find and fill
-  private final double WHEEL_TRACK_WIDTH_METERS = 9999999999999999.9999;
+  private final double WHEEL_TRACK_WIDTH_METERS = Units.inchesToMeters(27.25);
 
   /** The maximum speed of the robot in meters per second. */
 
   // TODO: find and fill
-  private final double MAX_SPEED_METERS_PER_SECOND = 999.9999;
+  private final double MAX_SPEED_METERS_PER_SECOND = 5;
 
   // CANcoder offsets of the swerve modules
 
   // TODO: find and fill
-  private final double FRONT_LEFT_STEER_OFFSET_ROTATIONS = 0.0;
-  private final double FRONT_RIGHT_STEER_OFFSET_ROTATIONS = 0.0;
-  private final double BACK_LEFT_STEER_OFFSET_ROTATIONS = 0.0;
-  private final double BACK_RIGHT_STEER_OFFSET_ROTATIONS = 0.0;
+  private final double FRONT_LEFT_STEER_OFFSET_ROTATIONS = 0.141845703125;
+  private final double FRONT_RIGHT_STEER_OFFSET_ROTATIONS = -0.37451171875;
+  private final double BACK_LEFT_STEER_OFFSET_ROTATIONS = -0.310302734375;
+  private final double BACK_RIGHT_STEER_OFFSET_ROTATIONS = 0.022705078125;
 
   // TODO: find and fill
   private final int GYRO_MOUNTING_ANGLE = 0;
@@ -112,8 +113,8 @@ public class BruinRobotConfig {
   private final TurretConfig turretConfig;
 
   // PathPlanner config constants
-  private final double ROBOT_MASS_KG = 99999999999999.99999;
-  private final double ROBOT_MOI = 999999.99999999;
+  private final double ROBOT_MASS_KG = 25.338;
+  private final double ROBOT_MOI = 6.7;
   private final double WHEEL_COF = 1.2;
   private RobotConfig PP_CONFIG;
 
@@ -140,16 +141,16 @@ public class BruinRobotConfig {
             .withDriveMotorGearRatio(DRIVE_GEAR_RATIO)
             .withSteerMotorGearRatio(STEER_GEAR_RATIO)
             .withCouplingGearRatio(COUPLING_GEAR_RATIO)
-            .withDriveMotorInverted(true)
-            .withSteerMotorInverted(true)
+            .withDriveMotorInverted(true) // true
+            .withSteerMotorInverted(false)
             .withEncoderInverted(false)
             .withEncoderOffset(FRONT_LEFT_STEER_OFFSET_ROTATIONS)
             .withLocationX(WHEELBASE_LENGTH_METERS / 2)
             .withLocationY(WHEEL_TRACK_WIDTH_METERS / 2)
             .withDriveMotorClosedLoopOutput(SwerveModuleConstants.ClosedLoopOutputType.Voltage)
             .withSteerMotorClosedLoopOutput(SwerveModuleConstants.ClosedLoopOutputType.Voltage)
-            .withDriveMotorGains(new ConfigureSlot0Gains(0, 0, 0, 0.11464878310546875, 0))
-            .withSteerMotorGains(new ConfigureSlot0Gains(100.0, 0.0, 0.0, 0.0, 0.0))
+            .withDriveMotorGains(new ConfigureSlot0Gains(0.1, 0, 0, 0.11464878310546875, 0))
+            .withSteerMotorGains(new ConfigureSlot0Gains(70.0, 0.0, 0.5, 0.1, 0.3))
             .withDriveMotorType(SwerveModuleConstants.DriveMotorArrangement.TalonFX_Integrated)
             .withSteerMotorType(SwerveModuleConstants.SteerMotorArrangement.TalonFX_Integrated)
             .withDriveMotorInitialConfigs(new TalonFXConfiguration())
@@ -173,16 +174,16 @@ public class BruinRobotConfig {
             .withDriveMotorGearRatio(DRIVE_GEAR_RATIO)
             .withSteerMotorGearRatio(STEER_GEAR_RATIO)
             .withCouplingGearRatio(COUPLING_GEAR_RATIO)
-            .withDriveMotorInverted(true)
-            .withSteerMotorInverted(true)
+            .withDriveMotorInverted(false)
+            .withSteerMotorInverted(false)
             .withEncoderInverted(false)
             .withEncoderOffset(FRONT_RIGHT_STEER_OFFSET_ROTATIONS)
             .withLocationX(WHEELBASE_LENGTH_METERS / 2)
             .withLocationY(-WHEEL_TRACK_WIDTH_METERS / 2)
             .withDriveMotorClosedLoopOutput(SwerveModuleConstants.ClosedLoopOutputType.Voltage)
             .withSteerMotorClosedLoopOutput(SwerveModuleConstants.ClosedLoopOutputType.Voltage)
-            .withDriveMotorGains(new ConfigureSlot0Gains(0, 0, 0, 0.11464878310546875, 0))
-            .withSteerMotorGains(new ConfigureSlot0Gains(100.0, 0.0, 0.0, 0.0, 0.0))
+            .withDriveMotorGains(new ConfigureSlot0Gains(0.1, 0, 0, 0.11464878310546875, 0))
+            .withSteerMotorGains(new ConfigureSlot0Gains(70.0, 0.0, 0.5, 0.1, 0.3))
             .withDriveMotorType(SwerveModuleConstants.DriveMotorArrangement.TalonFX_Integrated)
             .withSteerMotorType(SwerveModuleConstants.SteerMotorArrangement.TalonFX_Integrated)
             .withDriveMotorInitialConfigs(new TalonFXConfiguration())
@@ -206,16 +207,16 @@ public class BruinRobotConfig {
             .withDriveMotorGearRatio(DRIVE_GEAR_RATIO)
             .withSteerMotorGearRatio(STEER_GEAR_RATIO)
             .withCouplingGearRatio(COUPLING_GEAR_RATIO)
-            .withDriveMotorInverted(true)
-            .withSteerMotorInverted(true)
+            .withDriveMotorInverted(true) // true
+            .withSteerMotorInverted(false)
             .withEncoderInverted(false)
             .withEncoderOffset(BACK_LEFT_STEER_OFFSET_ROTATIONS)
             .withLocationX(-WHEELBASE_LENGTH_METERS / 2)
             .withLocationY(WHEEL_TRACK_WIDTH_METERS / 2)
             .withDriveMotorClosedLoopOutput(SwerveModuleConstants.ClosedLoopOutputType.Voltage)
             .withSteerMotorClosedLoopOutput(SwerveModuleConstants.ClosedLoopOutputType.Voltage)
-            .withDriveMotorGains(new ConfigureSlot0Gains(0, 0, 0, 0.11464878310546875, 0))
-            .withSteerMotorGains(new ConfigureSlot0Gains(100.0, 0.0, 0.0, 0.0, 0.0))
+            .withDriveMotorGains(new ConfigureSlot0Gains(0.1, 0, 0, 0.11464878310546875, 0))
+            .withSteerMotorGains(new ConfigureSlot0Gains(70.0, 0.0, 0.5, 0.1, 0.3))
             .withDriveMotorType(SwerveModuleConstants.DriveMotorArrangement.TalonFX_Integrated)
             .withSteerMotorType(SwerveModuleConstants.SteerMotorArrangement.TalonFX_Integrated)
             .withDriveMotorInitialConfigs(new TalonFXConfiguration())
@@ -239,16 +240,16 @@ public class BruinRobotConfig {
             .withDriveMotorGearRatio(DRIVE_GEAR_RATIO)
             .withSteerMotorGearRatio(STEER_GEAR_RATIO)
             .withCouplingGearRatio(COUPLING_GEAR_RATIO)
-            .withDriveMotorInverted(true)
-            .withSteerMotorInverted(true)
+            .withDriveMotorInverted(false)
+            .withSteerMotorInverted(false)
             .withEncoderInverted(false)
             .withEncoderOffset(BACK_RIGHT_STEER_OFFSET_ROTATIONS)
             .withLocationX(-WHEELBASE_LENGTH_METERS / 2)
             .withLocationY(-WHEEL_TRACK_WIDTH_METERS / 2)
             .withDriveMotorClosedLoopOutput(SwerveModuleConstants.ClosedLoopOutputType.Voltage)
             .withSteerMotorClosedLoopOutput(SwerveModuleConstants.ClosedLoopOutputType.Voltage)
-            .withDriveMotorGains(new ConfigureSlot0Gains(0, 0, 0, 0.11464878310546875, 0))
-            .withSteerMotorGains(new ConfigureSlot0Gains(100.0, 0.0, 0.0, 0.0, 0.0))
+            .withDriveMotorGains(new ConfigureSlot0Gains(0.1, 0, 0, 0.11464878310546875, 0))
+            .withSteerMotorGains(new ConfigureSlot0Gains(70.0, 0.0, 0.5, 0.1, 0.3))
             .withDriveMotorType(SwerveModuleConstants.DriveMotorArrangement.TalonFX_Integrated)
             .withSteerMotorType(SwerveModuleConstants.SteerMotorArrangement.TalonFX_Integrated)
             .withDriveMotorInitialConfigs(new TalonFXConfiguration())
