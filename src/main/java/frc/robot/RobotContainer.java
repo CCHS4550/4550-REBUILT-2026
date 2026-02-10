@@ -17,7 +17,7 @@ public class RobotContainer {
   public RobotContainer() {
     BruinRobotConfig config = new BruinRobotConfig();
 
-    questNav = new QuestNav(null, new QuestNavIOQuest(new Transform3d()));
+    questNav = new QuestNav(new QuestNavIOQuest(new Transform3d()));
     questNav.setPose(new Pose2d(3, 3, new Rotation2d()));
   }
 }

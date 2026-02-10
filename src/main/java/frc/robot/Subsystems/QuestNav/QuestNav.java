@@ -19,14 +19,14 @@ import org.littletonrobotics.junction.Logger;
 // this class listens to Vision and robot state for occasionally forced pose resets
 // this class implements drive as a listener to periodically update
 public class QuestNav extends SubsystemBase {
-  private final QuestConsumer consumer;
-
   // logging and interaction with the hardware
   private final QuestNavIO io;
   private final QuestNavIOInputsAutoLogged inputs = new QuestNavIOInputsAutoLogged();
 
   private final Alert disconnectedAlert;
   private final Alert noTrackingAlert;
+
+  Pose2d publishedPose = new Pose2d();
 
   // timer to be used to determine when to forcibly reset to robot pose
   private final Timer timer = new Timer();
@@ -40,8 +40,7 @@ public class QuestNav extends SubsystemBase {
           0.035 // Trust down to 2 degrees rotational
           );
 
-  public QuestNav(QuestConsumer consumer, QuestNavIO io) {
-    this.consumer = consumer;
+  public QuestNav(QuestNavIO io) {
     this.io = io;
 
     disconnectedAlert = new Alert("The quest is disconnected", AlertType.kWarning);
@@ -74,19 +73,17 @@ public class QuestNav extends SubsystemBase {
 
           Pose3d transformedPose =
               givenPoseFrame.questPose3d().transformBy(inputs.robotToQuest.inverse());
-
-          consumer.accept(
-              transformedPose.toPose2d(), givenPoseFrame.dataTimestamp(), QUESTNAV_STD_DEVS);
+          publishedPose = transformedPose.toPose2d();
         }
       }
 
-      Logger.recordOutput("Questnav", allPoseFrames.toArray(new Pose2d[allPoseFrames.size()]));
+      Logger.recordOutput("Questnav", allPoseFrames.toArray(new Pose3d[allPoseFrames.size()]));
       Logger.recordOutput(
-          "Questnav", rejectedPoseFrames.toArray(new Pose2d[rejectedPoseFrames.size()]));
+          "Questnav", rejectedPoseFrames.toArray(new Pose3d[rejectedPoseFrames.size()]));
       Logger.recordOutput(
-          "Questnav", acceptedPoseFrames.toArray(new Pose2d[acceptedPoseFrames.size()]));
+          "Questnav", acceptedPoseFrames.toArray(new Pose3d[acceptedPoseFrames.size()]));
 
-      backupOdometrySetter();
+      Logger.recordOutput("Questnav", publishedPose);
 
       disconnectedAlert.set(!inputs.QuestNavConnected);
       noTrackingAlert.set(!inputs.QuestNavTracking);
@@ -116,13 +113,5 @@ public class QuestNav extends SubsystemBase {
       timer.stop();
       timer.reset();
     }
-  }
-
-  @FunctionalInterface
-  public interface QuestConsumer {
-    void accept(
-        Pose2d questRobotPoseMeters,
-        double timestampSeconds,
-        Matrix<N3, N1> questMeasurementStdDevs);
   }
 }
