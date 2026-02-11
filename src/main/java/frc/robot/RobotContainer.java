@@ -3,7 +3,9 @@ package frc.robot;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Config.BruinRobotConfig;
@@ -50,9 +52,28 @@ public class RobotContainer {
         .a()
         .whileFalse(
             new InstantCommand(() -> swerveSubsystem.setWantedState(WantedState.TELEOP_DRIVE)));
+
+    controller
+        .b()
+        .onTrue(
+            new InstantCommand(
+                () ->
+                    swerveSubsystem.setDesiredPoseForDriveToPointWithConstraints(
+                        new Pose2d(0.5, 0.5, new Rotation2d(Units.degreesToRadians(67))), 1, 1)));
+    controller
+        .b()
+        .whileTrue(
+            new InstantCommand(() -> swerveSubsystem.setWantedState(WantedState.DRIVE_TO_POINT)));
+
+    controller
+        .b()
+        .whileFalse(
+            new InstantCommand(() -> swerveSubsystem.setWantedState(WantedState.TELEOP_DRIVE)));
   }
 
   public SwerveSubsystem getSwerveSubsystem() {
     return swerveSubsystem;
   }
 }
+
+

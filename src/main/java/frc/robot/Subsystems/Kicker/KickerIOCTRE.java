@@ -67,15 +67,12 @@ public class KickerIOCTRE implements KickerIO {
   @Override
   public void updateInputs(KickerIOInputs inputs) {
     BaseStatusSignal.refreshAll(
-      kickerAppliedVolts,
-      kickerSupplyCurrentAmps,
-      kickerStatorCurrentAmps,
-      kickerVelocityRotPerSec,
-      kickerAccelerationRotPerSecSquared,
-      kickerMotorTemp
-    );
-
-
+        kickerAppliedVolts,
+        kickerSupplyCurrentAmps,
+        kickerStatorCurrentAmps,
+        kickerVelocityRotPerSec,
+        kickerAccelerationRotPerSecSquared,
+        kickerMotorTemp);
 
     inputs.kickerVoltage = kickerAppliedVolts.getValueAsDouble();
     inputs.kickerSupplyCurrent = kickerSupplyCurrentAmps.getValueAsDouble();
