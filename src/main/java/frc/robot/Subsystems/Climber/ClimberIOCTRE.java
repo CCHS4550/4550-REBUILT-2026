@@ -9,6 +9,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.*;
 import frc.robot.Config.BruinRobotConfig;
+import frc.robot.Constant.Constants;
 import frc.robot.Util.Phoenix6Util;
 
 public class ClimberIOCTRE implements ClimberIO {
@@ -48,7 +49,6 @@ public class ClimberIOCTRE implements ClimberIO {
     leftConfig.Slot0.kD = bruinRobotConfig.getClimberConfig().climberKd;
     leftConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     leftConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    
 
     leftConfig.MotionMagic.MotionMagicCruiseVelocity = 0.4;
     leftConfig.MotionMagic.MotionMagicAcceleration = 0.3;
@@ -118,7 +118,7 @@ public class ClimberIOCTRE implements ClimberIO {
   }
 
   public double heightToRotations(double height) {
-    
+    return (height) / (Constants.ClimberConstants.HEIGHT_PER_ROTATION);
   }
 
   @Override

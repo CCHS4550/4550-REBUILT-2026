@@ -1,8 +1,7 @@
 package frc.robot.Subsystems.Climber;
 
-import org.littletonrobotics.junction.AutoLog;
-
 import edu.wpi.first.units.measure.Voltage;
+import org.littletonrobotics.junction.AutoLog;
 
 public interface ClimberIO {
 

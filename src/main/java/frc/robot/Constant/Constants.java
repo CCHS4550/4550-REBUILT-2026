@@ -54,6 +54,15 @@ public final class Constants {
     public static final double CLIMB_GEAR_RATIO = 0.00;
   }
 
+  public static final class ClimberConstants {
+    public static final double RETRACTED_HEIGHT = Units.inchesToMeters(0.0); // is this stupid? yes
+    public static final double L1_HEIGHT = Units.inchesToMeters(28.0);
+    public static final double L2_3_HEIGHT = Units.inchesToMeters(14.0);
+    public static final double AUTO_HOLD_HEIGHT = Units.inchesToMeters(23.0);
+
+    public static final double HEIGHT_PER_ROTATION = 0.0; // should be in meters, use sysid maybe?
+  }
+
   public static final class TurretConstants {
     public static final double ELEVATION_GEAR_RATIO = (60.0 / 12.0) * (60.0 / 16.0) * (58.0 / 9.0);
     public static final double ELEVATION_POSITION_COEFFICIENT = 2 * Math.PI * ELEVATION_GEAR_RATIO;
