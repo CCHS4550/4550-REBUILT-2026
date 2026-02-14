@@ -59,7 +59,9 @@ public class RobotContainer {
             new InstantCommand(
                 () ->
                     swerveSubsystem.setDesiredPoseForDriveToPointWithConstraints(
-                        new Pose2d(0.5, 0.5, new Rotation2d(Units.degreesToRadians(67))), 1, 1)));
+                        new Pose2d(0.5, 0.5, new Rotation2d(Units.degreesToRadians(67))),
+                        1,
+                        3.14)));
     controller
         .b()
         .whileTrue(
@@ -75,5 +77,3 @@ public class RobotContainer {
     return swerveSubsystem;
   }
 }
-
-

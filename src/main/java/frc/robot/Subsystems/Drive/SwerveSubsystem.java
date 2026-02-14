@@ -37,6 +37,7 @@ import frc.robot.Subsystems.QuestNav.QuestNav;
 import frc.robot.Util.LocalADStarAK;
 import frc.robot.Util.SubsystemDataProcessor;
 import frc.robot.Util.SysIdMechanism;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestConsumer {
@@ -89,9 +90,9 @@ public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestCons
   private SystemState systemState = SystemState.TELEOP_DRIVE;
   private WantedState wantedState = WantedState.TELEOP_DRIVE;
 
-  private Rotation2d desiredRotationForRotationLockState;
+  @AutoLogOutput private Rotation2d desiredRotationForRotationLockState;
 
-  private Pose2d desiredPoseForDriveToPoint = new Pose2d();
+  @AutoLogOutput private Pose2d desiredPoseForDriveToPoint = new Pose2d();
 
   final SwerveIOInputsAutoLogged swerveInputs = new SwerveIOInputsAutoLogged();
   ModuleIOInputsAutoLogged frontLeftInputs = new ModuleIOInputsAutoLogged();
@@ -335,14 +336,29 @@ public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestCons
         break;
 
       case ROTATION_LOCK:
+        double error =
+            MathUtil.angleModulus(
+                desiredRotationForRotationLockState
+                    .minus(swerveInputs.Pose.getRotation())
+                    .getRadians());
+        System.out.println(error);
+
+        double ff = 0.5; // example
+        double ffDirection = Math.signum(error) * ff;
+
+        double kP = 0.3;
+        if (error > 3.075 || error < -3.075) {
+          kP = 0.0;
+          ffDirection = 0.0;
+        }
         io.setSwerveState(
             driveAtAngle
                 .withVelocityX(calculateSpeedsBasedOnJoystickInputs().vxMetersPerSecond)
                 .withVelocityY(calculateSpeedsBasedOnJoystickInputs().vyMetersPerSecond)
                 .withTargetDirection(desiredRotationForRotationLockState)
-                .withHeadingPID(0.2, 0.0, 0.0)
-                .withTargetRateFeedforward(0.5)
-                .withMaxAbsRotationalRate(0.5));
+                .withHeadingPID(kP, 0.0, 0.00)
+                .withTargetRateFeedforward(ffDirection)
+                .withMaxAbsRotationalRate(3.14));
         break;
       case DRIVE_TO_POINT:
         var translationToDesiredPoint =
@@ -378,18 +394,51 @@ public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestCons
         Logger.recordOutput(
             "Subsystems/Drive/DriveToPoint/desiredPoint", desiredPoseForDriveToPoint);
 
+        Rotation2d desiredRotFlipped180 =
+            desiredPoseForDriveToPoint.getRotation().plus(Rotation2d.k180deg);
+
         if (Double.isNaN(maximumAngularVelocityForDriveToPoint)) {
+          error =
+              MathUtil.angleModulus(
+                  desiredRotFlipped180.minus(swerveInputs.Pose.getRotation()).getRadians());
+          System.out.println(error);
+
+          ff = 0.5; // example
+          ffDirection = Math.signum(error) * ff;
+
+          kP = 0.3;
+          if (error > 3.075 || error < -3.075) {
+            kP = 0.0;
+            ffDirection = 0.0;
+          }
           io.setSwerveState(
               driveAtAngle
                   .withVelocityX(xComponent)
                   .withVelocityY(yComponent)
-                  .withTargetDirection(desiredPoseForDriveToPoint.getRotation()));
+                  .withTargetDirection(desiredRotFlipped180)
+                  .withHeadingPID(kP, 0.0, 0.00)
+                  .withTargetRateFeedforward(ffDirection));
         } else {
+          error =
+              MathUtil.angleModulus(
+                  desiredRotFlipped180.minus(swerveInputs.Pose.getRotation()).getRadians());
+          System.out.println(error);
+
+          ff = 0.5; // example
+          ffDirection = Math.signum(error) * ff;
+
+          kP = 0.3;
+          if (error > 3.075 || error < -3.075) {
+            kP = 0.0;
+            ffDirection = 0.0;
+          }
           io.setSwerveState(
               driveAtAngle
                   .withVelocityX(xComponent)
                   .withVelocityY(yComponent)
-                  .withTargetDirection(desiredPoseForDriveToPoint.getRotation())
+                  .withTargetDirection(desiredRotFlipped180)
+                  .withHeadingPID(kP, 0.0, 0.00)
+                  .withTargetRateFeedforward(ffDirection)
                   .withMaxAbsRotationalRate(maximumAngularVelocityForDriveToPoint));
         }
         break;
