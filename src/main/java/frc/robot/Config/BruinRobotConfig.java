@@ -43,6 +43,7 @@ public class BruinRobotConfig {
   public final CanDeviceID SHOOTER_MOTOR = new CanDeviceID(-1, CANIVORE_CANBUS);
 
   public final CanDeviceID ELEVATION_CANCODER = new CanDeviceID(-1, CANIVORE_CANBUS);
+  public final CanDeviceID ROTATION_CANCODER = new CanDeviceID(-1, CANIVORE_CANBUS);
 
   public final CanDeviceID INTAKE_ROLLER = new CanDeviceID(-1, CANIVORE_CANBUS);
   public final CanDeviceID INTAKE_EXTENSION = new CanDeviceID(-1, CANIVORE_CANBUS);

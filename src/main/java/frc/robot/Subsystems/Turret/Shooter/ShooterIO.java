@@ -1,5 +1,6 @@
 package frc.robot.Subsystems.Turret.Shooter;
 
+import edu.wpi.first.units.measure.AngularVelocity;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface ShooterIO {
@@ -20,9 +21,7 @@ public interface ShooterIO {
 
   public default void updateInputs(ShooterIOInputs inputs) {}
 
-  public default void setRadPerSec(double radPerSec) {}
-
-  public default void setRotPerSec(double rotPerSec) {}
+  public default void setVelo(AngularVelocity Velo) {}
 
   public default void setVoltage(double voltage) {}
 }

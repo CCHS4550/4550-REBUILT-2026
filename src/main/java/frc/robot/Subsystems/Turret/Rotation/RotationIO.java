@@ -18,6 +18,8 @@ public interface RotationIO {
     public double rotationAccelRadPerSecSquared = 0.0;
 
     public Rotation2d rotationAngle = Rotation2d.kZero;
+
+    public double totalRotationsUnwrapped = 0.0;
   }
 
   public default void updateInputs(RotationIOInputs inputs) {}

@@ -7,6 +7,7 @@
 
 package frc.robot.Constant;
 
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Time;
@@ -56,6 +57,21 @@ public final class Constants {
   public static final class TurretConstants {
     public static final double ELEVATION_GEAR_RATIO = (60.0 / 12.0) * (60.0 / 16.0) * (58.0 / 9.0);
     public static final double ELEVATION_POSITION_COEFFICIENT = 2 * Math.PI * ELEVATION_GEAR_RATIO;
+
+    public static final double ROTATION_GEAR_RATIO = 0.0;
+    public static final double ROTATION_POSITION_COEFFICIENT = 0.0;
+
+    public static final double SHOOTER_MAX_RADIANS_PER_SEC = 0.0;
+
+    public static final double TURRET_HEIGHT_METERS = 0.0;
+
+    public static final Transform2d TURRET_TRANSFORM = new Transform2d();
+
+    public static final double MAX_BALL_HEIGHT_METERS = 5.4864;
+
+    public static final double FORWARD_ROTATION_LIMIT_RADIANS = 0.0;
+
+    public static final double BACKWARDS_ROTATION_LIMIT_RADIANS = 0.0;
   }
 
   public static final class VisionConstants {
@@ -63,5 +79,14 @@ public final class Constants {
     public static final double angularStdDevBaseline = 0.06;
     public static final double maxAmbiguity = 0.1;
     public static final double maxZError = 0.75;
+  }
+
+  public static final class ShooterCalculationConstants {
+    public static final double GRAVITATION_CONSTANT = 9.81;
+    public static final double TIME_DELAY = 0.03;
+    public static final double GEOMETRY_VELOCITY = 6.7;
+    public static final double TURRET_HEIGHT = 0.12;
+    // public static final Pose2d HUB_POSITION = new Pose2d(4.625594,4.034663,new Rotation2d());
+
   }
 }
