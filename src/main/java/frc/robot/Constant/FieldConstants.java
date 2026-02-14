@@ -14,10 +14,8 @@ public class FieldConstants {
   public static Pose2d scoringPoseBlue = new Pose2d();
   public static Pose2d scoringPoseRed = new Pose2d();
 
-  public static Pose2d passingPoseBlueLeft = new Pose2d();
-  public static Pose2d passingPoseRedLeft = new Pose2d();
-  public static Pose2d passingPoseBlueRight = new Pose2d();
-  public static Pose2d passingPoseRedRight = new Pose2d();
+  public static Pose2d passingPoseBlue = new Pose2d();
+  public static Pose2d passingPoseRed = new Pose2d();
 
   public static final double HUB_HEIGHT = 1.8288;
 
