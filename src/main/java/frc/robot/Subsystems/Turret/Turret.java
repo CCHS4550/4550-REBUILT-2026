@@ -33,7 +33,7 @@ public class Turret extends SubsystemBase {
 
   private TurretMeasurables wantedTurretMeasurables; // thing we access to inertia
   private TurretMeasurables noInertiaMeasurables;
-  private TurretMeasurables fieldOrientedMeasureables;
+  //private TurretMeasurables fieldOrientedMeasureables;
 
   private Pose2d desiredPose;
   private double desiredHeight;
@@ -74,7 +74,7 @@ public class Turret extends SubsystemBase {
 
     currentTurretMeasurables = new TurretMeasurables(null, null, 0);
     wantedTurretMeasurables = new TurretMeasurables(null, null);
-    fieldOrientedMeasureables = new TurretMeasurables(null, null, 0);
+    //fieldOrientedMeasureables = new TurretMeasurables(null, null, 0);
 
     atGoal = true;
   }
@@ -159,6 +159,7 @@ public class Turret extends SubsystemBase {
         wantedTurretMeasurables.updateWithCartesianVector(
             noInertiaMeasurables.getVector().minus(robotSpeedVector));
         wantedTurretMeasurables.shooterRadiansPerSec = 0;
+        convertToClosestBoundedTurretAngle();
         goToWantedState();
 
         break;
@@ -179,6 +180,7 @@ public class Turret extends SubsystemBase {
 
         wantedTurretMeasurables.updateWithCartesianVector(
             noInertiaMeasurables.getVector().minus(robotSpeedVector));
+        convertToClosestBoundedTurretAngle();
         goToWantedState();
 
         break;
@@ -199,6 +201,7 @@ public class Turret extends SubsystemBase {
 
         wantedTurretMeasurables.updateWithCartesianVector(
             noInertiaMeasurables.getVector().minus(robotSpeedVector));
+        convertToClosestBoundedTurretAngle();
         goToWantedState();
 
         break;
@@ -287,9 +290,9 @@ public class Turret extends SubsystemBase {
    * @param targetAngleRadians Target angle in radians
    * @return next absolute angle for the robot to move to
    */
-  public void convertToClosestBoundedTurretAngle(double targetAngleRadians) {
+  public void convertToClosestBoundedTurretAngle() {
     double currentTotalRadians = (rotationInputs.totalRotationsUnwrapped * 2 * Math.PI);
-    double closestOffset = targetAngleRadians - rotationInputs.rotationAngle.getRadians();
+    double closestOffset = wantedTurretMeasurables.rotationAngle.getRadians() - rotationInputs.rotationAngle.getRadians();
     if (closestOffset > Math.PI) {
 
       closestOffset -= 2 * Math.PI;

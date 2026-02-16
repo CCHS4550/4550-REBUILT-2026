@@ -4,6 +4,8 @@ public class TurretConfig {
   public double rotationKp;
   public double rotationKi;
   public double rotationKd;
+  public double rotationKs;
+  public double rotationKv;
 
   public double elevationKp;
   public double elevationKi;
@@ -12,6 +14,8 @@ public class TurretConfig {
   public double shooterKp;
   public double shooterKi;
   public double shooterKd;
+  public double shooterKs;
+  public double shooterKv;
 
   public TurretConfig withRotationKp(double rotationKp) {
     this.rotationKp = rotationKp;
@@ -25,6 +29,16 @@ public class TurretConfig {
 
   public TurretConfig withRotationKd(double rotationKd) {
     this.rotationKd = rotationKd;
+    return this;
+  }
+
+  public TurretConfig withRotationKs(double rotationKs) {
+    this.rotationKs = rotationKs;
+    return this;
+  }
+
+  public TurretConfig withRotationKv(double rotationKv) {
+    this.rotationKv = rotationKv;
     return this;
   }
 
@@ -55,6 +69,16 @@ public class TurretConfig {
 
   public TurretConfig withShooterKd(double shooterKd) {
     this.shooterKd = shooterKd;
+    return this;
+  }
+
+  public TurretConfig withShooterKs(double shooterKs) {
+    this.shooterKs = shooterKs;
+    return this;
+  }
+
+  public TurretConfig withShooterKv(double shooterKv) {
+    this.shooterKv = shooterKv;
     return this;
   }
 }

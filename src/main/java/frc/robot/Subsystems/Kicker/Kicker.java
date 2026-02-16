@@ -5,8 +5,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Kicker extends SubsystemBase {
   private KickerIO kickerIO;
 
-  private boolean atGoal;
-
   private KickerIOInputsAutoLogged kickerInputs = new KickerIOInputsAutoLogged();
 
   public enum KickerSystemState {
@@ -24,8 +22,6 @@ public class Kicker extends SubsystemBase {
 
   public Kicker(KickerIO io) {
     this.kickerIO = io;
-
-    atGoal = true;
   }
 
   @Override
@@ -51,11 +47,10 @@ public class Kicker extends SubsystemBase {
   public void applyStates() {
     switch (systemState) {
       case IDLE:
-        atGoal = true;
         break;
       case RUNNING:
         // kicking logic
-        kickerIO.setVoltage(9); // change to reasonable voltage
+        kickerIO.setVoltage(6); // change to reasonable voltage
         break;
 
       default:

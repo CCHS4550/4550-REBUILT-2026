@@ -6,6 +6,7 @@ public interface KickerIO {
   @AutoLog
   public class KickerIOInputs {
     public double kickerVoltage = 0;
+    public double kickerPosRad = 0.0;
     public double kickerSupplyCurrent = 0.0;
     public double kickerStatorCurrent = 0.0;
     public double kickerTemperature = 0.0;

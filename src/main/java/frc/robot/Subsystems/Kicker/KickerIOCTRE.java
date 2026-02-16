@@ -2,29 +2,28 @@ package frc.robot.Subsystems.Kicker;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Config.BruinRobotConfig;
+import frc.robot.Constant.Constants;
 import frc.robot.Util.Phoenix6Util;
 
 public class KickerIOCTRE implements KickerIO {
   private TalonFX kickerMotor;
 
   private TalonFXConfiguration kickerConfig;
-  private CANcoderConfiguration encoderConfig;
-  private MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0).withSlot(0);
 
   private final StatusSignal<Voltage> kickerAppliedVolts;
+  private final StatusSignal<Angle> kickerPosRot;
   private final StatusSignal<Current> kickerSupplyCurrentAmps;
   private final StatusSignal<Current> kickerStatorCurrentAmps;
   private final StatusSignal<AngularVelocity> kickerVelocityRotPerSec;
@@ -56,7 +55,9 @@ public class KickerIOCTRE implements KickerIO {
     // do config stuff
     Phoenix6Util.applyAndCheckConfiguration(kickerMotor, kickerConfig, 5);
 
+    kickerMotor.setPosition(0);
     kickerAppliedVolts = kickerMotor.getMotorVoltage();
+    kickerPosRot = kickerMotor.getPosition();
     kickerSupplyCurrentAmps = kickerMotor.getSupplyCurrent();
     kickerStatorCurrentAmps = kickerMotor.getStatorCurrent();
     kickerVelocityRotPerSec = kickerMotor.getVelocity();
@@ -68,6 +69,7 @@ public class KickerIOCTRE implements KickerIO {
   public void updateInputs(KickerIOInputs inputs) {
     BaseStatusSignal.refreshAll(
         kickerAppliedVolts,
+        kickerPosRot,
         kickerSupplyCurrentAmps,
         kickerStatorCurrentAmps,
         kickerVelocityRotPerSec,
@@ -75,6 +77,7 @@ public class KickerIOCTRE implements KickerIO {
         kickerMotorTemp);
 
     inputs.kickerVoltage = kickerAppliedVolts.getValueAsDouble();
+    inputs.kickerPosRad = kickerPosRot.getValueAsDouble()* Constants.LowerChassisConstants.KICKER_POSITION_COEFFICIENT;
     inputs.kickerSupplyCurrent = kickerSupplyCurrentAmps.getValueAsDouble();
     inputs.kickerStatorCurrent = kickerStatorCurrentAmps.getValueAsDouble();
     inputs.kickerTemperature = kickerMotorTemp.getValueAsDouble();

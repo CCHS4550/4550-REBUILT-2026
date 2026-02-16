@@ -3,9 +3,11 @@ package frc.robot.Subsystems.Turret.Shooter;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.AngularAcceleration;
@@ -19,6 +21,8 @@ import frc.robot.Util.Phoenix6Util;
 public class ShooterIOCTRE implements ShooterIO {
 
   private TalonFX shooterMotor;
+  private TalonFX shooterMotor2;
+
   private TalonFXConfiguration shooterConfig;
   private MotionMagicVelocityVoltage motionMagicVelocityVoltage;
 
@@ -30,11 +34,13 @@ public class ShooterIOCTRE implements ShooterIO {
   private final StatusSignal<Temperature> shooterMotorTemperature;
 
   public ShooterIOCTRE(BruinRobotConfig bruinRobotConfig) {
+    Follower follower = new Follower(bruinRobotConfig.SHOOTER_MOTOR.getDeviceNumber(), MotorAlignmentValue.Aligned);
     shooterMotor =
         new TalonFX(
             bruinRobotConfig.SHOOTER_MOTOR.getDeviceNumber(),
             bruinRobotConfig.SHOOTER_MOTOR.getBus());
-    motionMagicVelocityVoltage = new MotionMagicVelocityVoltage(0.0);
+    shooterMotor2 = new TalonFX(bruinRobotConfig.SHOOTER_MOTOR_2.getDeviceNumber(), bruinRobotConfig.SHOOTER_MOTOR_2.getBus());
+    motionMagicVelocityVoltage = new MotionMagicVelocityVoltage(0.0).withSlot(0);
 
     shooterConfig = new TalonFXConfiguration();
     shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -45,7 +51,9 @@ public class ShooterIOCTRE implements ShooterIO {
     shooterConfig.Slot0.kP = bruinRobotConfig.getTurretConfig().shooterKp;
     shooterConfig.Slot0.kI = bruinRobotConfig.getTurretConfig().shooterKi;
     shooterConfig.Slot0.kD = bruinRobotConfig.getTurretConfig().shooterKd;
-    shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    shooterConfig.Slot0.kS = bruinRobotConfig.getTurretConfig().shooterKs;
+    shooterConfig.Slot0.kV = bruinRobotConfig.getTurretConfig().shooterKv;
+    shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     shooterConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
     // change this later!
@@ -53,6 +61,9 @@ public class ShooterIOCTRE implements ShooterIO {
     shooterConfig.MotionMagic.MotionMagicAcceleration = 0.41;
 
     Phoenix6Util.applyAndCheckConfiguration(shooterMotor, shooterConfig, 5);
+    Phoenix6Util.applyAndCheckConfiguration(shooterMotor2, shooterConfig, 5);
+
+    shooterMotor2.setControl(follower);
 
     shooterAppliedVoltage = shooterMotor.getMotorVoltage();
     shooterSupplyCurrent = shooterMotor.getSupplyCurrent();

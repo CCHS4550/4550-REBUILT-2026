@@ -62,6 +62,8 @@ public class RotationIOCTRE implements RotationIO {
     rotationConfig.Slot0.kP = bruinRobotConfig.getTurretConfig().rotationKp;
     rotationConfig.Slot0.kI = bruinRobotConfig.getTurretConfig().rotationKi;
     rotationConfig.Slot0.kD = bruinRobotConfig.getTurretConfig().rotationKd;
+    rotationConfig.Slot0.kS = bruinRobotConfig.getTurretConfig().rotationKs;
+    rotationConfig.Slot0.kV = bruinRobotConfig.getTurretConfig().rotationKv;
     rotationConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     rotationConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 

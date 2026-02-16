@@ -12,9 +12,12 @@ import frc.robot.Config.BruinRobotConfig;
 import frc.robot.Subsystems.Drive.SwerveIOCTRE;
 import frc.robot.Subsystems.Drive.SwerveSubsystem;
 import frc.robot.Subsystems.Drive.SwerveSubsystem.WantedState;
+import frc.robot.Subsystems.Intake.Intake;
+import frc.robot.Subsystems.Intake.IntakeIOCTRE;
 
 public class RobotContainer {
   private final SwerveSubsystem swerveSubsystem;
+  private final Intake intake;
 
   private final CommandXboxController controller = new CommandXboxController(0);
 
@@ -38,6 +41,7 @@ public class RobotContainer {
             controller,
             0.5,
             0.5 / Math.hypot(moduleConstants[0].LocationX, moduleConstants[0].LocationY));
+    intake = new Intake(new IntakeIOCTRE(config));
 
     controller
         .a()

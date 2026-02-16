@@ -16,6 +16,7 @@ public interface IntakeIO {
 
     // Intake2
     public double extensionIntakeVoltage = 0.0;
+    public double extensionPosRadians;
     public double extensionIntakeSupplyCurrent = 0.0;
     public double extensionIntakeStatorCurrent = 0.0;
     public double extensionIntakeTemperature = 0.0;

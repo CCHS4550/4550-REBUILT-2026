@@ -11,6 +11,7 @@ import com.pathplanner.lib.config.RobotConfig;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import frc.robot.Subsystems.Intake.Intake;
 import frc.robot.Util.CanDeviceID;
 import java.util.List;
 
@@ -41,12 +42,13 @@ public class BruinRobotConfig {
   public final CanDeviceID ROTATION_MOTOR = new CanDeviceID(-1, CANIVORE_CANBUS);
   public final CanDeviceID ELEVATION_MOTOR = new CanDeviceID(-1, CANIVORE_CANBUS);
   public final CanDeviceID SHOOTER_MOTOR = new CanDeviceID(-1, CANIVORE_CANBUS);
+  public final CanDeviceID SHOOTER_MOTOR_2 = new CanDeviceID(-1, CANIVORE_CANBUS);
 
   public final CanDeviceID ELEVATION_CANCODER = new CanDeviceID(-1, CANIVORE_CANBUS);
   public final CanDeviceID ROTATION_CANCODER = new CanDeviceID(-1, CANIVORE_CANBUS);
 
-  public final CanDeviceID INTAKE_ROLLER = new CanDeviceID(-1, CANIVORE_CANBUS);
-  public final CanDeviceID INTAKE_EXTENSION = new CanDeviceID(-1, CANIVORE_CANBUS);
+  public final CanDeviceID INTAKE_ROLLER = new CanDeviceID(14, CANIVORE_CANBUS);
+  public final CanDeviceID INTAKE_EXTENSION = new CanDeviceID(15, CANIVORE_CANBUS);
 
   /**
    * Wheel radius in meters. Accuracy in these measurements affects wheel odometry which measures
@@ -111,6 +113,7 @@ public class BruinRobotConfig {
   private final VisionConfig photonVisionConfig;
   private final VisionConfig questNavConfig;
   private final TurretConfig turretConfig;
+  private final IntakeConfig intakeConfig;
 
   // PathPlanner config constants
   private final double ROBOT_MASS_KG = 25.338;
@@ -161,7 +164,7 @@ public class BruinRobotConfig {
             .withDriveInertia(0.001)
             .withSteerInertia(0.00001)
             .withSlipCurrent(120) // TODO MEASURE
-            .withFeedbackSource(SwerveModuleConstants.SteerFeedbackType.RemoteCANcoder)
+            .withFeedbackSource(SwerveModuleConstants.SteerFeedbackType.FusedCANcoder)
             .withSpeedAt12Volts(MAX_SPEED_METERS_PER_SECOND)
             .withWheelRadius(WHEEL_RADIUS_METERS);
 
@@ -194,7 +197,7 @@ public class BruinRobotConfig {
             .withDriveInertia(0.001)
             .withSteerInertia(0.00001)
             .withSlipCurrent(120) // TODO MEASURE
-            .withFeedbackSource(SwerveModuleConstants.SteerFeedbackType.RemoteCANcoder)
+            .withFeedbackSource(SwerveModuleConstants.SteerFeedbackType.FusedCANcoder)
             .withSpeedAt12Volts(MAX_SPEED_METERS_PER_SECOND)
             .withWheelRadius(WHEEL_RADIUS_METERS);
 
@@ -227,7 +230,7 @@ public class BruinRobotConfig {
             .withDriveInertia(0.001)
             .withSteerInertia(0.00001)
             .withSlipCurrent(120) // TODO MEASURE
-            .withFeedbackSource(SwerveModuleConstants.SteerFeedbackType.RemoteCANcoder)
+            .withFeedbackSource(SwerveModuleConstants.SteerFeedbackType.FusedCANcoder)
             .withSpeedAt12Volts(MAX_SPEED_METERS_PER_SECOND)
             .withWheelRadius(WHEEL_RADIUS_METERS);
 
@@ -260,7 +263,7 @@ public class BruinRobotConfig {
             .withDriveInertia(0.001)
             .withSteerInertia(0.00001)
             .withSlipCurrent(120) // TODO MEASURE
-            .withFeedbackSource(SwerveModuleConstants.SteerFeedbackType.RemoteCANcoder)
+            .withFeedbackSource(SwerveModuleConstants.SteerFeedbackType.FusedCANcoder)
             .withSpeedAt12Volts(MAX_SPEED_METERS_PER_SECOND)
             .withWheelRadius(WHEEL_RADIUS_METERS);
 
@@ -295,12 +298,18 @@ public class BruinRobotConfig {
             .withRotationKp(0.0)
             .withRotationKi(0)
             .withRotationKd(0)
+            .withRotationKs(0.0)
+            .withRotationKv(0)
             .withElevationKp(0)
             .withElevationKi(0)
             .withElevationKd(0)
             .withShooterKp(0)
             .withShooterKi(0)
-            .withShooterKd(0);
+            .withShooterKd(0)
+            .withShooterKs(0.0)
+            .withShooterKv(0.0);
+
+    intakeConfig = new IntakeConfig().withExtensionkP(0.0).withExtensionkI(0.0).withExtensionkD(0.0).withExtensionkS(0.0).withExtensionkV(0.0).withExtensionkG(0.0);
   }
 
   public SwerveDrivetrainConstants getSwerveDrivetrainConstants() {
@@ -322,6 +331,10 @@ public class BruinRobotConfig {
 
   public TurretConfig getTurretConfig() {
     return turretConfig;
+  }
+
+  public IntakeConfig getIntakeConfig() {
+    return intakeConfig;
   }
 
   public Translation2d[] getModuleTranslations() {
