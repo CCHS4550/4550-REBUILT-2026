@@ -34,12 +34,16 @@ public class ShooterIOCTRE implements ShooterIO {
   private final StatusSignal<Temperature> shooterMotorTemperature;
 
   public ShooterIOCTRE(BruinRobotConfig bruinRobotConfig) {
-    Follower follower = new Follower(bruinRobotConfig.SHOOTER_MOTOR.getDeviceNumber(), MotorAlignmentValue.Aligned);
+    Follower follower =
+        new Follower(bruinRobotConfig.SHOOTER_MOTOR.getDeviceNumber(), MotorAlignmentValue.Aligned);
     shooterMotor =
         new TalonFX(
             bruinRobotConfig.SHOOTER_MOTOR.getDeviceNumber(),
             bruinRobotConfig.SHOOTER_MOTOR.getBus());
-    shooterMotor2 = new TalonFX(bruinRobotConfig.SHOOTER_MOTOR_2.getDeviceNumber(), bruinRobotConfig.SHOOTER_MOTOR_2.getBus());
+    shooterMotor2 =
+        new TalonFX(
+            bruinRobotConfig.SHOOTER_MOTOR_2.getDeviceNumber(),
+            bruinRobotConfig.SHOOTER_MOTOR_2.getBus());
     motionMagicVelocityVoltage = new MotionMagicVelocityVoltage(0.0).withSlot(0);
 
     shooterConfig = new TalonFXConfiguration();

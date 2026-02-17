@@ -36,7 +36,7 @@ public class IntakeIOCTRE implements IntakeIO {
   private final StatusSignal<Temperature> spinnerMotorTemp;
 
   private final StatusSignal<Voltage> extensionAppliedVolts;
-  private final StatusSignal<Angle> extensionPosRadians;
+  private final StatusSignal<Angle> extensionPosRot;
   private final StatusSignal<Current> extensionSupplyCurrentAmps;
   private final StatusSignal<Current> extensionStatorCurrentAmps;
   private final StatusSignal<AngularVelocity> extensionVelocityRotationsPerSec;
@@ -59,12 +59,12 @@ public class IntakeIOCTRE implements IntakeIO {
     spinnerConfig.CurrentLimits.StatorCurrentLimit = 90.0;
 
     spinnerConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    spinnerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    spinnerConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     extensionConfig = new TalonFXConfiguration();
     extensionConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     extensionConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    extensionConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
+    extensionConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
     extensionConfig.CurrentLimits.StatorCurrentLimit = 90.0;
 
     extensionConfig.Slot0.kP = robotConfig.getIntakeConfig().extensionkP;
@@ -74,11 +74,11 @@ public class IntakeIOCTRE implements IntakeIO {
     extensionConfig.Slot0.kS = robotConfig.getIntakeConfig().extensionkS;
     extensionConfig.Slot0.kV = robotConfig.getIntakeConfig().extensionkS;
     extensionConfig.Slot0.kG = robotConfig.getIntakeConfig().extensionkG;
-    extensionConfig.MotionMagic.MotionMagicCruiseVelocity = 1000;
-    extensionConfig.MotionMagic.MotionMagicAcceleration = 100;
+    extensionConfig.MotionMagic.MotionMagicCruiseVelocity = 10000;
+    extensionConfig.MotionMagic.MotionMagicAcceleration = 1000;
 
     extensionConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    extensionConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    extensionConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     Phoenix6Util.applyAndCheckConfiguration(spinnerIntakeMotor, spinnerConfig, 5);
     Phoenix6Util.applyAndCheckConfiguration(extensionIntakeMotor, extensionConfig, 5);
@@ -90,9 +90,9 @@ public class IntakeIOCTRE implements IntakeIO {
     spinnerAccelerationRotationsPerSecSquared = spinnerIntakeMotor.getAcceleration();
     spinnerMotorTemp = spinnerIntakeMotor.getDeviceTemp();
 
-    extensionIntakeMotor.setPosition(Math.PI / 2);
+    extensionIntakeMotor.setPosition(6.25);
     extensionAppliedVolts = extensionIntakeMotor.getMotorVoltage();
-    extensionPosRadians = extensionIntakeMotor.getPosition();
+    extensionPosRot = extensionIntakeMotor.getPosition();
     extensionSupplyCurrentAmps = extensionIntakeMotor.getSupplyCurrent();
     extensionStatorCurrentAmps = extensionIntakeMotor.getStatorCurrent();
     extensionVelocityRotationsPerSec = extensionIntakeMotor.getVelocity();
@@ -104,7 +104,7 @@ public class IntakeIOCTRE implements IntakeIO {
   public void updateInputs(IntakeIOInputs inputs) {
     BaseStatusSignal.refreshAll(
         extensionAppliedVolts,
-        extensionPosRadians,
+        extensionPosRot,
         extensionSupplyCurrentAmps,
         extensionStatorCurrentAmps,
         extensionVelocityRotationsPerSec,
@@ -112,14 +112,17 @@ public class IntakeIOCTRE implements IntakeIO {
         extensionMotorTemp);
 
     inputs.extensionIntakeVoltage = extensionAppliedVolts.getValueAsDouble();
-    inputs.extensionPosRadians = extensionPosRadians.getValueAsDouble() * Constants.IntakeConstants.EXTENSION_POSITION_COEFFICIENT;
+    inputs.extensionPosRadians =
+        extensionPosRot.getValueAsDouble()
+            * Constants.IntakeConstants.EXTENSION_POSITION_COEFFICIENT;
     inputs.extensionIntakeSupplyCurrent = extensionSupplyCurrentAmps.getValueAsDouble();
     inputs.extensionIntakeStatorCurrent = extensionStatorCurrentAmps.getValueAsDouble();
     inputs.extensionIntakeVelocityRadPerSec =
-        Units.rotationsToRadians(
-            extensionVelocityRotationsPerSec.getValueAsDouble()); // Update with constant
+        extensionVelocityRotationsPerSec.getValueAsDouble()
+            * Constants.IntakeConstants.EXTENSION_POSITION_COEFFICIENT; // Update with constant
     inputs.extensionIntakeAccelRadPerSecSquared =
-        Units.rotationsToRadians(extensionAccelerationRotationsPerSecSquared.getValueAsDouble());
+        extensionVelocityRotationsPerSec.getValueAsDouble()
+            * Constants.IntakeConstants.EXTENSION_POSITION_COEFFICIENT;
     inputs.extensionIntakeTemperature = extensionMotorTemp.getValueAsDouble();
 
     BaseStatusSignal.refreshAll(
@@ -143,7 +146,8 @@ public class IntakeIOCTRE implements IntakeIO {
 
   @Override
   public void setExtensionMotorPositionRad(double rad) {
-    extensionIntakeMotor.setControl(extensionController.withPosition(rad));
+    extensionIntakeMotor.setControl(
+        extensionController.withPosition(Units.radiansToRotations(rad)));
   }
 
   @Override
@@ -152,12 +156,12 @@ public class IntakeIOCTRE implements IntakeIO {
   }
 
   @Override
-  public void tareExtensionEncoder() {
-    extensionIntakeMotor.setPosition(0);
+  public void setSpinnerVoltage(double voltage) {
+    spinnerIntakeMotor.setVoltage(voltage);
   }
 
   @Override
-  public void setSpinnerVoltage(double voltage) {
-    spinnerIntakeMotor.setVoltage(voltage);
+  public void setExtensionNeutralMode(NeutralModeValue neutralMode) {
+    extensionIntakeMotor.setNeutralMode(neutralMode);
   }
 }
