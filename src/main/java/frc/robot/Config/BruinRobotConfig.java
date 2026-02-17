@@ -11,7 +11,6 @@ import com.pathplanner.lib.config.RobotConfig;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
-import frc.robot.Subsystems.Intake.Intake;
 import frc.robot.Util.CanDeviceID;
 import java.util.List;
 
@@ -309,7 +308,14 @@ public class BruinRobotConfig {
             .withShooterKs(0.0)
             .withShooterKv(0.0);
 
-    intakeConfig = new IntakeConfig().withExtensionkP(0.0).withExtensionkI(0.0).withExtensionkD(0.0).withExtensionkS(0.0).withExtensionkV(0.0).withExtensionkG(0.0);
+    intakeConfig =
+        new IntakeConfig()
+            .withExtensionkP(0.7)
+            .withExtensionkI(0.0)
+            .withExtensionkD(0.0)
+            .withExtensionkS(0.0)
+            .withExtensionkV(0.0)
+            .withExtensionkG(0.0);
   }
 
   public SwerveDrivetrainConstants getSwerveDrivetrainConstants() {

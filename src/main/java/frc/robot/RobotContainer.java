@@ -13,6 +13,7 @@ import frc.robot.Subsystems.Drive.SwerveIOCTRE;
 import frc.robot.Subsystems.Drive.SwerveSubsystem;
 import frc.robot.Subsystems.Drive.SwerveSubsystem.WantedState;
 import frc.robot.Subsystems.Intake.Intake;
+import frc.robot.Subsystems.Intake.Intake.WantedIntakeState;
 import frc.robot.Subsystems.Intake.IntakeIOCTRE;
 
 public class RobotContainer {
@@ -75,6 +76,21 @@ public class RobotContainer {
         .b()
         .whileFalse(
             new InstantCommand(() -> swerveSubsystem.setWantedState(WantedState.TELEOP_DRIVE)));
+    controller
+        .x()
+        .whileTrue(
+            new InstantCommand(
+                () -> intake.setWantedIntakeState(WantedIntakeState.EXTENDED_PASSIVE)));
+    controller
+        .x()
+        .whileFalse(new InstantCommand(() -> intake.setWantedIntakeState(WantedIntakeState.IDLE)));
+
+    controller
+        .y()
+        .whileTrue(new InstantCommand(() -> intake.setWantedIntakeState(WantedIntakeState.STOWED)));
+    controller
+        .y()
+        .whileFalse(new InstantCommand(() -> intake.setWantedIntakeState(WantedIntakeState.IDLE)));
   }
 
   public SwerveSubsystem getSwerveSubsystem() {

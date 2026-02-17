@@ -2,6 +2,8 @@ package frc.robot.Subsystems.Intake;
 
 import org.littletonrobotics.junction.AutoLog;
 
+import com.ctre.phoenix6.signals.NeutralModeValue;
+
 public interface IntakeIO {
   @AutoLog
   public class IntakeIOInputs {
@@ -31,7 +33,7 @@ public interface IntakeIO {
 
   public default void setExtensionVoltage(double voltage) {}
 
-  public default void tareExtensionEncoder() {}
-
   public default void setSpinnerVoltage(double voltage) {}
+
+   default void setExtensionNeutralMode(NeutralModeValue neutralMode) {}
 }

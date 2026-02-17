@@ -55,7 +55,8 @@ public final class Constants {
   }
 
   public static final class TurretConstants {
-    public static final double ELEVATION_GEAR_RATIO = (60.0 / 12.0) * (60.0 / 16.0) * (58.0 / 9.0); // fill
+    public static final double ELEVATION_GEAR_RATIO =
+        (60.0 / 12.0) * (60.0 / 16.0) * (58.0 / 9.0); // fill
     public static final double ELEVATION_POSITION_COEFFICIENT = 2 * Math.PI * ELEVATION_GEAR_RATIO;
 
     public static final double ROTATION_GEAR_RATIO = 0.0;
@@ -75,12 +76,13 @@ public final class Constants {
   }
 
   public static final class IntakeConstants {
-    public static final double EXTENSION_GEAR_RATIO = (60.0 / 12.0) * (60.0 / 16.0) * (58.0 / 9.0); // fill
+    public static final double EXTENSION_GEAR_RATIO = 1.0 / 25.0; // fill
     public static final double EXTENSION_POSITION_COEFFICIENT = 2 * Math.PI * EXTENSION_GEAR_RATIO;
   }
 
   public static final class LowerChassisConstants {
-    public static final double KICKER_GEAR_RATIO = (60.0 / 12.0) * (60.0 / 16.0) * (58.0 / 9.0); //fill
+    public static final double KICKER_GEAR_RATIO =
+        (60.0 / 12.0) * (60.0 / 16.0) * (58.0 / 9.0); // fill
     public static final double KICKER_POSITION_COEFFICIENT = 2 * Math.PI * KICKER_GEAR_RATIO;
   }
 
