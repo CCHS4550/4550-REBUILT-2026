@@ -82,15 +82,17 @@ public class RobotContainer {
             new InstantCommand(
                 () -> intake.setWantedIntakeState(WantedIntakeState.EXTENDED_PASSIVE)));
     controller
-        .x()
-        .whileFalse(new InstantCommand(() -> intake.setWantedIntakeState(WantedIntakeState.IDLE)));
+        .rightTrigger()
+        .onTrue(
+            new InstantCommand(
+                () -> intake.setWantedIntakeState(WantedIntakeState.EXTENDED_INTAKING)));
+    controller
+        .rightTrigger()
+        .onFalse(new InstantCommand(() -> intake.setWantedIntakeState(WantedIntakeState.IDLE)));
 
     controller
         .y()
         .whileTrue(new InstantCommand(() -> intake.setWantedIntakeState(WantedIntakeState.STOWED)));
-    controller
-        .y()
-        .whileFalse(new InstantCommand(() -> intake.setWantedIntakeState(WantedIntakeState.IDLE)));
   }
 
   public SwerveSubsystem getSwerveSubsystem() {

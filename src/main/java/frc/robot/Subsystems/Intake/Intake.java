@@ -1,58 +1,35 @@
 package frc.robot.Subsystems.Intake;
 
-import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.Logger;
-
-import com.ctre.phoenix6.signals.NeutralModeValue;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
+import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 
 // This code is Stupid and needs the be cleaned up.
 public class Intake extends SubsystemBase {
   private final Timer timer = new Timer();
 
-  private enum CurrentPos{
-    STOWED,
-    MOVING,
-    EXTENDED
-  }
-
-  private enum EndGoal {
-    EXTENDED,
-    STOWED
-  }
-
-  private enum CurrentNeutralMode{
-    BRAKE,
-    COAST
-  }
-
-
   public enum WantedIntakeState {
     EXTENDED_INTAKING,
+    EXTENDED_PASSIVE,
     STOWED,
-    PASSIVE_GRAVITY,
     IDLE
   }
 
   public enum SystemState {
     EXTENDED_INTAKING,
-    MOVING_TO_EXTENSION,
+    EXTENDED_PASSIVE,
+    MOVING_TO_EXTENSION_ACTIVE,
+    MOVING_TO_EXTENSION_PASSIVE,
     STOWED,
     MOVING_TO_STOW,
-    PASSIVE_GRAVITY,
-    IDLE
+    IDLE_AT_EXTENDED,
+    IDLE_AT_STOW
   }
 
-  private SystemState systemState = SystemState.IDLE;
-  private WantedIntakeState wantedState = WantedIntakeState.IDLE;
-  private EndGoal endGoal = EndGoal.STOWED;
-  private CurrentNeutralMode currentNeutralMode = CurrentNeutralMode.BRAKE;
-  private CurrentPos currentPos = CurrentPos.STOWED;
-
+  private SystemState systemState = SystemState.STOWED;
+  private WantedIntakeState wantedState = WantedIntakeState.STOWED;
   private final IntakeIO intakeIO;
 
   private IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
@@ -61,40 +38,24 @@ public class Intake extends SubsystemBase {
     this.intakeIO = intakeIO;
   }
 
-  private SystemState handleStateTransition() {
-    switch(wantedState){
-      case IDLE: return SystemState.IDLE;
-      case EXTENDED_INTAKING: 
-        if(currentPos == CurrentPos.MOVING){
-          return SystemState.MOVING_TO_EXTENSION;
-        }
-        else{return SystemState.EXTENDED_INTAKING;}
-      case STOWED:
-       if(currentPos == CurrentPos.MOVING){
-          return SystemState.MOVING_TO_STOW;
-        }
-        else{return SystemState.STOWED;}
-      
-      case PASSIVE_GRAVITY:
-        return SystemState.PASSIVE_GRAVITY;
-      default: return SystemState.IDLE;
-      }
-    }
-
   private void applyStates() {
     switch (systemState) {
       case EXTENDED_INTAKING:
         intakeIO.setExtensionVoltage(0.0);
         intakeIO.setSpinnerVoltage(6.0);
         break;
-      case MOVING_TO_EXTENSION:
+      case MOVING_TO_EXTENSION_ACTIVE:
+        intakeIO.setExtensionVoltage(-3.0);
+        intakeIO.setSpinnerVoltage(-1.5);
+        break;
+      case MOVING_TO_EXTENSION_PASSIVE:
         intakeIO.setExtensionVoltage(-3.0);
         intakeIO.setSpinnerVoltage(-1.5);
         break;
       case MOVING_TO_STOW:
-      intakeIO.setExtensionVoltage(3.0);
-      intakeIO.setSpinnerVoltage(1.5);
-      break;
+        intakeIO.setExtensionVoltage(3.0);
+        intakeIO.setSpinnerVoltage(1.5);
+        break;
       default:
         intakeIO.setExtensionVoltage(0);
         intakeIO.setSpinnerVoltage(0);
@@ -103,39 +64,51 @@ public class Intake extends SubsystemBase {
   }
 
   public void setWantedIntakeState(WantedIntakeState state) {
-    switch(state){
-      case STOWED:
-              if(currentPos != CurrentPos.STOWED){
-                currentPos = CurrentPos.MOVING;
-                intakeIO.setExtensionNeutralMode(NeutralModeValue.Coast);
-                currentNeutralMode = CurrentNeutralMode.COAST;
-                endGoal = EndGoal.STOWED;
-                timer.reset();
-                timer.start();
-              }
-                else{intakeIO.setExtensionNeutralMode(NeutralModeValue.Brake);
-                currentNeutralMode = CurrentNeutralMode.BRAKE;}
-              break;
-      case PASSIVE_GRAVITY:
-            timer.reset();
-            timer.start();
-            break;
-      case EXTENDED_INTAKING:
-              if(currentPos != CurrentPos.EXTENDED){
-                currentPos = CurrentPos.MOVING;
-                intakeIO.setExtensionNeutralMode(NeutralModeValue.Coast);
-                currentNeutralMode = CurrentNeutralMode.COAST;
-                endGoal = EndGoal.EXTENDED;
-                timer.reset();
-                timer.start();
-              }
-                else{intakeIO.setExtensionNeutralMode(NeutralModeValue.Brake);
-                currentNeutralMode = CurrentNeutralMode.BRAKE;}
-              break;
-        default: break;
-    }
-    
     this.wantedState = state;
+    switch (state) {
+      case STOWED:
+        if (systemState != SystemState.STOWED && systemState != SystemState.IDLE_AT_STOW) {
+          systemState = SystemState.MOVING_TO_STOW;
+          timer.reset();
+          timer.start();
+        }
+        break;
+      case EXTENDED_INTAKING:
+        if (systemState != SystemState.EXTENDED_INTAKING
+            && systemState != SystemState.EXTENDED_PASSIVE
+            && systemState != SystemState.IDLE_AT_EXTENDED) {
+          systemState = SystemState.MOVING_TO_EXTENSION_ACTIVE;
+          timer.reset();
+          timer.start();
+        } else {
+          systemState = SystemState.EXTENDED_INTAKING;
+        }
+        break;
+      case EXTENDED_PASSIVE:
+        if (systemState != SystemState.EXTENDED_INTAKING
+            && systemState != SystemState.EXTENDED_PASSIVE
+            && systemState != SystemState.IDLE_AT_EXTENDED) {
+          systemState = SystemState.MOVING_TO_EXTENSION_PASSIVE;
+          timer.reset();
+          timer.start();
+        } else {
+          systemState = SystemState.EXTENDED_PASSIVE;
+        }
+        break;
+      case IDLE:
+        if (systemState == SystemState.EXTENDED_INTAKING
+            || systemState == SystemState.EXTENDED_PASSIVE
+            || systemState == SystemState.MOVING_TO_EXTENSION_ACTIVE
+            || systemState == SystemState.MOVING_TO_EXTENSION_PASSIVE
+            || systemState == SystemState.IDLE_AT_EXTENDED) {
+          this.systemState = SystemState.IDLE_AT_EXTENDED;
+        } else {
+          this.systemState = SystemState.IDLE_AT_STOW;
+        }
+
+      default:
+        break;
+    }
   }
 
   @AutoLogOutput(key = "Subsystems/Intake")
@@ -151,31 +124,24 @@ public class Intake extends SubsystemBase {
       }
     }
     return false;
-  };
+  }
+  ;
 
-  private void endTimerStateAndMoveOn(){
-    if(systemState == SystemState.MOVING_TO_EXTENSION || systemState == SystemState.MOVING_TO_STOW){
-      if(timer.hasElapsed(0.7)){
-        timer.stop();
-        timer.reset();
-        setWantedIntakeState(WantedIntakeState.PASSIVE_GRAVITY);
-      }
+  private void endTimerStateAndMoveOn() {
+    if (systemState == SystemState.MOVING_TO_EXTENSION_PASSIVE && timer.hasElapsed(0.7)) {
+      timer.stop();
+      timer.reset();
+      systemState = SystemState.EXTENDED_PASSIVE;
     }
-    if(systemState == SystemState.PASSIVE_GRAVITY){
-      if(timer.hasElapsed(0.15)){
-        timer.stop();
-        timer.reset();
-        switch(endGoal){
-          case EXTENDED:
-            currentPos = CurrentPos.EXTENDED;
-            setWantedIntakeState(WantedIntakeState.EXTENDED_INTAKING);
-            break;
-          case STOWED:
-            currentPos = CurrentPos.STOWED;
-            setWantedIntakeState(WantedIntakeState.STOWED);
-            break;
-        }
-      }
+    if (systemState == SystemState.MOVING_TO_EXTENSION_ACTIVE && timer.hasElapsed(0.7)) {
+      timer.stop();
+      timer.reset();
+      systemState = SystemState.EXTENDED_INTAKING;
+    }
+    if (systemState == SystemState.MOVING_TO_STOW && timer.hasElapsed(0.75)) {
+      timer.stop();
+      timer.reset();
+      systemState = SystemState.STOWED;
     }
   }
 
@@ -187,9 +153,6 @@ public class Intake extends SubsystemBase {
     Logger.recordOutput("Subsystems/Intake/SystemState", systemState);
     Logger.recordOutput("Subsystems/Intake/DesiredState", wantedState);
     endTimerStateAndMoveOn();
-    systemState = handleStateTransition();
     applyStates();
   }
-
-
 }

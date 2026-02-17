@@ -161,7 +161,7 @@ public class IntakeIOCTRE implements IntakeIO {
   }
 
   @Override
-  public void setExtensionNeutralMode(NeutralModeValue neutralMode){
+  public void setExtensionNeutralMode(NeutralModeValue neutralMode) {
     extensionIntakeMotor.setNeutralMode(neutralMode);
   }
 }
