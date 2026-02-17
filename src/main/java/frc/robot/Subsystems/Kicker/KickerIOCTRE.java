@@ -77,7 +77,9 @@ public class KickerIOCTRE implements KickerIO {
         kickerMotorTemp);
 
     inputs.kickerVoltage = kickerAppliedVolts.getValueAsDouble();
-    inputs.kickerPosRad = kickerPosRot.getValueAsDouble()* Constants.LowerChassisConstants.KICKER_POSITION_COEFFICIENT;
+    inputs.kickerPosRad =
+        kickerPosRot.getValueAsDouble()
+            * Constants.LowerChassisConstants.KICKER_POSITION_COEFFICIENT;
     inputs.kickerSupplyCurrent = kickerSupplyCurrentAmps.getValueAsDouble();
     inputs.kickerStatorCurrent = kickerStatorCurrentAmps.getValueAsDouble();
     inputs.kickerTemperature = kickerMotorTemp.getValueAsDouble();

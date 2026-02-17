@@ -225,7 +225,7 @@ public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestCons
         this::getChassisSpeeds,
         this::runVelo,
         new PPHolonomicDriveController(
-            new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
+            new PIDConstants(3.0, 0.0, 0.0), new PIDConstants(3.0, 0.0, 0.0)),
         PP_Config,
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         this);

@@ -3,9 +3,12 @@ package frc.robot;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Config.BruinRobotConfig;
@@ -14,10 +17,14 @@ import frc.robot.Subsystems.Drive.SwerveSubsystem;
 import frc.robot.Subsystems.Drive.SwerveSubsystem.WantedState;
 import frc.robot.Subsystems.Intake.Intake;
 import frc.robot.Subsystems.Intake.IntakeIOCTRE;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
   private final SwerveSubsystem swerveSubsystem;
   private final Intake intake;
+
+  // autochooser
+  private final LoggedDashboardChooser<Command> autoChooser;
 
   private final CommandXboxController controller = new CommandXboxController(0);
 
@@ -42,6 +49,12 @@ public class RobotContainer {
             0.5,
             0.5 / Math.hypot(moduleConstants[0].LocationX, moduleConstants[0].LocationY));
     intake = new Intake(new IntakeIOCTRE(config));
+
+    NamedCommands.registerCommand(
+        "enable autodrive",
+        new InstantCommand(() -> swerveSubsystem.setWantedState(WantedState.AUTOPATH_FOLLOWER)));
+
+    autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     controller
         .a()
@@ -79,5 +92,9 @@ public class RobotContainer {
 
   public SwerveSubsystem getSwerveSubsystem() {
     return swerveSubsystem;
+  }
+
+  public Command getAutonomousCommand() {
+    return autoChooser.get();
   }
 }

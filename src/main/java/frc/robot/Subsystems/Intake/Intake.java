@@ -32,33 +32,35 @@ public class Intake extends SubsystemBase {
   }
 
   private SystemState handleStateTransition() {
-    switch(wantedState){
-      case EXTENDED_INTAKING : {
-        if(atWantedAngle()){
-          return SystemState.EXTENDED_INTAKING;
+    switch (wantedState) {
+      case EXTENDED_INTAKING:
+        {
+          if (atWantedAngle()) {
+            return SystemState.EXTENDED_INTAKING;
+          } else {
+            return SystemState.MOVING_TO_EXTENSION;
+          }
         }
-        else{
-          return SystemState.MOVING_TO_EXTENSION;
+      case EXTENDED_PASSIVE:
+        {
+          if (atWantedAngle()) {
+            return SystemState.EXTENDED_PASSIVE;
+          } else {
+            return SystemState.MOVING_TO_EXTENSION;
+          }
         }
-      }
-      case EXTENDED_PASSIVE: {
-        if(atWantedAngle()){
-          return SystemState.EXTENDED_PASSIVE;
+      case STOWED:
+        {
+          if (atWantedAngle()) {
+            return SystemState.STOWED;
+          } else {
+            return SystemState.MOVING_TO_STOW;
+          }
         }
-        else{
-          return SystemState.MOVING_TO_EXTENSION;
-        }
-      }
-      case STOWED : {
-         if(atWantedAngle()){
-          return SystemState.STOWED;
-        }
-        else{
-          return SystemState.MOVING_TO_STOW;
-        }
-      }
-      case IDLE : return SystemState.IDLE;
-      default: return SystemState.IDLE;
+      case IDLE:
+        return SystemState.IDLE;
+      default:
+        return SystemState.IDLE;
     }
   }
 
@@ -93,19 +95,21 @@ public class Intake extends SubsystemBase {
     this.wantedState = state;
   }
 
-  public boolean atWantedAngle(){
-    if(wantedState == WantedState.EXTENDED_INTAKING || wantedState == WantedState.EXTENDED_PASSIVE){
-      if(MathUtil.isNear(0.0, inputs.extensionPosRadians ,0.1)){
+  public boolean atWantedAngle() {
+    if (wantedState == WantedState.EXTENDED_INTAKING
+        || wantedState == WantedState.EXTENDED_PASSIVE) {
+      if (MathUtil.isNear(0.0, inputs.extensionPosRadians, 0.1)) {
         return true;
       }
     }
-    if(wantedState == WantedState.STOWED){
-      if(MathUtil.isNear(Math.PI / 2, inputs.extensionPosRadians ,0.1)){
+    if (wantedState == WantedState.STOWED) {
+      if (MathUtil.isNear(Math.PI / 2, inputs.extensionPosRadians, 0.1)) {
         return true;
       }
     }
     return false;
-};
+  }
+  ;
 
   @Override
   public void periodic() {

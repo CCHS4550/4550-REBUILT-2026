@@ -112,7 +112,9 @@ public class IntakeIOCTRE implements IntakeIO {
         extensionMotorTemp);
 
     inputs.extensionIntakeVoltage = extensionAppliedVolts.getValueAsDouble();
-    inputs.extensionPosRadians = extensionPosRadians.getValueAsDouble() * Constants.IntakeConstants.EXTENSION_POSITION_COEFFICIENT;
+    inputs.extensionPosRadians =
+        extensionPosRadians.getValueAsDouble()
+            * Constants.IntakeConstants.EXTENSION_POSITION_COEFFICIENT;
     inputs.extensionIntakeSupplyCurrent = extensionSupplyCurrentAmps.getValueAsDouble();
     inputs.extensionIntakeStatorCurrent = extensionStatorCurrentAmps.getValueAsDouble();
     inputs.extensionIntakeVelocityRadPerSec =

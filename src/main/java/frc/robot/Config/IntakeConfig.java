@@ -1,19 +1,19 @@
 package frc.robot.Config;
 
 public class IntakeConfig {
-    public double extensionkP;
+  public double extensionkP;
 
-    public double extensionkI;
+  public double extensionkI;
 
-    public double extensionkD;
+  public double extensionkD;
 
-    public double extensionkS;
+  public double extensionkS;
 
-    public double extensionkV;
+  public double extensionkV;
 
-    public double extensionkG;
+  public double extensionkG;
 
-    public IntakeConfig withExtensionkP(double extensionkP) {
+  public IntakeConfig withExtensionkP(double extensionkP) {
     this.extensionkP = extensionkP;
     return this;
   }
