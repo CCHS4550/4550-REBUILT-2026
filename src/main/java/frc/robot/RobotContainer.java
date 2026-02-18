@@ -12,13 +12,10 @@ import frc.robot.Config.BruinRobotConfig;
 import frc.robot.Subsystems.Drive.SwerveIOCTRE;
 import frc.robot.Subsystems.Drive.SwerveSubsystem;
 import frc.robot.Subsystems.Drive.SwerveSubsystem.WantedState;
-import frc.robot.Subsystems.Intake.Intake;
-import frc.robot.Subsystems.Intake.Intake.WantedIntakeState;
-import frc.robot.Subsystems.Intake.IntakeIOCTRE;
 
 public class RobotContainer {
   private final SwerveSubsystem swerveSubsystem;
-  private final Intake intake;
+  // private final Intake intake;
 
   private final CommandXboxController controller = new CommandXboxController(0);
 
@@ -42,7 +39,7 @@ public class RobotContainer {
             controller,
             0.5,
             0.5 / Math.hypot(moduleConstants[0].LocationX, moduleConstants[0].LocationY));
-    intake = new Intake(new IntakeIOCTRE(config));
+    // intake = new Intake(new IntakeIOCTRE(config));
 
     controller
         .a()
@@ -76,23 +73,24 @@ public class RobotContainer {
         .b()
         .whileFalse(
             new InstantCommand(() -> swerveSubsystem.setWantedState(WantedState.TELEOP_DRIVE)));
-    controller
-        .x()
-        .whileTrue(
-            new InstantCommand(
-                () -> intake.setWantedIntakeState(WantedIntakeState.EXTENDED_PASSIVE)));
-    controller
-        .rightTrigger()
-        .onTrue(
-            new InstantCommand(
-                () -> intake.setWantedIntakeState(WantedIntakeState.EXTENDED_INTAKING)));
-    controller
-        .rightTrigger()
-        .onFalse(new InstantCommand(() -> intake.setWantedIntakeState(WantedIntakeState.IDLE)));
+    // controller
+    //     .x()
+    //     .whileTrue(
+    //         new InstantCommand(
+    //             () -> intake.setWantedIntakeState(WantedIntakeState.EXTENDED_PASSIVE)));
+    // controller
+    //     .rightTrigger()
+    //     .onTrue(
+    //         new InstantCommand(
+    //             () -> intake.setWantedIntakeState(WantedIntakeState.EXTENDED_INTAKING)));
+    // controller
+    //     .rightTrigger()
+    //     .onFalse(new InstantCommand(() -> intake.setWantedIntakeState(WantedIntakeState.IDLE)));
 
-    controller
-        .y()
-        .whileTrue(new InstantCommand(() -> intake.setWantedIntakeState(WantedIntakeState.STOWED)));
+    // controller
+    //     .y()
+    //     .whileTrue(new InstantCommand(() ->
+    // intake.setWantedIntakeState(WantedIntakeState.STOWED)));
   }
 
   public SwerveSubsystem getSwerveSubsystem() {

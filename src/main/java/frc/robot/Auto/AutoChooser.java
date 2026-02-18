@@ -71,7 +71,6 @@ public class AutoChooser extends SendableChooser<Auto> {
 
     autoChooser.reset(null);
 
-    SmartDashboard.putString("Selected Auto", autoChooser.getSelected().name());
 
     return autoChooser;
   }

@@ -48,6 +48,7 @@ class AutoFactory {
   }
 
   Pair<Pose2d, Command> createTestAuto() {
+    System.out.println(trajectoryName(Location.FAR_LEFT_STARTING, Location.LEFT_TRENCH));
     var initialTrajectory =
         trajectoryCache
             .loadTrajectory(trajectoryName(Location.FAR_LEFT_STARTING, Location.LEFT_TRENCH))
