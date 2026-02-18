@@ -17,6 +17,10 @@ public class FieldConstants {
   public static Pose2d passingPoseBlue = new Pose2d();
   public static Pose2d passingPoseRed = new Pose2d();
 
+  public static Pose2d middleStartingPoseBlue = new Pose2d();
+
+  public static Pose2d middleStartingPoseRed = new Pose2d();
+
   public static final double HUB_HEIGHT = 1.8288;
 
   public static double SCORE_HEIGHT_METERS = 0.0;
@@ -34,5 +38,9 @@ public class FieldConstants {
 
   public static Pose2d getPassingPose() {
     return isBlueAlliance() ? passingPoseBlue : passingPoseRed;
+  }
+
+  public static Pose2d getMiddleStartingPose() {
+    return isBlueAlliance() ? middleStartingPoseBlue : middleStartingPoseRed;
   }
 }

@@ -13,7 +13,9 @@ import edu.wpi.first.wpilibj.IterativeRobotBase;
 import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.Auto.AutoChooser;
 import frc.robot.Constant.Constants;
 import frc.robot.Util.DummyLogReceiver;
 import java.lang.reflect.Field;
@@ -32,6 +34,9 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
  */
 public class Robot extends LoggedRobot {
   private RobotContainer robotContainer;
+  private Command autonomousCommand;
+
+  private AutoChooser autoChooser;
 
   public Robot() {
     // Record metadata
@@ -88,6 +93,9 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().setPeriod(0.2);
 
     robotContainer = new RobotContainer();
+
+    autoChooser = AutoChooser.create(robotContainer);
+    SmartDashboard.putData("auto program", autoChooser);
   }
 
   /** This function is called periodically during all modes. */
@@ -103,15 +111,25 @@ public class Robot extends LoggedRobot {
 
   /** This function is called once when the robot is disabled. */
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    autoChooser.reset(null);
+  }
 
   /** This function is called periodically when disabled. */
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    autoChooser.update();
+  }
 
   /** This autonomous runs the autonomous command selected by your {@link Robotstate} class. */
   @Override
-  public void autonomousInit() {}
+  public void autonomousInit() {
+    autonomousCommand = autoChooser.getSelectedCommand().orElse(null);
+
+    if (autonomousCommand != null) {
+      autonomousCommand.schedule();
+    }
+  }
 
   /** This function is called periodically during autonomous. */
   @Override
@@ -119,7 +137,11 @@ public class Robot extends LoggedRobot {
 
   /** This function is called once when teleop is enabled. */
   @Override
-  public void teleopInit() {}
+  public void teleopInit() {
+    if (autonomousCommand != null) {
+      autonomousCommand.cancel();
+    }
+  }
 
   /** This function is called periodically during operator control. */
   @Override
@@ -127,7 +149,9 @@ public class Robot extends LoggedRobot {
 
   /** This function is called once when test mode is enabled. */
   @Override
-  public void testInit() {}
+  public void testInit() {
+    CommandScheduler.getInstance().cancelAll();
+  }
 
   /** This function is called periodically during test mode. */
   @Override
