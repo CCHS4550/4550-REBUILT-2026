@@ -44,8 +44,7 @@ public class RobotContainer {
     controller
         .a()
         .onTrue(
-            new InstantCommand(
-                () -> swerveSubsystem.setTargetRotation(Rotation2d.fromDegrees(90))));
+            new InstantCommand(() -> swerveSubsystem.setTargetRotation(Rotation2d.fromDegrees(0))));
     controller
         .a()
         .whileTrue(
