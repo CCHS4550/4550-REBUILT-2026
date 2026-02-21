@@ -21,7 +21,7 @@ import frc.robot.Subsystems.Turret.Rotation.*;
 import frc.robot.Subsystems.Turret.Shooter.*;
 import frc.robot.Util.TurretMeasurables;
 
-public class Turret extends SubsystemBase {
+public class TurretSubsystem extends SubsystemBase {
   // system states, wanted states -> tracking target?, idle, passing over, etc.
   // TurretState -> how fast shooter is going, rotation angle, and hood angle
 
@@ -50,23 +50,27 @@ public class Turret extends SubsystemBase {
   private ShooterIOInputsAutoLogged shooterInputs = new ShooterIOInputsAutoLogged();
 
   public enum TurretSystemState {
-    TRACKING_TARGET,
+    TRACKING_HUB,
+    TRACKING_PASS,
     IDLE,
     ACTIVE_SHOOTING,
-    ACTIVE_PASSING
+    ACTIVE_PASSING,
+    HOOD_ZEROED
   };
 
   public enum TurretWantedState {
     IDLE,
     SHOOT_SCORE,
     PASS_TO_ALLIANCE,
-    PASSIVE_TRACK
+    PASSIVE_HUB,
+    PASSIVE_PASS,
+    HOOD_ZEROED
   };
 
   private TurretSystemState systemState = TurretSystemState.IDLE;
   private TurretWantedState wantedState = TurretWantedState.IDLE;
 
-  public Turret(ElevationIO elevationIO, RotationIO rotationIO, ShooterIO shooterIO) {
+  public TurretSubsystem(ElevationIO elevationIO, RotationIO rotationIO, ShooterIO shooterIO) {
 
     this.elevationIO = elevationIO;
     this.rotationIO = rotationIO;
@@ -119,18 +123,21 @@ public class Turret extends SubsystemBase {
         if (atSetpoint()) {
           return TurretSystemState.ACTIVE_SHOOTING;
         } else {
-          return TurretSystemState.TRACKING_TARGET;
+          return TurretSystemState.TRACKING_HUB;
         }
 
       case PASS_TO_ALLIANCE:
         if (atSetpoint()) {
           return TurretSystemState.ACTIVE_PASSING;
         } else {
-          return TurretSystemState.TRACKING_TARGET;
+          return TurretSystemState.TRACKING_PASS;
         }
-      case PASSIVE_TRACK:
-        return TurretSystemState.TRACKING_TARGET;
+      case PASSIVE_PASS:
+        return TurretSystemState.TRACKING_PASS;
 
+      case PASSIVE_HUB:
+        return TurretSystemState.TRACKING_HUB;
+        
       default:
         return TurretSystemState.IDLE;
     }
@@ -141,7 +148,9 @@ public class Turret extends SubsystemBase {
       case IDLE:
         atGoal = true;
         break;
-      case TRACKING_TARGET:
+      case TRACKING_HUB
+      
+      :
         // Rotation2d calculatedAngle = findFieldCentricAngleToTarget(new
         // Pose2d()).plus(findAngleAdjustmentForRobotInertia());
         // convertToClosestBoundedTurretAngle(calculatedAngle.getRadians());
@@ -188,8 +197,8 @@ public class Turret extends SubsystemBase {
         // Rotation2d calculatedAngle = findFieldCentricAngleToTarget(new
         // Pose2d()).plus(findAngleAdjustmentForRobotInertia());
         // convertToClosestBoundedTurretAngle(calculatedAngle.getRadians());
-        desiredPose = FieldConstants.getScoringPose();
-        desiredHeight = FieldConstants.HUB_HEIGHT;
+        desiredPose = FieldConstants.getPassingPose();
+        desiredHeight = 0.0;
         // put calc here
         noInertiaMeasurables =
             new TurretMeasurables(
