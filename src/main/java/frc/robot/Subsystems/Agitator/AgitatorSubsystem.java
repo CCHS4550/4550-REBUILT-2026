@@ -2,7 +2,7 @@ package frc.robot.Subsystems.Agitator;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class Agitator extends SubsystemBase {
+public class AgitatorSubsystem extends SubsystemBase {
   public enum WantedState {
     IDLE,
     SPINNING
@@ -20,7 +20,7 @@ public class Agitator extends SubsystemBase {
 
   private AgitatorIOInputsAutoLogged inputs = new AgitatorIOInputsAutoLogged();
 
-  public Agitator(AgitatorIO agitatorIO) {
+  public AgitatorSubsystem(AgitatorIO agitatorIO) {
     this.agitatorIO = agitatorIO;
   }
 
@@ -48,5 +48,9 @@ public class Agitator extends SubsystemBase {
         agitatorIO.setVoltage(5.0);
         break;
     }
+  }
+
+  public void setWantedState (WantedState wantedState){
+    this.wantedState = wantedState;
   }
 }
