@@ -37,8 +37,8 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestConsumer {
-  private final PIDController choreoXController = new PIDController(3.14, 0, 0);
-  private final PIDController choreoYController = new PIDController(3.14, 0, 0);
+  private final PIDController choreoXController = new PIDController(1.14, 0, 0);
+  private final PIDController choreoYController = new PIDController(1.14, 0, 0);
   private final PIDController choreoThetaController = new PIDController(0.5, 0, 0);
 
   private Trajectory<SwerveSample> desiredChoreoTrajectory;
