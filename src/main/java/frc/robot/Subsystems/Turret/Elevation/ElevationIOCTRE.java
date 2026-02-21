@@ -69,7 +69,6 @@ public class ElevationIOCTRE implements ElevationIO {
     encoderConfig = new CANcoderConfiguration();
     encoderConfig
         .MagnetSensor
-        .withAbsoluteSensorDiscontinuityPoint(0.82)
         .withMagnetOffset(0.0)
         .withSensorDirection(SensorDirectionValue.Clockwise_Positive);
     elevationEncoder.getConfigurator().apply(encoderConfig);
