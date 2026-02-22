@@ -52,8 +52,8 @@ public class ElevationIOCTRE implements ElevationIO {
     elevationConfig = new TalonFXConfiguration();
     elevationConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     elevationConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    elevationConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
-    elevationConfig.CurrentLimits.StatorCurrentLimit = 90.0;
+    elevationConfig.CurrentLimits.SupplyCurrentLimit = 10.0;
+    elevationConfig.CurrentLimits.StatorCurrentLimit = 20.0;
 
     elevationConfig.Slot0.kP = bruinRobotConfig.getTurretConfig().elevationKp;
     elevationConfig.Slot0.kI = bruinRobotConfig.getTurretConfig().elevationKi;
@@ -69,7 +69,10 @@ public class ElevationIOCTRE implements ElevationIO {
     encoderConfig = new CANcoderConfiguration();
     encoderConfig
         .MagnetSensor
-        .withMagnetOffset(0.0)
+        .withMagnetOffset(
+            (-(Constants.TurretConstants.ELEVATION_DEFAULT_ENCODER_READING_AT_SHALLOWEST_ANGLE))
+                + (Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE
+                    / Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT))
         .withSensorDirection(SensorDirectionValue.Clockwise_Positive);
     elevationEncoder.getConfigurator().apply(encoderConfig);
 
@@ -88,8 +91,8 @@ public class ElevationIOCTRE implements ElevationIO {
         elevationAppliedVolts,
         elevationSupplyCurrentAmps,
         elevationStatorCurrentAmps,
-        elevationAccelerationRotationsPerSecSquared,
-        elevationMotorTemp);
+        elevationMotorTemp,
+        elevationAccelerationRotationsPerSecSquared);
     BaseStatusSignal.refreshAll(elevationAngleRotations, elevationVelocityRotationsPerSec);
     inputs.elevationVoltage = elevationAppliedVolts.getValueAsDouble();
     inputs.elevationSupplyCurrent = elevationSupplyCurrentAmps.getValueAsDouble();
@@ -98,12 +101,15 @@ public class ElevationIOCTRE implements ElevationIO {
 
     inputs.elevationVelocityRadPerSec =
         elevationVelocityRotationsPerSec.getValueAsDouble()
-            * Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT;
+            * Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT;
     inputs.elevationAccelRadPerSecSquared =
         elevationAccelerationRotationsPerSecSquared.getValueAsDouble()
             * Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT;
 
-    inputs.elevationAngle = Rotation2d.fromRotations(elevationAngleRotations.getValueAsDouble());
+    inputs.elevationAngle =
+        Rotation2d.fromRadians(
+            elevationAngleRotations.getValueAsDouble()
+                * Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT);
   }
 
   @Override

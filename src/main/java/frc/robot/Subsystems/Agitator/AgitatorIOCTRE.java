@@ -27,7 +27,10 @@ public class AgitatorIOCTRE implements AgitatorIO {
   private final StatusSignal<Temperature> agitatorMotorTemp;
 
   public AgitatorIOCTRE(BruinRobotConfig bruinRobotConfig) {
-    agitatorMotor = new TalonFX(0);
+    agitatorMotor =
+        new TalonFX(
+            bruinRobotConfig.AGITATOR_MOTOR.getDeviceNumber(),
+            bruinRobotConfig.AGITATOR_MOTOR.getBus());
     agitatorConfig = new TalonFXConfiguration();
 
     agitatorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;

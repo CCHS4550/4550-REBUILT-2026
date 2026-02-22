@@ -55,8 +55,8 @@ public class RotationIOCTRE implements RotationIO {
     rotationConfig = new TalonFXConfiguration();
     rotationConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     rotationConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    rotationConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
-    rotationConfig.CurrentLimits.StatorCurrentLimit = 90.0;
+    rotationConfig.CurrentLimits.SupplyCurrentLimit = 20.0;
+    rotationConfig.CurrentLimits.StatorCurrentLimit = 45.0;
 
     rotationConfig.Slot0.kP = bruinRobotConfig.getTurretConfig().rotationKp;
     rotationConfig.Slot0.kI = bruinRobotConfig.getTurretConfig().rotationKi;
@@ -68,10 +68,12 @@ public class RotationIOCTRE implements RotationIO {
     // Hardware-level protection
     rotationConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     rotationConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
-        Math.toRadians(359.0) / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT;
+        Math.toRadians(120.0) / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT;
 
     rotationConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    rotationConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.0;
+    rotationConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
+        Math.toRadians(-120.0) / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT;
+    ;
 
     rotationConfig.MotionMagic.MotionMagicCruiseVelocity = 0.4;
     rotationConfig.MotionMagic.MotionMagicAcceleration = 0.3; // some constant idk
@@ -81,7 +83,7 @@ public class RotationIOCTRE implements RotationIO {
     encoderConfig = new CANcoderConfiguration();
     encoderConfig
         .MagnetSensor
-        .withMagnetOffset(0.0)
+        .withMagnetOffset(-0.7)
         .withSensorDirection(SensorDirectionValue.Clockwise_Positive);
     rotationEncoder.getConfigurator().apply(encoderConfig);
 
@@ -101,8 +103,8 @@ public class RotationIOCTRE implements RotationIO {
         rotationAppliedVolts,
         rotationSupplyCurrentAmps,
         rotationStatorCurrentAmps,
-        rotationAccelerationRotationsPerSecSquared,
-        rotationMotorTemp);
+        rotationMotorTemp,
+        rotationAccelerationRotationsPerSecSquared);
     BaseStatusSignal.refreshAll(rotationAngleRotations, rotationVelocityRotationsPerSec);
     inputs.rotationVoltage = rotationAppliedVolts.getValueAsDouble();
     inputs.rotationSupplyCurrent = rotationSupplyCurrentAmps.getValueAsDouble();
@@ -111,12 +113,15 @@ public class RotationIOCTRE implements RotationIO {
 
     inputs.rotationVelocityRadPerSec =
         rotationVelocityRotationsPerSec.getValueAsDouble()
-            * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT;
+            * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER;
     inputs.rotationAccelRadPerSecSquared =
         rotationAccelerationRotationsPerSecSquared.getValueAsDouble()
             * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT;
 
-    inputs.rotationAngle = Rotation2d.fromRotations(rotationAngleRotations.getValueAsDouble());
+    inputs.rotationAngle =
+        Rotation2d.fromRadians(
+            rotationAngleRotations.getValueAsDouble()
+                * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER);
   }
 
   @Override

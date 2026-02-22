@@ -23,6 +23,8 @@ import frc.robot.Subsystems.Turret.Rotation.RotationIOInputsAutoLogged;
 import frc.robot.Subsystems.Turret.Shooter.ShooterIO;
 import frc.robot.Subsystems.Turret.Shooter.ShooterIOInputsAutoLogged;
 import frc.robot.Util.TurretMeasurables;
+import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 
 public class Turret extends SubsystemBase {
   // system states, wanted states -> tracking target?, idle, passing over, etc.
@@ -31,11 +33,9 @@ public class Turret extends SubsystemBase {
   /** This is a ratio comparing turret position error per radian per second. */
   private static final double TURRET_POSITION_ERROR_TO_DRIVEBASE_VELOCITY_PROPORTION = 0.213;
 
-  private static final double MIN_ANGLE = 0.0;
+  private static final double MIN_ANGLE = Math.toRadians(-135);
 
-  private static final double MAX_ANGLE = Math.toRadians(359);
-
-  private static final double HYSTERESIS_THRESHOLD = Math.toRadians(20.0);
+  private static final double MAX_ANGLE = Math.toRadians(135);
 
   private ElevationIO elevationIO;
   private RotationIO rotationIO;
@@ -86,8 +86,8 @@ public class Turret extends SubsystemBase {
     this.rotationIO = rotationIO;
     this.shooterIO = shooterIO;
 
-    currentTurretMeasurables = new TurretMeasurables(null, null, 0);
-    wantedTurretMeasurables = new TurretMeasurables(null, null);
+    currentTurretMeasurables = new TurretMeasurables(new Rotation2d(), new Rotation2d(), 0);
+    wantedTurretMeasurables = new TurretMeasurables(new Rotation2d(), new Rotation2d());
     // fieldOrientedMeasureables = new TurretMeasurables(null, null, 0);
 
     atGoal = true;
@@ -98,6 +98,10 @@ public class Turret extends SubsystemBase {
     elevationIO.updateInputs(elevationInputs);
     rotationIO.updateInputs(rotationInputs);
     shooterIO.updateInputs(shooterInputs);
+
+    Logger.processInputs("Subsystems/elevation", elevationInputs);
+    Logger.processInputs("Subsystems/rotation", rotationInputs);
+    Logger.processInputs("Subsystems/shooter", shooterInputs);
 
     chassisSpeeds = Robotstate.getInstance().getRobotChassisSpeeds();
     turretPose =
@@ -245,15 +249,15 @@ public class Turret extends SubsystemBase {
     return MathUtil.isNear(
             currentTurretMeasurables.elevationAngle.getRadians(),
             wantedTurretMeasurables.elevationAngle.getRadians(),
-            2.0)
+            0.1)
         && MathUtil.isNear(
             currentTurretMeasurables.rotationAngle.getRadians(),
             wantedTurretMeasurables.rotationAngle.getRadians(),
-            2.0)
+            0.1)
         && MathUtil.isNear(
             currentTurretMeasurables.shooterRadiansPerSec,
             wantedTurretMeasurables.shooterRadiansPerSec,
-            2.0);
+            0.1);
   }
 
   public void setWantedState(TurretWantedState wantedState) {
@@ -314,54 +318,20 @@ public class Turret extends SubsystemBase {
                     * Robotstate.getInstance().getRobotChassisSpeeds().omegaRadiansPerSecond));
   }
 
- public void convertToBoundedTurretAngle() {
-    double current = normalize(rotationInputs.rotationAngle.getRadians());
-    double target  = normalize(wantedTurretMeasurables.rotationAngle.getRadians());
+  public void convertToBoundedTurretAngle() {
+    double normAngle = normalize(wantedTurretMeasurables.rotationAngle.getRadians());
 
-    // TRUE shortest path (always between -180 and +180 degrees)
-    double shortestDelta = MathUtil.inputModulus(target - current, -Math.PI, Math.PI);
-
-    // The long way around the circle
-    double longestDelta = shortestDelta - (Math.signum(shortestDelta) * 2.0 * Math.PI);
-
-    double shortEnd = current + shortestDelta;
-    double longEnd  = current + longestDelta;
-
-    boolean shortValid = isWithinBounds(shortEnd);
-    boolean longValid  = isWithinBounds(longEnd);
-
-    double chosenEnd;
-
-    if (shortValid) {
-        // Preferred path is legal
-        chosenEnd = shortEnd;
-        targetIsInDeadzoneFlag = false;
-
-    } else if (longValid) {
-        // Short path crosses hardstop — measure overshoot
-        double overshoot = distanceOutsideBounds(shortEnd);
-
-        if (overshoot > HYSTERESIS_THRESHOLD) {
-            // Commit to long flip
-            chosenEnd = longEnd;
-            targetIsInDeadzoneFlag = false; // We are actively moving to a valid target
-        } else {
-            // Stay pinned at wall
-            chosenEnd = clamp(shortEnd);
-            targetIsInDeadzoneFlag = true; // Tell the shooter we can't track right now
-        }
-
+    if (!isWithinBounds(normAngle)) {
+      wantedTurretMeasurables.rotationAngle = Rotation2d.fromRadians(clamp(normAngle));
+      targetIsInDeadzoneFlag = true;
     } else {
-        // Neither valid (extreme edge case, usually only if MIN/MAX are messed up)
-        chosenEnd = clamp(shortEnd);
-        targetIsInDeadzoneFlag = true; 
+      wantedTurretMeasurables.rotationAngle = Rotation2d.fromRadians(normAngle);
+      targetIsInDeadzoneFlag = false;
     }
-
-    wantedTurretMeasurables.rotationAngle = Rotation2d.fromRadians(clamp(chosenEnd));
-}
+  }
 
   private double normalize(double angle) {
-    return MathUtil.inputModulus(angle, 0.0, 2.0 * Math.PI);
+    return MathUtil.inputModulus(angle, -Math.PI, Math.PI);
   }
 
   private boolean isWithinBounds(double angle) {
@@ -372,9 +342,13 @@ public class Turret extends SubsystemBase {
     return MathUtil.clamp(angle, MIN_ANGLE, MAX_ANGLE);
   }
 
-  private double distanceOutsideBounds(double angle) {
-    if (angle < MIN_ANGLE) return MIN_ANGLE - angle;
-    if (angle > MAX_ANGLE) return angle - MAX_ANGLE;
-    return 0.0;
+  @AutoLogOutput(key = "Subsystems/elevation")
+  public double displayTestingRadiansElevation() {
+    return elevationInputs.elevationAngle.getRadians();
+  }
+
+  @AutoLogOutput(key = "Subsystems/rotation")
+  public double displayTestingRadiansRotation() {
+    return rotationInputs.rotationAngle.getRadians();
   }
 }

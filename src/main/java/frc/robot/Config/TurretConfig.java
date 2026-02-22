@@ -10,6 +10,8 @@ public class TurretConfig {
   public double elevationKp;
   public double elevationKi;
   public double elevationKd;
+  public double elevationKs;
+  public double elevationKv;
 
   public double shooterKp;
   public double shooterKi;
@@ -54,6 +56,16 @@ public class TurretConfig {
 
   public TurretConfig withElevationKd(double elevationKd) {
     this.elevationKd = elevationKd;
+    return this;
+  }
+
+  public TurretConfig withElevationKs(double elevationKs) {
+    this.elevationKs = elevationKs;
+    return this;
+  }
+
+  public TurretConfig withElevationKv(double elevationKv) {
+    this.elevationKv = elevationKv;
     return this;
   }
 
