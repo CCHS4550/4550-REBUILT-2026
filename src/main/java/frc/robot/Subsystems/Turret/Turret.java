@@ -123,8 +123,6 @@ public class Turret extends SubsystemBase {
 
     systemState = handleStateTransitions();
     applyStates();
-
-    setWantedState(wantedState);
     atGoal = atSetpoint();
   }
 

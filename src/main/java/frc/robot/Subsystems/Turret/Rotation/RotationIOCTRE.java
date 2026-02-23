@@ -63,18 +63,10 @@ public class RotationIOCTRE implements RotationIO {
     rotationConfig.Slot0.kD = bruinRobotConfig.getTurretConfig().rotationKd;
     rotationConfig.Slot0.kS = bruinRobotConfig.getTurretConfig().rotationKs;
     rotationConfig.Slot0.kV = bruinRobotConfig.getTurretConfig().rotationKv;
+    rotationConfig.Feedback.withFeedbackRemoteSensorID(
+        bruinRobotConfig.ROTATION_CANCODER.getDeviceNumber());
     rotationConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     rotationConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    // Hardware-level protection
-    rotationConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    rotationConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
-        Math.toRadians(120.0) / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT;
-
-    rotationConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    rotationConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
-        Math.toRadians(-120.0) / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT;
-    ;
-
     rotationConfig.MotionMagic.MotionMagicCruiseVelocity = 0.4;
     rotationConfig.MotionMagic.MotionMagicAcceleration = 0.3; // some constant idk
 
@@ -88,7 +80,7 @@ public class RotationIOCTRE implements RotationIO {
     rotationEncoder.getConfigurator().apply(encoderConfig);
 
     rotationMotor.setPosition(0.0);
-    rotationAngleRotations = rotationEncoder.getAbsolutePosition();
+    rotationAngleRotations = rotationEncoder.getPosition();
     rotationAppliedVolts = rotationMotor.getMotorVoltage();
     rotationSupplyCurrentAmps = rotationMotor.getSupplyCurrent();
     rotationStatorCurrentAmps = rotationMotor.getStatorCurrent();
@@ -115,20 +107,21 @@ public class RotationIOCTRE implements RotationIO {
         rotationVelocityRotationsPerSec.getValueAsDouble()
             * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER;
     inputs.rotationAccelRadPerSecSquared =
-        rotationAccelerationRotationsPerSecSquared.getValueAsDouble()
-            * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT;
+        (rotationAccelerationRotationsPerSecSquared.getValueAsDouble()
+            * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT);
 
     inputs.rotationAngle =
         Rotation2d.fromRadians(
-            rotationAngleRotations.getValueAsDouble()
-                * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER);
+            (rotationAngleRotations.getValueAsDouble()
+                * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER));
   }
 
   @Override
   public void setRotationAngle(Rotation2d angle) {
     rotationMotor.setControl(
         motionMagicVoltage.withPosition(
-            angle.getRadians() / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT));
+            angle.getRadians()
+                / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER));
   }
 
   @Override

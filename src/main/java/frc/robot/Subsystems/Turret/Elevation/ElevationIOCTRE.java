@@ -52,13 +52,15 @@ public class ElevationIOCTRE implements ElevationIO {
     elevationConfig = new TalonFXConfiguration();
     elevationConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     elevationConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    elevationConfig.CurrentLimits.SupplyCurrentLimit = 10.0;
-    elevationConfig.CurrentLimits.StatorCurrentLimit = 20.0;
+    elevationConfig.CurrentLimits.SupplyCurrentLimit = 30;
+    elevationConfig.CurrentLimits.StatorCurrentLimit = 40.0;
 
     elevationConfig.Slot0.kP = bruinRobotConfig.getTurretConfig().elevationKp;
     elevationConfig.Slot0.kI = bruinRobotConfig.getTurretConfig().elevationKi;
     elevationConfig.Slot0.kD = bruinRobotConfig.getTurretConfig().elevationKd;
-    elevationConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    elevationConfig.Feedback.withFeedbackRemoteSensorID(
+        bruinRobotConfig.ELEVATION_CANCODER.getDeviceNumber());
+    elevationConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     elevationConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
     elevationConfig.MotionMagic.MotionMagicCruiseVelocity = 0.4;
@@ -70,13 +72,14 @@ public class ElevationIOCTRE implements ElevationIO {
     encoderConfig
         .MagnetSensor
         .withMagnetOffset(
-            (-(Constants.TurretConstants.ELEVATION_DEFAULT_ENCODER_READING_AT_SHALLOWEST_ANGLE))
-                + (Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE
+            ((-(Constants.TurretConstants.ELEVATION_DEFAULT_ENCODER_READING_AT_SHALLOWEST_ANGLE)))
+                + (Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS
                     / Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT))
-        .withSensorDirection(SensorDirectionValue.Clockwise_Positive);
+        // 0.0)
+        .withSensorDirection(SensorDirectionValue.CounterClockwise_Positive);
     elevationEncoder.getConfigurator().apply(encoderConfig);
 
-    elevationAngleRotations = elevationEncoder.getAbsolutePosition();
+    elevationAngleRotations = elevationEncoder.getPosition();
     elevationAppliedVolts = elevationMotor.getMotorVoltage();
     elevationSupplyCurrentAmps = elevationMotor.getSupplyCurrent();
     elevationStatorCurrentAmps = elevationMotor.getStatorCurrent();
@@ -101,22 +104,27 @@ public class ElevationIOCTRE implements ElevationIO {
 
     inputs.elevationVelocityRadPerSec =
         elevationVelocityRotationsPerSec.getValueAsDouble()
-            * Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT;
+            * Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT
+            * -1;
     inputs.elevationAccelRadPerSecSquared =
         elevationAccelerationRotationsPerSecSquared.getValueAsDouble()
-            * Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT;
+            * Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT
+            * -1;
 
     inputs.elevationAngle =
         Rotation2d.fromRadians(
             elevationAngleRotations.getValueAsDouble()
-                * Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT);
+                * Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT
+                * -1);
   }
 
   @Override
   public void setElevationAngle(Rotation2d angle) {
     elevationMotor.setControl(
         motionMagicVoltage.withPosition(
-            angle.getRadians() / Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT));
+            angle.getRadians()
+                / Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT
+                * -1));
   }
 
   @Override

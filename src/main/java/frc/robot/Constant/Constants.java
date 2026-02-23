@@ -55,8 +55,8 @@ public final class Constants {
   }
 
   public static final class TurretConstants {
-    public static final double ELEVATION_GEAR_RATIO = 1.0 / 71.0; // fill
-    public static final double ELEVATION_ENCODER_GEAR_RATIO = 1.0 / 8.75;
+    public static final double ELEVATION_GEAR_RATIO = 1.0 / 149.08; // fill
+    public static final double ELEVATION_ENCODER_GEAR_RATIO = -1.0 / 18.5;
     public static final double ELEVATION_POSITION_COEFFICIENT = 2 * Math.PI * ELEVATION_GEAR_RATIO;
 
     public static final double ELEVATION_ENCODER_POSITION_COEFFICIENT =
@@ -68,8 +68,10 @@ public final class Constants {
     public static final double ROTATION_POSITION_COEFFICIENT_TO_ENCODER =
         2 * Math.PI * ROTATION_GEAR_RATIO_TO_ENCODER;
 
-    public static final double ELEVATION_DEFAULT_ENCODER_READING_AT_SHALLOWEST_ANGLE = 6.55;
-    public static final double SHALLOWEST_POSSIBLE_ELEVATION_ANGLE = 50.0;
+    // public static final double ELEVATION_DEFAULT_ENCODER_READING_AT_SHALLOWEST_ANGLE = -0.48;
+    public static final double ELEVATION_DEFAULT_ENCODER_READING_AT_SHALLOWEST_ANGLE = 0.35;
+    public static final double SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS = Math.toRadians(49.0);
+    public static final double STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS = Math.toRadians(78);
 
     public static final double SHOOTER_MAX_RADIANS_PER_SEC = 0.0;
 

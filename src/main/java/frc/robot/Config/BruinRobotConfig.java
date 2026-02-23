@@ -36,19 +36,19 @@ public class BruinRobotConfig {
   public final CanDeviceID BACK_RIGHT_STEER_MOTOR = new CanDeviceID(11);
   public final CanDeviceID BACK_RIGHT_STEER_ENCODER = new CanDeviceID(12);
 
-  public final CanDeviceID KICKER_MOTOR = new CanDeviceID(16);
-  public final CanDeviceID AGITATOR_MOTOR = new CanDeviceID(23);
+  public final CanDeviceID KICKER_MOTOR = new CanDeviceID(16, CANIVORE_CANBUS);
+  public final CanDeviceID AGITATOR_MOTOR = new CanDeviceID(23, CANIVORE_CANBUS);
 
-  public final CanDeviceID ROTATION_MOTOR = new CanDeviceID(19);
-  public final CanDeviceID ELEVATION_MOTOR = new CanDeviceID(20);
-  public final CanDeviceID SHOOTER_MOTOR = new CanDeviceID(17);
-  public final CanDeviceID SHOOTER_MOTOR_2 = new CanDeviceID(18);
+  public final CanDeviceID ROTATION_MOTOR = new CanDeviceID(19, CANIVORE_CANBUS);
+  public final CanDeviceID ELEVATION_MOTOR = new CanDeviceID(20, CANIVORE_CANBUS);
+  public final CanDeviceID SHOOTER_MOTOR = new CanDeviceID(17, CANIVORE_CANBUS);
+  public final CanDeviceID SHOOTER_MOTOR_2 = new CanDeviceID(18, CANIVORE_CANBUS);
 
-  public final CanDeviceID ELEVATION_CANCODER = new CanDeviceID(21);
-  public final CanDeviceID ROTATION_CANCODER = new CanDeviceID(22);
+  public final CanDeviceID ELEVATION_CANCODER = new CanDeviceID(21, CANIVORE_CANBUS);
+  public final CanDeviceID ROTATION_CANCODER = new CanDeviceID(22, CANIVORE_CANBUS);
 
-  public final CanDeviceID INTAKE_ROLLER = new CanDeviceID(14);
-  public final CanDeviceID INTAKE_EXTENSION = new CanDeviceID(15);
+  public final CanDeviceID INTAKE_ROLLER = new CanDeviceID(14, CANIVORE_CANBUS);
+  public final CanDeviceID INTAKE_EXTENSION = new CanDeviceID(15, CANIVORE_CANBUS);
 
   /**
    * Wheel radius in meters. Accuracy in these measurements affects wheel odometry which measures
