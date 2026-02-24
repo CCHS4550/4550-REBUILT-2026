@@ -11,6 +11,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -113,9 +114,11 @@ public class ElevationIOCTRE implements ElevationIO {
 
     inputs.elevationAngle =
         Rotation2d.fromRadians(
-            elevationAngleRotations.getValueAsDouble()
+            (Math.PI) -
+            (elevationAngleRotations.getValueAsDouble()
                 * Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT
-                * -1);
+                )
+            - Units.degreesToRadians(77.312));
   }
 
   @Override

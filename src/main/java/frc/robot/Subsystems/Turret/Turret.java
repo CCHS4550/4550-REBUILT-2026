@@ -67,14 +67,16 @@ public class Turret extends SubsystemBase {
     TRACKING_TARGET,
     IDLE,
     ACTIVE_SHOOTING,
-    ACTIVE_PASSING
+    ACTIVE_PASSING,
+    TESTING
   };
 
   public enum TurretWantedState {
     IDLE,
     SHOOT_SCORE,
     PASS_TO_ALLIANCE,
-    PASSIVE_TRACK
+    PASSIVE_TRACK,
+    TESTING
   };
 
   private TurretSystemState systemState = TurretSystemState.IDLE;
@@ -124,6 +126,8 @@ public class Turret extends SubsystemBase {
     systemState = handleStateTransitions();
     applyStates();
     atGoal = atSetpoint();
+
+    System.out.println("Elevation Angle!: " + elevationInputs.elevationAngle.getRotations());
   }
 
   public TurretSystemState handleStateTransitions() {
@@ -146,6 +150,9 @@ public class Turret extends SubsystemBase {
         }
       case PASSIVE_TRACK:
         return TurretSystemState.TRACKING_TARGET;
+
+      case TESTING:
+        return TurretSystemState.TESTING;
 
       default:
         return TurretSystemState.IDLE;
@@ -223,6 +230,10 @@ public class Turret extends SubsystemBase {
         convertToBoundedTurretAngle();
         goToWantedState();
 
+        break;
+
+      case TESTING:
+        goToWantedState();
         break;
       default:
         break;
@@ -348,5 +359,9 @@ public class Turret extends SubsystemBase {
   @AutoLogOutput(key = "Subsystems/rotation")
   public double displayTestingRadiansRotation() {
     return rotationInputs.rotationAngle.getRadians();
+  }
+
+  public void setWantedTurretMeasurables(TurretMeasurables wanted) {
+    this.wantedTurretMeasurables = wanted;
   }
 }

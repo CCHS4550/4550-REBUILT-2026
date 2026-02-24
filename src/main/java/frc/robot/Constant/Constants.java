@@ -55,8 +55,8 @@ public final class Constants {
   }
 
   public static final class TurretConstants {
-    public static final double ELEVATION_GEAR_RATIO = 1.0 / 149.08; // fill
-    public static final double ELEVATION_ENCODER_GEAR_RATIO = -1.0 / 18.5;
+    public static final double ELEVATION_GEAR_RATIO = 1.0 / 21.0; // fill
+    public static final double ELEVATION_ENCODER_GEAR_RATIO = -1.0 / 8.80;
     public static final double ELEVATION_POSITION_COEFFICIENT = 2 * Math.PI * ELEVATION_GEAR_RATIO;
 
     public static final double ELEVATION_ENCODER_POSITION_COEFFICIENT =
