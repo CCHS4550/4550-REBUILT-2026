@@ -10,6 +10,8 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
@@ -118,9 +120,12 @@ public class RotationIOCTRE implements RotationIO {
 
   @Override
   public void setRotationAngle(Rotation2d angle) {
+
+    Rotation2d wantedAng = new Rotation2d(MathUtil.clamp(Constants.TurretConstants.BACKWARDS_ROTATION_LIMIT_RADIANS, angle.getRadians(), Constants.TurretConstants.FORWARD_ROTATION_LIMIT_RADIANS));
+
     rotationMotor.setControl(
         motionMagicVoltage.withPosition(
-            angle.getRadians()
+            wantedAng.getRadians()
                 / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER));
   }
 

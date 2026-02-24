@@ -123,6 +123,14 @@ public class ElevationIOCTRE implements ElevationIO {
 
   @Override
   public void setElevationAngle(Rotation2d angle) {
+
+    if (angle.getRadians() > Constants.TurretConstants.STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS) {
+        angle = Rotation2d.fromRadians(Constants.TurretConstants.STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
+    }
+    if (angle.getRadians() < Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS) {
+        angle = Rotation2d.fromRadians(Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
+    }
+
     elevationMotor.setControl(
         motionMagicVoltage.withPosition(
             angle.getRadians()

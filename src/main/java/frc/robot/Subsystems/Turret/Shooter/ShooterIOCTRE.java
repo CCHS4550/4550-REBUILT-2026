@@ -104,6 +104,13 @@ public class ShooterIOCTRE implements ShooterIO {
 
   @Override
   public void setVelo(AngularVelocity velo) {
-    shooterMotor.setControl(motionMagicVelocityVoltage.withVelocity(velo));
+    // double velocitySetpoint = velo.magnitude() / 60;
+    // shooterMotor.setControl (motionMagicVelocityVoltage.withVelocity(velocitySetpoint).withSlot(0).withEnableFOC(true));
+    // shooterMotor2.setControl (motionMagicVelocityVoltage.withVelocity(velocitySetpoint).withSlot(0).withEnableFOC(true));
+
+    shooterMotor.setControl(motionMagicVelocityVoltage.withVelocity(velo).withSlot(0).withEnableFOC(true));
+    shooterMotor2.setControl(motionMagicVelocityVoltage.withVelocity(velo).withSlot(0).withEnableFOC(true));
+
+
   }
 }
