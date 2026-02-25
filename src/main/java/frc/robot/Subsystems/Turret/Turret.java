@@ -126,8 +126,8 @@ public class Turret extends SubsystemBase {
     systemState = handleStateTransitions();
     applyStates();
     atGoal = atSetpoint();
-
-    System.out.println("Elevation Angle!: " + elevationInputs.elevationAngle.getRotations());
+    System.out.println("Elevation Angle!: " + rotationInputs.rotationVoltage);
+    System.out.println(rotationInputs.rotationAngle.getDegrees());
   }
 
   public TurretSystemState handleStateTransitions() {
@@ -162,6 +162,9 @@ public class Turret extends SubsystemBase {
   public void applyStates() {
     switch (systemState) {
       case IDLE:
+        rotationIO.setVoltage(0);
+        elevationIO.setVoltage(0);
+        shooterIO.setVoltage(0);
         atGoal = true;
         break;
       case TRACKING_TARGET:
@@ -233,7 +236,7 @@ public class Turret extends SubsystemBase {
         break;
 
       case TESTING:
-        goToWantedState();
+        rotationIO.setRotationAngle(Rotation2d.kZero);
         break;
       default:
         break;

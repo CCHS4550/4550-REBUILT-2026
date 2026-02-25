@@ -3,7 +3,6 @@ package frc.robot;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Config.BruinRobotConfig;
@@ -15,7 +14,6 @@ import frc.robot.Subsystems.Turret.Rotation.RotationIOCTRE;
 import frc.robot.Subsystems.Turret.Shooter.ShooterIOCTRE;
 import frc.robot.Subsystems.Turret.Turret;
 import frc.robot.Subsystems.Turret.Turret.TurretWantedState;
-import frc.robot.Util.TurretMeasurables;
 
 public class RobotContainer {
   // private final SwerveSubsystem swerveSubsystem;
@@ -110,14 +108,14 @@ public class RobotContainer {
     //                         new Rotation2d(Units.degreesToRadians(20)),
     //                         new Rotation2d(Units.degreesToRadians(20), 2)))));
 
-    controller
-        .rightTrigger()
-        .onTrue(
-            new InstantCommand(
-                () ->
-                    turret.setWantedTurretMeasurables(
-                        new TurretMeasurables(
-                            new Rotation2d(0), new Rotation2d(45 * ((2 * Math.PI) / 360))))));
+    // controller
+    //     .rightTrigger()
+    //     .onTrue(
+    //         new InstantCommand(
+    //             () ->
+    //                 turret.setWantedTurretMeasurables(
+    //                     new TurretMeasurables(
+    //                         new Rotation2d(0), new Rotation2d(45 * ((2 * Math.PI) / 360))))));
 
     controller
         .rightTrigger()

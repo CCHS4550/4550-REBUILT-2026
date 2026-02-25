@@ -10,8 +10,6 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
-
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
@@ -57,20 +55,21 @@ public class RotationIOCTRE implements RotationIO {
     rotationConfig = new TalonFXConfiguration();
     rotationConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     rotationConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    rotationConfig.CurrentLimits.SupplyCurrentLimit = 20.0;
-    rotationConfig.CurrentLimits.StatorCurrentLimit = 45.0;
+    rotationConfig.CurrentLimits.SupplyCurrentLimit = 60.0;
+    rotationConfig.CurrentLimits.StatorCurrentLimit = 90.0;
 
     rotationConfig.Slot0.kP = bruinRobotConfig.getTurretConfig().rotationKp;
     rotationConfig.Slot0.kI = bruinRobotConfig.getTurretConfig().rotationKi;
     rotationConfig.Slot0.kD = bruinRobotConfig.getTurretConfig().rotationKd;
     rotationConfig.Slot0.kS = bruinRobotConfig.getTurretConfig().rotationKs;
-    rotationConfig.Slot0.kV = bruinRobotConfig.getTurretConfig().rotationKv;
+    rotationConfig.Slot0.kS = bruinRobotConfig.getTurretConfig().rotationKv;
     rotationConfig.Feedback.withFeedbackRemoteSensorID(
         bruinRobotConfig.ROTATION_CANCODER.getDeviceNumber());
     rotationConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     rotationConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    rotationConfig.MotionMagic.MotionMagicCruiseVelocity = 0.4;
-    rotationConfig.MotionMagic.MotionMagicAcceleration = 0.3; // some constant idk
+    rotationConfig.MotionMagic.MotionMagicExpo_kV = bruinRobotConfig.getTurretConfig().rotationKv;
+    rotationConfig.MotionMagic.MotionMagicCruiseVelocity = 10;
+    rotationConfig.MotionMagic.MotionMagicAcceleration = 12; // some constant idk
 
     Phoenix6Util.applyAndCheckConfiguration(rotationMotor, rotationConfig, 5);
 
@@ -120,13 +119,7 @@ public class RotationIOCTRE implements RotationIO {
 
   @Override
   public void setRotationAngle(Rotation2d angle) {
-
-    Rotation2d wantedAng = new Rotation2d(MathUtil.clamp(Constants.TurretConstants.BACKWARDS_ROTATION_LIMIT_RADIANS, angle.getRadians(), Constants.TurretConstants.FORWARD_ROTATION_LIMIT_RADIANS));
-
-    rotationMotor.setControl(
-        motionMagicVoltage.withPosition(
-            wantedAng.getRadians()
-                / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER));
+    rotationMotor.setControl(motionMagicVoltage.withPosition(angle.getRadians()));
   }
 
   @Override

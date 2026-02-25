@@ -114,21 +114,26 @@ public class ElevationIOCTRE implements ElevationIO {
 
     inputs.elevationAngle =
         Rotation2d.fromRadians(
-            (Math.PI) -
-            (elevationAngleRotations.getValueAsDouble()
-                * Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT
-                )
-            - Units.degreesToRadians(77.312));
+            mapRange(
+                (Math.PI)
+                    - (elevationAngleRotations.getValueAsDouble()
+                        * Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT)
+                    - Units.degreesToRadians(77.312)));
   }
 
   @Override
   public void setElevationAngle(Rotation2d angle) {
 
     if (angle.getRadians() > Constants.TurretConstants.STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS) {
-        angle = Rotation2d.fromRadians(Constants.TurretConstants.STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
+      angle =
+          Rotation2d.fromRadians(
+              Constants.TurretConstants.STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
     }
-    if (angle.getRadians() < Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS) {
-        angle = Rotation2d.fromRadians(Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
+    if (angle.getRadians()
+        < Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS) {
+      angle =
+          Rotation2d.fromRadians(
+              Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
     }
 
     elevationMotor.setControl(
@@ -141,5 +146,14 @@ public class ElevationIOCTRE implements ElevationIO {
   @Override
   public void setVoltage(double volts) {
     elevationMotor.setVoltage(volts);
+  }
+
+  public static double mapRange(double value) {
+    // Check to prevent division by zero if the old range is invalid
+
+    // Perform the linear mapping
+    double oldRange = 2.3643 - 1.3024;
+    double newRange = 1.3788 - 0.7505;
+    return 0.7505 + ((value - 1.3024) * newRange / oldRange);
   }
 }
