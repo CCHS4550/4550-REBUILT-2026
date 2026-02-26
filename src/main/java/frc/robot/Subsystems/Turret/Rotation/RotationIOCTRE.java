@@ -51,6 +51,13 @@ public class RotationIOCTRE implements RotationIO {
                 .getBus()); // creates CANCoder, which should be connected to the motor electrically
 
     // I should probably set up these constants in like RobotConfig, but I just want to try and
+
+     encoderConfig = new CANcoderConfiguration();
+    encoderConfig
+        .MagnetSensor
+        .withMagnetOffset(-0.7)
+        .withSensorDirection(SensorDirectionValue.Clockwise_Positive);
+    rotationEncoder.getConfigurator().apply(encoderConfig);
     // complete this out
     rotationConfig = new TalonFXConfiguration();
     rotationConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -62,25 +69,18 @@ public class RotationIOCTRE implements RotationIO {
     rotationConfig.Slot0.kI = bruinRobotConfig.getTurretConfig().rotationKi;
     rotationConfig.Slot0.kD = bruinRobotConfig.getTurretConfig().rotationKd;
     rotationConfig.Slot0.kS = bruinRobotConfig.getTurretConfig().rotationKs;
-    rotationConfig.Slot0.kS = bruinRobotConfig.getTurretConfig().rotationKv;
-    rotationConfig.Feedback.withFeedbackRemoteSensorID(
-        bruinRobotConfig.ROTATION_CANCODER.getDeviceNumber());
+    rotationConfig.Slot0.kV = bruinRobotConfig.getTurretConfig().rotationKv;
+    rotationConfig.Feedback.withFusedCANcoder(rotationEncoder);
     rotationConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     rotationConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     rotationConfig.MotionMagic.MotionMagicExpo_kV = bruinRobotConfig.getTurretConfig().rotationKv;
-    rotationConfig.MotionMagic.MotionMagicCruiseVelocity = 10;
-    rotationConfig.MotionMagic.MotionMagicAcceleration = 12; // some constant idk
+    rotationConfig.MotionMagic.MotionMagicCruiseVelocity = 3;
+    rotationConfig.MotionMagic.MotionMagicAcceleration = 5; // some constant idk
 
     Phoenix6Util.applyAndCheckConfiguration(rotationMotor, rotationConfig, 5);
 
-    encoderConfig = new CANcoderConfiguration();
-    encoderConfig
-        .MagnetSensor
-        .withMagnetOffset(-0.7)
-        .withSensorDirection(SensorDirectionValue.Clockwise_Positive);
-    rotationEncoder.getConfigurator().apply(encoderConfig);
-
-    rotationMotor.setPosition(0.0);
+    // PUT THE TURRET IN STOW BEFORE THE BOT IS TURNED ON
+    rotationMotor.setPosition(rotationEncoder.getPosition().getValueAsDouble());
     rotationAngleRotations = rotationEncoder.getPosition();
     rotationAppliedVolts = rotationMotor.getMotorVoltage();
     rotationSupplyCurrentAmps = rotationMotor.getSupplyCurrent();
@@ -119,7 +119,7 @@ public class RotationIOCTRE implements RotationIO {
 
   @Override
   public void setRotationAngle(Rotation2d angle) {
-    rotationMotor.setControl(motionMagicVoltage.withPosition(angle.getRadians()));
+    rotationMotor.setControl(motionMagicVoltage.withPosition(angle.getRadians() / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER));
   }
 
   @Override

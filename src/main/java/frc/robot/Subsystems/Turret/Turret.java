@@ -33,9 +33,9 @@ public class Turret extends SubsystemBase {
   /** This is a ratio comparing turret position error per radian per second. */
   private static final double TURRET_POSITION_ERROR_TO_DRIVEBASE_VELOCITY_PROPORTION = 0.213;
 
-  private static final double MIN_ANGLE = Math.toRadians(-135);
+  private static final double MIN_ANGLE = Math.toRadians(-195);
 
-  private static final double MAX_ANGLE = Math.toRadians(135);
+  private static final double MAX_ANGLE = Math.toRadians(195);
 
   private ElevationIO elevationIO;
   private RotationIO rotationIO;
@@ -68,6 +68,8 @@ public class Turret extends SubsystemBase {
     IDLE,
     ACTIVE_SHOOTING,
     ACTIVE_PASSING,
+    STOW,
+    ZERO,
     TESTING
   };
 
@@ -76,6 +78,8 @@ public class Turret extends SubsystemBase {
     SHOOT_SCORE,
     PASS_TO_ALLIANCE,
     PASSIVE_TRACK,
+    STOW,
+    ZERO,
     TESTING
   };
 
@@ -153,6 +157,10 @@ public class Turret extends SubsystemBase {
 
       case TESTING:
         return TurretSystemState.TESTING;
+      case ZERO:
+        return TurretSystemState.ZERO;
+      case STOW:
+        return TurretSystemState.STOW;
 
       default:
         return TurretSystemState.IDLE;
@@ -238,6 +246,16 @@ public class Turret extends SubsystemBase {
       case TESTING:
         rotationIO.setRotationAngle(Rotation2d.kZero);
         break;
+      case ZERO:
+        wantedTurretMeasurables.rotationAngle = Rotation2d.kZero;
+        wantedTurretMeasurables.elevationAngle = Rotation2d.fromRadians(Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
+        wantedTurretMeasurables.shooterRadiansPerSec = Constants.TurretConstants.SHOOTER_MAX_RADIANS_PER_SEC / 1.6;
+        goToWantedState();
+      case STOW:
+        wantedTurretMeasurables.rotationAngle = Rotation2d.fromRadians(Math.PI/2);
+        wantedTurretMeasurables.elevationAngle = Rotation2d.fromRadians(Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
+        wantedTurretMeasurables.shooterRadiansPerSec = Constants.TurretConstants.SHOOTER_MAX_RADIANS_PER_SEC / 1.6;
+        goToWantedState();
       default:
         break;
     }

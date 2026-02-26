@@ -10,6 +10,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
+
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
@@ -50,24 +51,6 @@ public class ElevationIOCTRE implements ElevationIO {
 
     // I should probably set up these constants in like RobotConfig, but I just want to try and
     // complete this out
-    elevationConfig = new TalonFXConfiguration();
-    elevationConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    elevationConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    elevationConfig.CurrentLimits.SupplyCurrentLimit = 30;
-    elevationConfig.CurrentLimits.StatorCurrentLimit = 40.0;
-
-    elevationConfig.Slot0.kP = bruinRobotConfig.getTurretConfig().elevationKp;
-    elevationConfig.Slot0.kI = bruinRobotConfig.getTurretConfig().elevationKi;
-    elevationConfig.Slot0.kD = bruinRobotConfig.getTurretConfig().elevationKd;
-    elevationConfig.Feedback.withFeedbackRemoteSensorID(
-        bruinRobotConfig.ELEVATION_CANCODER.getDeviceNumber());
-    elevationConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    elevationConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-
-    elevationConfig.MotionMagic.MotionMagicCruiseVelocity = 0.4;
-    elevationConfig.MotionMagic.MotionMagicAcceleration = 0.3; // some constant idk
-
-    Phoenix6Util.applyAndCheckConfiguration(elevationMotor, elevationConfig, 5);
 
     encoderConfig = new CANcoderConfiguration();
     encoderConfig
@@ -79,6 +62,23 @@ public class ElevationIOCTRE implements ElevationIO {
         // 0.0)
         .withSensorDirection(SensorDirectionValue.CounterClockwise_Positive);
     elevationEncoder.getConfigurator().apply(encoderConfig);
+    elevationConfig = new TalonFXConfiguration();
+    elevationConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    elevationConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    elevationConfig.CurrentLimits.SupplyCurrentLimit = 30;
+    elevationConfig.CurrentLimits.StatorCurrentLimit = 40.0;
+
+    elevationConfig.Slot0.kP = bruinRobotConfig.getTurretConfig().elevationKp;
+    elevationConfig.Slot0.kI = bruinRobotConfig.getTurretConfig().elevationKi;
+    elevationConfig.Slot0.kD = bruinRobotConfig.getTurretConfig().elevationKd;
+    elevationConfig.Feedback.withFusedCANcoder(elevationEncoder);
+    elevationConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    elevationConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
+    elevationConfig.MotionMagic.MotionMagicCruiseVelocity = 0.4;
+    elevationConfig.MotionMagic.MotionMagicAcceleration = 0.3; // some constant idk
+
+    Phoenix6Util.applyAndCheckConfiguration(elevationMotor, elevationConfig, 5);
 
     elevationAngleRotations = elevationEncoder.getPosition();
     elevationAppliedVolts = elevationMotor.getMotorVoltage();
@@ -105,12 +105,10 @@ public class ElevationIOCTRE implements ElevationIO {
 
     inputs.elevationVelocityRadPerSec =
         elevationVelocityRotationsPerSec.getValueAsDouble()
-            * Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT
-            * -1;
+            * Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT;
     inputs.elevationAccelRadPerSecSquared =
         elevationAccelerationRotationsPerSecSquared.getValueAsDouble()
-            * Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT
-            * -1;
+            * Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT;
 
     inputs.elevationAngle =
         Rotation2d.fromRadians(
@@ -139,8 +137,7 @@ public class ElevationIOCTRE implements ElevationIO {
     elevationMotor.setControl(
         motionMagicVoltage.withPosition(
             angle.getRadians()
-                / Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT
-                * -1));
+                / Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT));
   }
 
   @Override
