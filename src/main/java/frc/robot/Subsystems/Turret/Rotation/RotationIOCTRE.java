@@ -7,6 +7,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GainSchedBehaviorValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
@@ -70,10 +71,17 @@ public class RotationIOCTRE implements RotationIO {
     rotationConfig.Slot0.kD = bruinRobotConfig.getTurretConfig().rotationKd;
     rotationConfig.Slot0.kS = bruinRobotConfig.getTurretConfig().rotationKs;
     rotationConfig.Slot0.kV = bruinRobotConfig.getTurretConfig().rotationKv;
+    rotationConfig.Slot0.GainSchedBehavior = GainSchedBehaviorValue.UseSlot1;
+    rotationConfig.Slot1.kP = 1.4;
+    rotationConfig.Slot1.kI = 0;
+    rotationConfig.Slot1.kD = 0;
+    rotationConfig.Slot1.kS = 0.2;
+    rotationConfig.Slot1.kV = 0.1;
     rotationConfig.Feedback.withFusedCANcoder(rotationEncoder);
+    rotationConfig.ClosedLoopGeneral.GainSchedErrorThreshold = 0.0012;
     rotationConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     rotationConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    rotationConfig.MotionMagic.MotionMagicExpo_kV = bruinRobotConfig.getTurretConfig().rotationKv;
+
     rotationConfig.MotionMagic.MotionMagicCruiseVelocity = 3;
     rotationConfig.MotionMagic.MotionMagicAcceleration = 5; // some constant idk
 
