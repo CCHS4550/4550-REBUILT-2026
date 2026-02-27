@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constant.Constants;
@@ -130,8 +131,7 @@ public class Turret extends SubsystemBase {
     systemState = handleStateTransitions();
     applyStates();
     atGoal = atSetpoint();
-    System.out.println("Elevation Angle!: " + rotationInputs.rotationVoltage);
-    System.out.println(rotationInputs.rotationAngle.getDegrees());
+    System.out.println("Elevation Angle!: " + elevationInputs.elevationAngle.getRadians());
   }
 
   public TurretSystemState handleStateTransitions() {
@@ -244,7 +244,7 @@ public class Turret extends SubsystemBase {
         break;
 
       case TESTING:
-        rotationIO.setRotationAngle(Rotation2d.kZero);
+        elevationIO.setElevationAngle(new Rotation2d(Units.degreesToRadians(-10)));
         break;
       case ZERO:
         wantedTurretMeasurables.rotationAngle = Rotation2d.kZero;
