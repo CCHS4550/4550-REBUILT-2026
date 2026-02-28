@@ -4,18 +4,13 @@ import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 
+import choreo.trajectory.SwerveSample;
+import choreo.trajectory.Trajectory;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.ctre.phoenix6.swerve.SwerveRequest.ApplyRobotSpeeds;
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.pathfinding.Pathfinding;
-import com.pathplanner.lib.util.DriveFeedforwards;
-import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
@@ -26,21 +21,30 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constant.Constants;
 import frc.robot.Constant.FieldConstants;
+import frc.robot.Robotstate;
 import frc.robot.Subsystems.QuestNav.QuestNav;
-import frc.robot.Util.LocalADStarAK;
 import frc.robot.Util.SubsystemDataProcessor;
 import frc.robot.Util.SysIdMechanism;
+import java.util.Optional;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestConsumer {
+  private final PIDController choreoXController = new PIDController(1.14, 0, 0);
+  private final PIDController choreoYController = new PIDController(1.14, 0, 0);
+  private final PIDController choreoThetaController = new PIDController(0.5, 0, 0);
+
+  private Trajectory<SwerveSample> desiredChoreoTrajectory;
+  private final Timer choreoTimer = new Timer();
+  private Optional<SwerveSample> choreoSampleToBeApplied;
+
   private static final double CONTROLLER_DEADBAND = 0.1;
   public static final double TRANSLATION_ERROR_MARGIN_METERS_DRIVE_TO_POINT =
       Units.inchesToMeters(1.0);
@@ -64,15 +68,12 @@ public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestCons
       new SwerveRequest.FieldCentricFacingAngle()
           .withDriveRequestType(SwerveModule.DriveRequestType.Velocity);
 
-  private final SwerveRequest.ApplyRobotSpeeds acceptRelativeSpeeds =
-      new ApplyRobotSpeeds().withDriveRequestType(SwerveModule.DriveRequestType.Velocity);
-
   private static final double SKEW_COMPENSATION_SCALAR = -0.03;
 
   public enum WantedState {
     SYS_ID,
     TELEOP_DRIVE,
-    AUTOPATH_FOLLOWER,
+    CHOREO_PATH,
     ROTATION_LOCK,
     DRIVE_TO_POINT,
     IDLE
@@ -81,7 +82,7 @@ public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestCons
   public enum SystemState {
     SYS_ID,
     TELEOP_DRIVE,
-    AUTOPATH_FOLLOWER,
+    CHOREO_PATH,
     ROTATION_LOCK,
     DRIVE_TO_POINT,
     IDLE
@@ -218,27 +219,6 @@ public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestCons
 
     driveAtAngle.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
 
-    // Configure AutoBuilder for PathPlanner
-    AutoBuilder.configure(
-        this::getPose2d,
-        this::resetTranslationAndRotation,
-        this::getChassisSpeeds,
-        this::runVelo,
-        new PPHolonomicDriveController(
-            new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
-        PP_Config,
-        () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
-        this);
-    Pathfinding.setPathfinder(new LocalADStarAK());
-    PathPlannerLogging.setLogActivePathCallback(
-        (activePath) -> {
-          Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[0]));
-        });
-    PathPlannerLogging.setLogTargetPoseCallback(
-        (targetPose) -> {
-          Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
-        });
-
     SubsystemDataProcessor.createAndStartSubsystemDataProcessor(
         () -> {
           synchronized (moduleIOLock) {
@@ -312,7 +292,16 @@ public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestCons
       case SYS_ID -> SystemState.SYS_ID;
       case TELEOP_DRIVE -> SystemState.TELEOP_DRIVE;
 
-      case AUTOPATH_FOLLOWER -> SystemState.AUTOPATH_FOLLOWER;
+      case CHOREO_PATH -> {
+        if (systemState != SystemState.CHOREO_PATH) {
+          choreoTimer.restart();
+          choreoSampleToBeApplied = desiredChoreoTrajectory.sampleAt(choreoTimer.get(), false);
+          yield SystemState.CHOREO_PATH;
+        } else {
+          choreoSampleToBeApplied = desiredChoreoTrajectory.sampleAt(choreoTimer.get(), false);
+          yield SystemState.CHOREO_PATH;
+        }
+      }
 
       case ROTATION_LOCK -> SystemState.ROTATION_LOCK;
       case DRIVE_TO_POINT -> SystemState.DRIVE_TO_POINT;
@@ -332,9 +321,41 @@ public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestCons
                 .withSpeeds(calculateSpeedsBasedOnJoystickInputs())
                 .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage));
         break;
-      case AUTOPATH_FOLLOWER:
-        break;
+      case CHOREO_PATH:
+        {
+          if (choreoSampleToBeApplied.isPresent()) {
+            var sample = choreoSampleToBeApplied.get();
+            Logger.recordOutput("Subsystems/Drive/Choreo/Timer Value", choreoTimer.get());
+            Logger.recordOutput(
+                "Subsystems/Drive/Choreo/Traj Name", desiredChoreoTrajectory.name());
+            Logger.recordOutput(
+                "Subsystems/Drive/Choreo/Total time", desiredChoreoTrajectory.getTotalTime());
+            Logger.recordOutput("Subsystems/Drive/Choreo/sample/Desired Pose", sample.getPose());
+            Logger.recordOutput(
+                "Subsystems/Drive/Choreo/sample/Desired Chassis Speeds", sample.getChassisSpeeds());
+            Logger.recordOutput(
+                "Subsystems/Drive/Choreo/sample/Module Forces X", sample.moduleForcesX());
+            Logger.recordOutput(
+                "Subsystems/Drive/Choreo/sample/Module Forces Y", sample.moduleForcesY());
+            synchronized (swerveInputs) {
+              var pose = swerveInputs.Pose;
 
+              var targetSpeeds = sample.getChassisSpeeds();
+              targetSpeeds.vxMetersPerSecond += choreoXController.calculate(pose.getX(), sample.x);
+              targetSpeeds.vyMetersPerSecond += choreoYController.calculate(pose.getY(), sample.y);
+              targetSpeeds.omegaRadiansPerSecond +=
+                  choreoThetaController.calculate(pose.getRotation().getRadians(), sample.heading);
+
+              io.setSwerveState(
+                  new SwerveRequest.ApplyFieldSpeeds()
+                      .withSpeeds(targetSpeeds)
+                      .withWheelForceFeedforwardsX(sample.moduleForcesX())
+                      .withWheelForceFeedforwardsY(sample.moduleForcesY())
+                      .withDriveRequestType(SwerveModule.DriveRequestType.Velocity));
+            }
+          }
+          break;
+        }
       case ROTATION_LOCK:
         double error =
             MathUtil.angleModulus(
@@ -456,6 +477,12 @@ public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestCons
     this.wantedState = state;
   }
 
+  public void setDesiredChoreoTrajectory(Trajectory<SwerveSample> trajectory) {
+    this.desiredChoreoTrajectory = trajectory;
+    this.wantedState = WantedState.CHOREO_PATH;
+    choreoTimer.reset();
+  }
+
   public void setDesiredPoseForDriveToPoint(Pose2d pose) {
     this.desiredPoseForDriveToPoint = pose;
     this.wantedState = WantedState.DRIVE_TO_POINT;
@@ -521,17 +548,6 @@ public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestCons
         swerveInputs.Pose.getRotation().plus(skewCompensationFactor));
   }
 
-  private void runVelo(ChassisSpeeds speeds, DriveFeedforwards ff) {
-    double[] ffX = ff.robotRelativeForcesXNewtons();
-    double[] ffY = ff.robotRelativeForcesYNewtons();
-
-    io.setSwerveState(
-        acceptRelativeSpeeds
-            .withSpeeds(speeds)
-            .withWheelForceFeedforwardsX(ffX)
-            .withWheelForceFeedforwardsY(ffY));
-  }
-
   public void resetTranslationAndRotation(Pose2d pose2d) {
     resetTranslation(pose2d);
     resetRotation(pose2d.getRotation());
@@ -594,12 +610,46 @@ public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestCons
     this.rotationVelocityCoefficient = rotationVelocityCoefficient;
   }
 
-  public ChassisSpeeds getChassisSpeeds() {
-    return swerveInputs.Speeds;
+  public boolean isAtChoreoSetpoint() {
+    if (systemState != SystemState.CHOREO_PATH) {
+      return false;
+    }
+    return MathUtil.isNear(
+            desiredChoreoTrajectory.getFinalPose(false).get().getX(), swerveInputs.Pose.getX(), 0.1)
+        && MathUtil.isNear(
+            desiredChoreoTrajectory.getFinalPose(false).get().getY(),
+            swerveInputs.Pose.getY(),
+            0.1);
   }
 
-  public Pose2d getPose2d() {
-    return swerveInputs.Pose;
+  public boolean isAtEndOfChoreoTrajectoryOrDriveToPoint() {
+    if (desiredChoreoTrajectory != null) {
+      return (MathUtil.isNear(
+                  desiredChoreoTrajectory.getFinalPose(false).get().getX(),
+                  swerveInputs.Pose.getX(),
+                  0.1)
+              && MathUtil.isNear(
+                  desiredChoreoTrajectory.getFinalPose(false).get().getY(),
+                  swerveInputs.Pose.getY(),
+                  0.1))
+          || isAtDriveToPointSetpoint();
+    } else {
+      return isAtDriveToPointSetpoint();
+    }
+  }
+
+  public double getRobotDistanceFromChoreoEndpoint() {
+    Logger.recordOutput("Choreo/FinalPose", desiredChoreoTrajectory.getFinalPose(false).get());
+    var distance =
+        Math.abs(
+            desiredChoreoTrajectory
+                .getFinalPose(false)
+                .get()
+                .minus(Robotstate.getInstance().getRobotPoseFromSwerveDriveOdometry())
+                .getTranslation()
+                .getNorm());
+    Logger.recordOutput("Choreo/DistanceFromEndpoint", distance);
+    return distance;
   }
 
   /** Adds a new timestamped vision measurement. */
