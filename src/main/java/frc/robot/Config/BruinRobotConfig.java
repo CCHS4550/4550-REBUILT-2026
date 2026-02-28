@@ -36,15 +36,16 @@ public class BruinRobotConfig {
   public final CanDeviceID BACK_RIGHT_STEER_MOTOR = new CanDeviceID(11);
   public final CanDeviceID BACK_RIGHT_STEER_ENCODER = new CanDeviceID(12);
 
-  public final CanDeviceID KICKER_MOTOR = new CanDeviceID(-1);
+  public final CanDeviceID KICKER_MOTOR = new CanDeviceID(16, CANIVORE_CANBUS);
+  public final CanDeviceID AGITATOR_MOTOR = new CanDeviceID(23, CANIVORE_CANBUS);
 
-  public final CanDeviceID ROTATION_MOTOR = new CanDeviceID(-1, CANIVORE_CANBUS);
-  public final CanDeviceID ELEVATION_MOTOR = new CanDeviceID(-1, CANIVORE_CANBUS);
-  public final CanDeviceID SHOOTER_MOTOR = new CanDeviceID(-1, CANIVORE_CANBUS);
-  public final CanDeviceID SHOOTER_MOTOR_2 = new CanDeviceID(-1, CANIVORE_CANBUS);
+  public final CanDeviceID ROTATION_MOTOR = new CanDeviceID(19, CANIVORE_CANBUS);
+  public final CanDeviceID ELEVATION_MOTOR = new CanDeviceID(20, CANIVORE_CANBUS);
+  public final CanDeviceID SHOOTER_MOTOR = new CanDeviceID(17, CANIVORE_CANBUS);
+  public final CanDeviceID SHOOTER_MOTOR_2 = new CanDeviceID(18, CANIVORE_CANBUS);
 
-  public final CanDeviceID ELEVATION_CANCODER = new CanDeviceID(-1, CANIVORE_CANBUS);
-  public final CanDeviceID ROTATION_CANCODER = new CanDeviceID(-1, CANIVORE_CANBUS);
+  public final CanDeviceID ELEVATION_CANCODER = new CanDeviceID(21, CANIVORE_CANBUS);
+  public final CanDeviceID ROTATION_CANCODER = new CanDeviceID(22, CANIVORE_CANBUS);
 
   public final CanDeviceID INTAKE_ROLLER = new CanDeviceID(14, CANIVORE_CANBUS);
   public final CanDeviceID INTAKE_EXTENSION = new CanDeviceID(15, CANIVORE_CANBUS);
@@ -294,19 +295,22 @@ public class BruinRobotConfig {
     // Turret Constants
     turretConfig =
         new TurretConfig()
-            .withRotationKp(0.0)
+            .withRotationKp(10.14)
             .withRotationKi(0)
             .withRotationKd(0)
-            .withRotationKs(0.0)
-            .withRotationKv(0)
-            .withElevationKp(0)
+            .withRotationKs(0.2)
+            .withRotationKv(4)
+            // 51.39646
+            .withElevationKp(21)
             .withElevationKi(0)
-            .withElevationKd(0)
-            .withShooterKp(0)
+            .withElevationKd(0.1)
+            .withElevationKs(0.33)
+            .withElevationKv(0.5)
+            .withShooterKp(0.6)
             .withShooterKi(0)
             .withShooterKd(0)
-            .withShooterKs(0.0)
-            .withShooterKv(0.0);
+            .withShooterKs(0.25)
+            .withShooterKv(0.3);
 
     intakeConfig =
         new IntakeConfig()

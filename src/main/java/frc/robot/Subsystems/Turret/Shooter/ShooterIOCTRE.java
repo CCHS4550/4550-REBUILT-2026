@@ -61,8 +61,8 @@ public class ShooterIOCTRE implements ShooterIO {
     shooterConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
     // change this later!
-    shooterConfig.MotionMagic.MotionMagicCruiseVelocity = 0.4550;
-    shooterConfig.MotionMagic.MotionMagicAcceleration = 0.41;
+    shooterConfig.MotionMagic.MotionMagicCruiseVelocity = 10;
+    shooterConfig.MotionMagic.MotionMagicAcceleration = 5;
 
     Phoenix6Util.applyAndCheckConfiguration(shooterMotor, shooterConfig, 5);
     Phoenix6Util.applyAndCheckConfiguration(shooterMotor2, shooterConfig, 5);
@@ -104,6 +104,15 @@ public class ShooterIOCTRE implements ShooterIO {
 
   @Override
   public void setVelo(AngularVelocity velo) {
-    shooterMotor.setControl(motionMagicVelocityVoltage.withVelocity(velo));
+    // double velocitySetpoint = velo.magnitude() / 60;
+    // shooterMotor.setControl
+    // (motionMagicVelocityVoltage.withVelocity(velocitySetpoint).withSlot(0).withEnableFOC(true));
+    // shooterMotor2.setControl
+    // (motionMagicVelocityVoltage.withVelocity(velocitySetpoint).withSlot(0).withEnableFOC(true));
+
+    shooterMotor.setControl(
+        motionMagicVelocityVoltage.withVelocity(velo).withSlot(0).withEnableFOC(true));
+    shooterMotor2.setControl(
+        motionMagicVelocityVoltage.withVelocity(velo).withSlot(0).withEnableFOC(true));
   }
 }

@@ -1,20 +1,24 @@
 package frc.robot.Subsystems.Agitator;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Agitator extends SubsystemBase {
-  public enum WantedState {
+  private Timer timer;
+
+  public enum WantedAgitatorState {
     IDLE,
     SPINNING
   }
 
   public enum SystemState {
     IDLE,
-    SPINNING
+    SPINNING,
+    BACK_SPIN
   }
 
   private SystemState systemState = SystemState.IDLE;
-  private WantedState wantedState = WantedState.IDLE;
+  private WantedAgitatorState wantedState = WantedAgitatorState.IDLE;
 
   private final AgitatorIO agitatorIO;
 
@@ -30,13 +34,41 @@ public class Agitator extends SubsystemBase {
 
     systemState = handleSystemState();
     applyWantedState();
+    moveOnByTimer();
+  }
+
+  public void setWantedAgitatorState(WantedAgitatorState wantedAgitatorState) {
+    if (wantedState == WantedAgitatorState.SPINNING
+        && systemState != SystemState.SPINNING
+        && systemState != SystemState.BACK_SPIN) {
+      timer.reset();
+      timer.start();
+    }
+    wantedState = wantedAgitatorState;
   }
 
   private SystemState handleSystemState() {
-    return switch (wantedState) {
-      case IDLE -> SystemState.IDLE;
-      case SPINNING -> SystemState.SPINNING;
-    };
+    switch (wantedState) {
+      case IDLE:
+        return SystemState.IDLE;
+      case SPINNING:
+        {
+          if (!timer.isRunning()) {
+            return SystemState.SPINNING;
+          }
+          return SystemState.BACK_SPIN;
+        }
+      default:
+        return SystemState.IDLE;
+    }
+  }
+
+  private void moveOnByTimer() {
+    if (timer.hasElapsed(0.3)) {
+      timer.stop();
+      timer.reset();
+      systemState = SystemState.SPINNING;
+    }
   }
 
   private void applyWantedState() {
@@ -46,6 +78,9 @@ public class Agitator extends SubsystemBase {
         break;
       case SPINNING:
         agitatorIO.setVoltage(5.0);
+        break;
+      case BACK_SPIN:
+        agitatorIO.setVoltage(-3);
         break;
     }
   }

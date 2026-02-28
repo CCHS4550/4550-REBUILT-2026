@@ -49,36 +49,44 @@ public class ElevationIOCTRE implements ElevationIO {
 
     // I should probably set up these constants in like RobotConfig, but I just want to try and
     // complete this out
-    elevationConfig = new TalonFXConfiguration();
-    elevationConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    elevationConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    elevationConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
-    elevationConfig.CurrentLimits.StatorCurrentLimit = 90.0;
-
-    elevationConfig.Slot0.kP = bruinRobotConfig.getTurretConfig().elevationKp;
-    elevationConfig.Slot0.kI = bruinRobotConfig.getTurretConfig().elevationKi;
-    elevationConfig.Slot0.kD = bruinRobotConfig.getTurretConfig().elevationKd;
-    elevationConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    elevationConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-
-    elevationConfig.MotionMagic.MotionMagicCruiseVelocity = 0.4;
-    elevationConfig.MotionMagic.MotionMagicAcceleration = 0.3; // some constant idk
-
-    Phoenix6Util.applyAndCheckConfiguration(elevationMotor, elevationConfig, 5);
 
     encoderConfig = new CANcoderConfiguration();
     encoderConfig
         .MagnetSensor
-        .withAbsoluteSensorDiscontinuityPoint(0.82)
-        .withMagnetOffset(0.0)
-        .withSensorDirection(SensorDirectionValue.Clockwise_Positive);
+        .withMagnetOffset(
+            ((-(Constants.TurretConstants.ELEVATION_DEFAULT_ENCODER_READING_AT_SHALLOWEST_ANGLE)))
+                + (Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS
+                    / Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT))
+        // 0.0)
+        .withSensorDirection(SensorDirectionValue.CounterClockwise_Positive);
     elevationEncoder.getConfigurator().apply(encoderConfig);
+    elevationConfig = new TalonFXConfiguration();
+    elevationConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    elevationConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+    elevationConfig.CurrentLimits.SupplyCurrentLimit = 30;
+    elevationConfig.CurrentLimits.StatorCurrentLimit = 40.0;
 
-    elevationAngleRotations = elevationEncoder.getAbsolutePosition();
+    elevationConfig.Slot0.kP = bruinRobotConfig.getTurretConfig().elevationKp;
+    elevationConfig.Slot0.kI = bruinRobotConfig.getTurretConfig().elevationKi;
+    elevationConfig.Slot0.kD = bruinRobotConfig.getTurretConfig().elevationKd;
+    elevationConfig.Slot0.kS = bruinRobotConfig.getTurretConfig().elevationKs;
+    elevationConfig.Slot0.kV = bruinRobotConfig.getTurretConfig().elevationKv;
+    elevationConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    elevationConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
+    elevationConfig.MotionMagic.MotionMagicCruiseVelocity = 64.4;
+    elevationConfig.MotionMagic.MotionMagicAcceleration = 75.3; // some constant idk
+
+    Phoenix6Util.applyAndCheckConfiguration(elevationMotor, elevationConfig, 5);
+
+    elevationMotor.setPosition(
+        Constants.TurretConstants.STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS
+            / Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT);
+    elevationAngleRotations = elevationMotor.getPosition();
     elevationAppliedVolts = elevationMotor.getMotorVoltage();
     elevationSupplyCurrentAmps = elevationMotor.getSupplyCurrent();
     elevationStatorCurrentAmps = elevationMotor.getStatorCurrent();
-    elevationVelocityRotationsPerSec = elevationEncoder.getVelocity();
+    elevationVelocityRotationsPerSec = elevationMotor.getVelocity();
     elevationAccelerationRotationsPerSecSquared = elevationMotor.getAcceleration();
     elevationMotorTemp = elevationMotor.getDeviceTemp();
   }
@@ -89,8 +97,8 @@ public class ElevationIOCTRE implements ElevationIO {
         elevationAppliedVolts,
         elevationSupplyCurrentAmps,
         elevationStatorCurrentAmps,
-        elevationAccelerationRotationsPerSecSquared,
-        elevationMotorTemp);
+        elevationMotorTemp,
+        elevationAccelerationRotationsPerSecSquared);
     BaseStatusSignal.refreshAll(elevationAngleRotations, elevationVelocityRotationsPerSec);
     inputs.elevationVoltage = elevationAppliedVolts.getValueAsDouble();
     inputs.elevationSupplyCurrent = elevationSupplyCurrentAmps.getValueAsDouble();
@@ -104,11 +112,33 @@ public class ElevationIOCTRE implements ElevationIO {
         elevationAccelerationRotationsPerSecSquared.getValueAsDouble()
             * Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT;
 
-    inputs.elevationAngle = Rotation2d.fromRotations(elevationAngleRotations.getValueAsDouble());
+    inputs.elevationAngle =
+        Rotation2d.fromRadians(
+            elevationAngleRotations.getValueAsDouble()
+                * Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT);
+    // Rotation2d.fromRadians(
+    //     mapRange(
+    //         (Math.PI)
+    //             - (elevationAngleRotations.getValueAsDouble()
+    //                 * Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT)
+    //             - Units.degreesToRadians(77.312)));
   }
 
   @Override
   public void setElevationAngle(Rotation2d angle) {
+
+    if (angle.getRadians() > Constants.TurretConstants.STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS) {
+      angle =
+          Rotation2d.fromRadians(
+              Constants.TurretConstants.STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
+    }
+    if (angle.getRadians()
+        < Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS) {
+      angle =
+          Rotation2d.fromRadians(
+              Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
+    }
+
     elevationMotor.setControl(
         motionMagicVoltage.withPosition(
             angle.getRadians() / Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT));
@@ -117,5 +147,14 @@ public class ElevationIOCTRE implements ElevationIO {
   @Override
   public void setVoltage(double volts) {
     elevationMotor.setVoltage(volts);
+  }
+
+  public static double mapRange(double value) {
+    // Check to prevent division by zero if the old range is invalid
+
+    // Perform the linear mapping
+    double oldRange = 2.3643 - 1.3024;
+    double newRange = 1.3788 - 0.7505;
+    return 0.7505 + ((value - 1.3024) * newRange / oldRange);
   }
 }
