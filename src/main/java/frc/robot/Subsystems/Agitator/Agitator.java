@@ -85,7 +85,7 @@ public class Agitator extends SubsystemBase {
     }
   }
 
-  public void setWantedState (WantedState wantedState){
+  public void setWantedState(WantedAgitatorState wantedState) {
     this.wantedState = wantedState;
   }
 }

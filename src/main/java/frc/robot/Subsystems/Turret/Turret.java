@@ -81,7 +81,8 @@ public class Turret extends SubsystemBase {
     PASSIVE_TRACK,
     STOW,
     ZERO,
-    TESTING
+    TESTING,
+    PASSIVE_PASS
   };
 
   private TurretSystemState systemState = TurretSystemState.IDLE;
@@ -131,7 +132,6 @@ public class Turret extends SubsystemBase {
     systemState = handleStateTransitions();
     applyStates();
     atGoal = atSetpoint();
-    System.out.println("Elevation Angle!: " + elevationInputs.elevationAngle.getRadians());
   }
 
   public TurretSystemState handleStateTransitions() {
@@ -175,9 +175,7 @@ public class Turret extends SubsystemBase {
         shooterIO.setVoltage(0);
         atGoal = true;
         break;
-      case TRACKING_HUB
-      
-      :
+      case TRACKING_HUB:
         // Rotation2d calculatedAngle = findFieldCentricAngleToTarget(new
         // Pose2d()).plus(findAngleAdjustmentForRobotInertia());
         // convertToBoundedTurretAngle(calculatedAngle.getRadians());
