@@ -2,7 +2,7 @@ package frc.robot.Subsystems.Kicker;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class KickerSubsystem extends SubsystemBase {
+public class Kicker extends SubsystemBase {
   private KickerIO kickerIO;
 
   private KickerIOInputsAutoLogged kickerInputs = new KickerIOInputsAutoLogged();
@@ -20,7 +20,7 @@ public class KickerSubsystem extends SubsystemBase {
   private KickerSystemState systemState = KickerSystemState.IDLE;
   private KickerWantedState wantedState = KickerWantedState.IDLE;
 
-  public KickerSubsystem(KickerIO io) {
+  public Kicker(KickerIO io) {
     this.kickerIO = io;
   }
 

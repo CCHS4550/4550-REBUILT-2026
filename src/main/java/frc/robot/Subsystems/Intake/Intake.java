@@ -7,7 +7,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 // This code is Stupid and needs the be cleaned up.
-public class IntakeSubsystem extends SubsystemBase {
+public class Intake extends SubsystemBase {
   private final Timer timer = new Timer();
 
   public enum WantedIntakeState {
@@ -34,7 +34,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   private IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
 
-  public IntakeSubsystem(IntakeIO intakeIO) {
+  public Intake(IntakeIO intakeIO) {
     this.intakeIO = intakeIO;
   }
 
