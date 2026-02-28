@@ -2,10 +2,10 @@ package frc.robot.Subsystems.Agitator;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Subsystems.Drive.SwerveSubsystem.WantedState;
 
 public class Agitator extends SubsystemBase {
   private Timer timer;
+
   public enum WantedAgitatorState {
     IDLE,
     SPINNING
@@ -36,8 +36,11 @@ public class Agitator extends SubsystemBase {
     applyWantedState();
     moveOnByTimer();
   }
-  public void setWantedAgitatorState(WantedAgitatorState wantedAgitatorState){
-    if(wantedState == WantedAgitatorState.SPINNING && systemState != SystemState.SPINNING && systemState != SystemState.BACK_SPIN){
+
+  public void setWantedAgitatorState(WantedAgitatorState wantedAgitatorState) {
+    if (wantedState == WantedAgitatorState.SPINNING
+        && systemState != SystemState.SPINNING
+        && systemState != SystemState.BACK_SPIN) {
       timer.reset();
       timer.start();
     }
@@ -45,20 +48,23 @@ public class Agitator extends SubsystemBase {
   }
 
   private SystemState handleSystemState() {
-     switch (wantedState) {
-      case IDLE : return SystemState.IDLE;
-      case SPINNING: {
-        if(!timer.isRunning()){
-          return SystemState.SPINNING;
+    switch (wantedState) {
+      case IDLE:
+        return SystemState.IDLE;
+      case SPINNING:
+        {
+          if (!timer.isRunning()) {
+            return SystemState.SPINNING;
+          }
+          return SystemState.BACK_SPIN;
         }
-        return SystemState.BACK_SPIN;
-      }
-      default: return SystemState.IDLE;
+      default:
+        return SystemState.IDLE;
     }
   }
 
-  private void moveOnByTimer(){
-    if(timer.hasElapsed(0.3)){
+  private void moveOnByTimer() {
+    if (timer.hasElapsed(0.3)) {
       timer.stop();
       timer.reset();
       systemState = SystemState.SPINNING;
@@ -74,8 +80,8 @@ public class Agitator extends SubsystemBase {
         agitatorIO.setVoltage(5.0);
         break;
       case BACK_SPIN:
-      agitatorIO.setVoltage(-3);
-      break;
+        agitatorIO.setVoltage(-3);
+        break;
     }
   }
 }

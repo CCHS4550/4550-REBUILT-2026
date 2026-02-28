@@ -10,7 +10,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constant.Constants;
@@ -244,17 +243,24 @@ public class Turret extends SubsystemBase {
         break;
 
       case TESTING:
-        elevationIO.setElevationAngle(new Rotation2d(Units.degreesToRadians(-10)));
+        elevationIO.setElevationAngle(Rotation2d.fromDegrees(60));
+        rotationIO.setRotationAngle(Rotation2d.fromDegrees(0));
         break;
       case ZERO:
         wantedTurretMeasurables.rotationAngle = Rotation2d.kZero;
-        wantedTurretMeasurables.elevationAngle = Rotation2d.fromRadians(Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
-        wantedTurretMeasurables.shooterRadiansPerSec = Constants.TurretConstants.SHOOTER_MAX_RADIANS_PER_SEC / 1.6;
+        wantedTurretMeasurables.elevationAngle =
+            Rotation2d.fromRadians(
+                Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
+        wantedTurretMeasurables.shooterRadiansPerSec =
+            Constants.TurretConstants.SHOOTER_MAX_RADIANS_PER_SEC / 1.6;
         goToWantedState();
       case STOW:
-        wantedTurretMeasurables.rotationAngle = Rotation2d.fromRadians(Math.PI/2);
-        wantedTurretMeasurables.elevationAngle = Rotation2d.fromRadians(Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
-        wantedTurretMeasurables.shooterRadiansPerSec = Constants.TurretConstants.SHOOTER_MAX_RADIANS_PER_SEC / 1.6;
+        wantedTurretMeasurables.rotationAngle = Rotation2d.fromRadians(Math.PI / 2);
+        wantedTurretMeasurables.elevationAngle =
+            Rotation2d.fromRadians(
+                Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
+        wantedTurretMeasurables.shooterRadiansPerSec =
+            Constants.TurretConstants.SHOOTER_MAX_RADIANS_PER_SEC / 1.6;
         goToWantedState();
       default:
         break;

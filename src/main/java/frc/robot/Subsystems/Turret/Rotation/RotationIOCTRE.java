@@ -52,7 +52,7 @@ public class RotationIOCTRE implements RotationIO {
 
     // I should probably set up these constants in like RobotConfig, but I just want to try and
 
-     encoderConfig = new CANcoderConfiguration();
+    encoderConfig = new CANcoderConfiguration();
     encoderConfig
         .MagnetSensor
         .withMagnetOffset(-0.7)
@@ -105,11 +105,11 @@ public class RotationIOCTRE implements RotationIO {
     inputs.rotationTemperature = rotationMotorTemp.getValueAsDouble();
 
     inputs.rotationVelocityRadPerSec =
-        rotationVelocityRotationsPerSec.getValueAsDouble()
-            * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER;
+        (rotationVelocityRotationsPerSec.getValueAsDouble()
+            * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER);
     inputs.rotationAccelRadPerSecSquared =
-        (rotationAccelerationRotationsPerSecSquared.getValueAsDouble()
-            * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT);
+        ((rotationAccelerationRotationsPerSecSquared.getValueAsDouble()
+            * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT));
 
     inputs.rotationAngle =
         Rotation2d.fromRadians(
@@ -119,7 +119,10 @@ public class RotationIOCTRE implements RotationIO {
 
   @Override
   public void setRotationAngle(Rotation2d angle) {
-    rotationMotor.setControl(motionMagicVoltage.withPosition(angle.getRadians() / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER));
+    rotationMotor.setControl(
+        motionMagicVoltage.withPosition(
+            ((angle.getRadians())
+                / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER)));
   }
 
   @Override

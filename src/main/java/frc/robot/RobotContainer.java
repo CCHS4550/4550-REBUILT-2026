@@ -6,6 +6,8 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Config.BruinRobotConfig;
+import frc.robot.Subsystems.Drive.SwerveIOCTRE;
+import frc.robot.Subsystems.Drive.SwerveSubsystem;
 import frc.robot.Subsystems.Intake.Intake;
 import frc.robot.Subsystems.Intake.Intake.WantedIntakeState;
 import frc.robot.Subsystems.Intake.IntakeIOCTRE;
@@ -16,7 +18,7 @@ import frc.robot.Subsystems.Turret.Turret;
 import frc.robot.Subsystems.Turret.Turret.TurretWantedState;
 
 public class RobotContainer {
-  // private final SwerveSubsystem swerveSubsystem;
+  private final SwerveSubsystem swerveSubsystem;
   private final Intake intake;
   private final Turret turret;
 
@@ -35,13 +37,13 @@ public class RobotContainer {
     //         moduleConstants[0].SpeedAt12Volts,
     //         moduleConstants[0].SpeedAt12Volts
     //             / Math.hypot(moduleConstants[0].LocationX, moduleConstants[0].LocationY));
-    // swerveSubsystem =
-    //     new SwerveSubsystem(
-    //         new SwerveIOCTRE(config.getSwerveDrivetrainConstants(), config.getModuleConstants()),
-    //         config.geRobotConfig(),
-    //         controller,
-    //         0.5,
-    //         0.5 / Math.hypot(moduleConstants[0].LocationX, moduleConstants[0].LocationY));
+    swerveSubsystem =
+        new SwerveSubsystem(
+            new SwerveIOCTRE(config.getSwerveDrivetrainConstants(), config.getModuleConstants()),
+            config.geRobotConfig(),
+            controller,
+            0.5,
+            0.5 / Math.hypot(moduleConstants[0].LocationX, moduleConstants[0].LocationY));
     intake = new Intake(new IntakeIOCTRE(config));
     turret =
         new Turret(
@@ -130,7 +132,7 @@ public class RobotContainer {
         .whileFalse(new InstantCommand(() -> turret.setWantedState(TurretWantedState.IDLE)));
   }
 
-  //   public SwerveSubsystem getSwerveSubsystem() {
-  //     return swerveSubsystem;
-  //   }
+    public SwerveSubsystem getSwerveSubsystem() {
+      return swerveSubsystem;
+    }
 }
