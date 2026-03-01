@@ -23,4 +23,6 @@ public interface ElevationIO {
   default void setElevationAngle(Rotation2d angle) {}
 
   default void setVoltage(double voltage) {}
+
+  default void setEncoderPositionAtBottom() {}
 }

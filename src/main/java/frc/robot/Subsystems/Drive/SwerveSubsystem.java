@@ -309,6 +309,10 @@ public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestCons
     };
   }
 
+  public Rotation2d getSwerveRotation() {
+    return swerveInputs.Pose.getRotation();
+  }
+
   private void applyStates() {
     switch (systemState) { // case something something the very basic python things -- shirly 2026
         // (i was held hostage mb)

@@ -48,6 +48,10 @@ public class Superstructure extends SubsystemBase {
     this.wantedState = wantedState;
   }
 
+  public void setIntakeActive(boolean INTAKE_ACTIVE) {
+    this.INTAKE_ACTIVE = INTAKE_ACTIVE;
+  }
+
   private void applyStates() {
     switch (systemState) {
       case IDLE:
@@ -112,6 +116,12 @@ public class Superstructure extends SubsystemBase {
         kicker.setWantedState(KickerWantedState.RUNNING);
         turret.setWantedState(TurretWantedState.SHOOT_SCORE);
         agitator.setWantedAgitatorState(WantedAgitatorState.SPINNING);
+
+      case PRACTICE_INDEXING:
+        intake.setWantedIntakeState(WantedIntakeState.IDLE);
+        kicker.setWantedState(KickerWantedState.RUNNING);
+        turret.setWantedState(TurretWantedState.SHOOT_SCORE);
+        agitator.setWantedAgitatorState(WantedAgitatorState.SPINNING);
     }
   }
 
@@ -162,7 +172,8 @@ public class Superstructure extends SubsystemBase {
     EXTEND_INTAKE,
     PASSIVE_TRACKING,
     ACTIVE_SHOOT,
-    ACTIVE_PASS
+    ACTIVE_PASS,
+    PRACTICE_INDEXING
   }
 
   private enum SystemState {
@@ -178,7 +189,8 @@ public class Superstructure extends SubsystemBase {
     INTAKING_ACTIVE_SHOOT,
     ACTIVE_SHOOT,
     INTAKING_ACTIVE_PASS,
-    ACTIVE_PASS
+    ACTIVE_PASS,
+    PRACTICE_INDEXING
   }
 
   private SystemState returnTrackingTarget() {

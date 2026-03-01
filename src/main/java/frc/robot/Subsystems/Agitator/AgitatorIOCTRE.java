@@ -35,11 +35,11 @@ public class AgitatorIOCTRE implements AgitatorIO {
 
     agitatorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     agitatorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    agitatorConfig.CurrentLimits.SupplyCurrentLimit = 0.0;
-    agitatorConfig.CurrentLimits.StatorCurrentLimit = 0.0;
+    agitatorConfig.CurrentLimits.SupplyCurrentLimit = 40.0;
+    agitatorConfig.CurrentLimits.StatorCurrentLimit = 90.0;
 
     agitatorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    agitatorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    agitatorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     Phoenix6Util.applyAndCheckConfiguration(agitatorMotor, agitatorConfig, 5);
 

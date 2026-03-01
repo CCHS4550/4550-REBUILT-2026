@@ -193,6 +193,8 @@ public class Vision extends SubsystemBase {
           "Vision/Summary/RobotPosesRejected",
           allRobotPosesRejected.toArray(new Pose3d[allRobotPosesRejected.size()]));
     }
+
+    System.out.println();
   }
 
   /**

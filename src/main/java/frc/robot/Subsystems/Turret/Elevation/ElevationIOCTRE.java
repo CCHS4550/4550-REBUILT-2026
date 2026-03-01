@@ -11,6 +11,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -69,24 +70,20 @@ public class ElevationIOCTRE implements ElevationIO {
     elevationConfig.Slot0.kP = bruinRobotConfig.getTurretConfig().elevationKp;
     elevationConfig.Slot0.kI = bruinRobotConfig.getTurretConfig().elevationKi;
     elevationConfig.Slot0.kD = bruinRobotConfig.getTurretConfig().elevationKd;
-    elevationConfig.Slot0.kS = bruinRobotConfig.getTurretConfig().elevationKs;
-    elevationConfig.Slot0.kV = bruinRobotConfig.getTurretConfig().elevationKv;
+    elevationConfig.Feedback.withFusedCANcoder(elevationEncoder);
     elevationConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     elevationConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
-    elevationConfig.MotionMagic.MotionMagicCruiseVelocity = 64.4;
-    elevationConfig.MotionMagic.MotionMagicAcceleration = 75.3; // some constant idk
+    elevationConfig.MotionMagic.MotionMagicCruiseVelocity = 0.4;
+    elevationConfig.MotionMagic.MotionMagicAcceleration = 0.3; // some constant idk
 
     Phoenix6Util.applyAndCheckConfiguration(elevationMotor, elevationConfig, 5);
 
-    elevationMotor.setPosition(
-        Constants.TurretConstants.STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS
-            / Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT);
-    elevationAngleRotations = elevationMotor.getPosition();
+    elevationAngleRotations = elevationEncoder.getPosition();
     elevationAppliedVolts = elevationMotor.getMotorVoltage();
     elevationSupplyCurrentAmps = elevationMotor.getSupplyCurrent();
     elevationStatorCurrentAmps = elevationMotor.getStatorCurrent();
-    elevationVelocityRotationsPerSec = elevationMotor.getVelocity();
+    elevationVelocityRotationsPerSec = elevationEncoder.getVelocity();
     elevationAccelerationRotationsPerSecSquared = elevationMotor.getAcceleration();
     elevationMotorTemp = elevationMotor.getDeviceTemp();
   }
@@ -107,21 +104,18 @@ public class ElevationIOCTRE implements ElevationIO {
 
     inputs.elevationVelocityRadPerSec =
         elevationVelocityRotationsPerSec.getValueAsDouble()
-            * Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT;
+            * Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT;
     inputs.elevationAccelRadPerSecSquared =
         elevationAccelerationRotationsPerSecSquared.getValueAsDouble()
             * Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT;
 
     inputs.elevationAngle =
         Rotation2d.fromRadians(
-            elevationAngleRotations.getValueAsDouble()
-                * Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT);
-    // Rotation2d.fromRadians(
-    //     mapRange(
-    //         (Math.PI)
-    //             - (elevationAngleRotations.getValueAsDouble()
-    //                 * Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT)
-    //             - Units.degreesToRadians(77.312)));
+            mapRange(
+                (Math.PI)
+                    - (elevationAngleRotations.getValueAsDouble()
+                        * Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT)
+                    - Units.degreesToRadians(77.312)));
   }
 
   @Override
@@ -141,7 +135,7 @@ public class ElevationIOCTRE implements ElevationIO {
 
     elevationMotor.setControl(
         motionMagicVoltage.withPosition(
-            angle.getRadians() / Constants.TurretConstants.ELEVATION_POSITION_COEFFICIENT));
+            angle.getRadians() / Constants.TurretConstants.ELEVATION_ENCODER_POSITION_COEFFICIENT));
   }
 
   @Override
@@ -156,5 +150,9 @@ public class ElevationIOCTRE implements ElevationIO {
     double oldRange = 2.3643 - 1.3024;
     double newRange = 1.3788 - 0.7505;
     return 0.7505 + ((value - 1.3024) * newRange / oldRange);
+  }
+
+  public void setEncoderPositionAtBottom() {
+    // elevationEncoder.setPosition(new Rotation2d(0.4308868857));
   }
 }
