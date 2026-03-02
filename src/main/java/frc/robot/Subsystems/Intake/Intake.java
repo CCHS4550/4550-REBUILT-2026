@@ -127,6 +127,7 @@ public class Intake extends SubsystemBase {
   }
   ;
 
+  // 0.25 works for pumping
   private void endTimerStateAndMoveOn() {
     if (systemState == SystemState.MOVING_TO_EXTENSION_PASSIVE && timer.hasElapsed(0.7)) {
       timer.stop();
@@ -138,7 +139,7 @@ public class Intake extends SubsystemBase {
       timer.reset();
       systemState = SystemState.EXTENDED_INTAKING;
     }
-    if (systemState == SystemState.MOVING_TO_STOW && timer.hasElapsed(0.75)) {
+    if (systemState == SystemState.MOVING_TO_STOW && timer.hasElapsed(0.7)) {
       timer.stop();
       timer.reset();
       systemState = SystemState.STOWED;

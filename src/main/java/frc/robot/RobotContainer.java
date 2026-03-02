@@ -6,13 +6,17 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Config.BruinRobotConfig;
-import frc.robot.Subsystems.Agitator.*;
-import frc.robot.Subsystems.Drive.*;
+import frc.robot.Subsystems.Agitator.Agitator;
+import frc.robot.Subsystems.Agitator.AgitatorIOCTRE;
+import frc.robot.Subsystems.Drive.SwerveIOCTRE;
+import frc.robot.Subsystems.Drive.SwerveSubsystem;
 import frc.robot.Subsystems.Intake.Intake;
 import frc.robot.Subsystems.Intake.Intake.WantedIntakeState;
 import frc.robot.Subsystems.Intake.IntakeIOCTRE;
 import frc.robot.Subsystems.Kicker.Kicker;
 import frc.robot.Subsystems.Kicker.KickerIOCTRE;
+import frc.robot.Subsystems.Superstructure;
+import frc.robot.Subsystems.Superstructure.WantedSuperstructureState;
 import frc.robot.Subsystems.Turret.Elevation.ElevationIOCTRE;
 import frc.robot.Subsystems.Turret.Rotation.RotationIOCTRE;
 import frc.robot.Subsystems.Turret.Shooter.ShooterIOCTRE;
@@ -24,7 +28,7 @@ public class RobotContainer {
   private final Turret turret;
   //   private final Vision vision;
 
-  // private final Superstructure superstructure;
+  private final Superstructure superstructure;
   private SwerveSubsystem swerveSubsystem;
   private final Agitator agitator;
   private final Kicker kicker;
@@ -57,7 +61,7 @@ public class RobotContainer {
         new Turret(
             new ElevationIOCTRE(config), new RotationIOCTRE(config), new ShooterIOCTRE(config));
 
-    // superstructure = new Superstructure(swerveSubsystem, intake, kicker, turret, agitator);
+    superstructure = new Superstructure(swerveSubsystem, intake, kicker, turret, agitator);
 
     // vision = new Vision ((pose, timestamp, stdDevs) -> {
     //     poseEstimator.addVisionMeasurement(pose, timestamp, stdDevs);
@@ -173,8 +177,27 @@ public class RobotContainer {
     controller
         .rightBumper()
         .whileTrue(
-            new InstantCommand(() -> turret.setWantedState(Turret.TurretWantedState.TESTING)))
-        .whileFalse(new InstantCommand(() -> turret.setWantedState(Turret.TurretWantedState.IDLE)));
+            new InstantCommand(
+                () ->
+                    superstructure.setWantedSuperstructureState(
+                        WantedSuperstructureState.ZERO, true)))
+        .whileFalse(
+            new InstantCommand(
+                () ->
+                    superstructure.setWantedSuperstructureState(
+                        WantedSuperstructureState.IDLE, false)));
+    controller
+        .leftBumper()
+        .whileTrue(
+            new InstantCommand(
+                () ->
+                    superstructure.setWantedSuperstructureState(
+                        WantedSuperstructureState.STOW, false)))
+        .whileFalse(
+            new InstantCommand(
+                () ->
+                    superstructure.setWantedSuperstructureState(
+                        WantedSuperstructureState.IDLE, false)));
   }
 
   public SwerveSubsystem getSwerveSubsystem() {

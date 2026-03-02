@@ -86,8 +86,8 @@ public class Turret extends SubsystemBase {
     PRACTICE_SHOOTING
   };
 
-  private TurretSystemState systemState = TurretSystemState.IDLE;
-  private TurretWantedState wantedState = TurretWantedState.IDLE;
+  @AutoLogOutput private TurretSystemState systemState = TurretSystemState.IDLE;
+  @AutoLogOutput private TurretWantedState wantedState = TurretWantedState.IDLE;
 
   public Turret(ElevationIO elevationIO, RotationIO rotationIO, ShooterIO shooterIO) {
 
@@ -133,8 +133,6 @@ public class Turret extends SubsystemBase {
     systemState = handleStateTransitions();
     applyStates();
     atGoal = atSetpoint();
-    System.out.println(
-        "Shooter Speed rn!: " + Units.radiansToRotations(shooterInputs.shooterVelocityRadPerSec));
   }
 
   public TurretSystemState handleStateTransitions() {
@@ -184,28 +182,28 @@ public class Turret extends SubsystemBase {
         // Rotation2d calculatedAngle = findFieldCentricAngleToTarget(new
         // Pose2d()).plus(findAngleAdjustmentForRobotInertia());
         // convertToBoundedTurretAngle(calculatedAngle.getRadians());
-        // desiredPose = FieldConstants.getScoringPose();
-        // desiredHeight = FieldConstants.HUB_HEIGHT;
-        // // put calc here
-        // noInertiaMeasurables =
-        //     new TurretMeasurables(
-        //         calculateElevationAngleNoInertia(desiredPose),
-        //         findFieldCentricAngleToTarget(desiredPose),
-        //         Constants.ShooterCalculationConstants.GEOMETRY_VELOCITY);
-        // robotSpeedVector =
-        //     VecBuilder.fill(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond, 0);
+        desiredPose = FieldConstants.getScoringPose();
+        desiredHeight = FieldConstants.HUB_HEIGHT;
+        // put calc here
+        noInertiaMeasurables =
+            new TurretMeasurables(
+                calculateElevationAngleNoInertia(desiredPose),
+                findFieldCentricAngleToTarget(desiredPose),
+                Constants.ShooterCalculationConstants.GEOMETRY_VELOCITY);
+        robotSpeedVector =
+            VecBuilder.fill(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond, 0);
 
-        // wantedTurretMeasurables.updateWithCartesianVector(
-        //     noInertiaMeasurables.getVector().minus(robotSpeedVector));
-        // wantedTurretMeasurables.shooterRadiansPerSec = 1;
-        // convertToRobotRelativeNonBounded();
-        // convertToBoundedTurretAngle();
-        // goToWantedState();
+        wantedTurretMeasurables.updateWithCartesianVector(
+            noInertiaMeasurables.getVector().minus(robotSpeedVector));
+        wantedTurretMeasurables.shooterRadiansPerSec = 1;
+        convertToRobotRelativeNonBounded();
+        convertToBoundedTurretAngle();
+        goToWantedState();
 
-        rotationIO.setVoltage(0);
-        elevationIO.setVoltage(0);
-        shooterIO.setVoltage(0);
-        atGoal = true;
+        // rotationIO.setVoltage(0);
+        // elevationIO.setVoltage(0);
+        // shooterIO.setVoltage(0);
+        // atGoal = true;
         break;
 
       case ACTIVE_SHOOTING:
@@ -255,27 +253,26 @@ public class Turret extends SubsystemBase {
 
       case TESTING:
         wantedTurretMeasurables =
-            new TurretMeasurables(Rotation2d.fromDegrees(60), Rotation2d.fromDegrees(0), 500);
+            new TurretMeasurables(Rotation2d.fromDegrees(70), Rotation2d.fromDegrees(0), 200);
         goToWantedState();
         break;
       case ZERO:
-        wantedTurretMeasurables.rotationAngle = Rotation2d.kZero;
-        wantedTurretMeasurables.elevationAngle =
-            Rotation2d.fromRadians(
-                Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
-        wantedTurretMeasurables.shooterRadiansPerSec =
-            Constants.TurretConstants.SHOOTER_MAX_RADIANS_PER_SEC / 1.6;
+        wantedTurretMeasurables =
+            new TurretMeasurables(Rotation2d.fromDegrees(Constants.TurretConstants.STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS), Rotation2d.fromDegrees(0), 0);
         goToWantedState();
+        break;
       case STOW:
-        wantedTurretMeasurables.rotationAngle = Rotation2d.fromRadians(Math.PI / 2);
+        wantedTurretMeasurables.rotationAngle = Rotation2d.fromDegrees(90);
         wantedTurretMeasurables.elevationAngle =
             Rotation2d.fromRadians(
-                Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
+                Constants.TurretConstants.STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
         wantedTurretMeasurables.shooterRadiansPerSec =
             Constants.TurretConstants.SHOOTER_MAX_RADIANS_PER_SEC / 1.6;
         goToWantedState();
+        break;
       case PRACTICE_SHOOTING:
         shooterIO.setVelo(RadiansPerSecond.of(30));
+        break;
       default:
         break;
     }
@@ -288,7 +285,7 @@ public class Turret extends SubsystemBase {
 
   private void goToWantedState() {
     rotationIO.setRotationAngle(
-        wantedTurretMeasurables.rotationAngle.plus(Rotation2d.fromDegrees(90)));
+        wantedTurretMeasurables.rotationAngle.plus(Rotation2d.fromDegrees(0)));
     elevationIO.setElevationAngle(wantedTurretMeasurables.elevationAngle);
     shooterIO.setVelo(
         AngularVelocity.ofBaseUnits(
@@ -370,15 +367,36 @@ public class Turret extends SubsystemBase {
   }
 
   public void convertToBoundedTurretAngle() {
-    double normAngle = normalize(wantedTurretMeasurables.rotationAngle.getRadians());
+     double currentTotalRadians = (rotationInputs.totalRotationsUnwrapped * 2 * Math.PI);
+        double closestOffset = wantedTurretMeasurables.rotationAngle.getRadians() - rotationInputs.rotationAngle.getRadians();
+        if (closestOffset > Math.PI) {
 
-    if (!isWithinBounds(normAngle)) {
-      wantedTurretMeasurables.rotationAngle = Rotation2d.fromRadians(clamp(normAngle));
-      targetIsInDeadzoneFlag = true;
-    } else {
-      wantedTurretMeasurables.rotationAngle = Rotation2d.fromRadians(normAngle);
-      targetIsInDeadzoneFlag = false;
-    }
+            closestOffset -= 2 * Math.PI;
+
+        } else if (closestOffset < -Math.PI) {
+            closestOffset += 2 * Math.PI;
+        }
+
+        double finalOffset = currentTotalRadians + closestOffset;
+        if ((currentTotalRadians + closestOffset) % (2 * Math.PI)
+                == (currentTotalRadians - closestOffset)
+                        % (2 * Math.PI)) { // If the offset can go either way, go closer to zero
+            if (finalOffset > 0) {
+                finalOffset = currentTotalRadians - Math.abs(closestOffset);
+            } else {
+                finalOffset = currentTotalRadians + Math.abs(closestOffset);
+            }
+        }
+        if (finalOffset > Units.degreesToRadians(MAX_ANGLE)) { // if past upper rotation limit
+            finalOffset -= (2 * Math.PI);
+        } else if (finalOffset < Units.degreesToRadians(MIN_ANGLE)) { // if below lower rotation limit
+            finalOffset += (2 * Math.PI);
+        }
+        wantedTurretMeasurables.rotationAngle= Rotation2d.fromRadians(finalOffset);
+
+        double clampedElevation = MathUtil.clamp(wantedTurretMeasurables.elevationAngle.getDegrees(), Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS, Constants.TurretConstants.STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
+        wantedTurretMeasurables.elevationAngle= Rotation2d.fromDegrees(clampedElevation);
+
   }
 
   private double normalize(double angle) {

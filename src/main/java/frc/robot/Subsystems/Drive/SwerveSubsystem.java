@@ -109,7 +109,7 @@ public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestCons
   private final double maxVelocity;
   private final double maxAngularVelocity;
 
-  private double teleopVelocityCoefficient = 1.0;
+  private double teleopVelocityCoefficient = 0.2;
   private double rotationVelocityCoefficient = 1.0;
   private double maximumAngularVelocityForDriveToPoint = Double.NaN;
 

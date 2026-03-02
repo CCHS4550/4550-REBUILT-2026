@@ -1,6 +1,7 @@
 package frc.robot.Subsystems.Kicker;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.littletonrobotics.junction.AutoLogOutput;
 
 public class Kicker extends SubsystemBase {
   private KickerIO kickerIO;
@@ -17,8 +18,8 @@ public class Kicker extends SubsystemBase {
     RUNNING
   }
 
-  private KickerSystemState systemState = KickerSystemState.IDLE;
-  private KickerWantedState wantedState = KickerWantedState.IDLE;
+  @AutoLogOutput private KickerSystemState systemState = KickerSystemState.IDLE;
+  @AutoLogOutput private KickerWantedState wantedState = KickerWantedState.IDLE;
 
   public Kicker(KickerIO io) {
     this.kickerIO = io;
@@ -47,10 +48,11 @@ public class Kicker extends SubsystemBase {
   public void applyStates() {
     switch (systemState) {
       case IDLE:
+        kickerIO.setVoltage(0);
         break;
       case RUNNING:
         // kicking logic
-        kickerIO.setVoltage(4); // change to reasonable voltage
+        kickerIO.setVoltage(5); // change to reasonable voltage
         break;
 
       default:
@@ -58,7 +60,7 @@ public class Kicker extends SubsystemBase {
     }
   }
 
-  public void setWantedState(KickerWantedState wantedState) {
+  public void setWantedKickerState(KickerWantedState wantedState) {
     this.wantedState = wantedState;
   }
 }

@@ -295,11 +295,11 @@ public class BruinRobotConfig {
     // Turret Constants
     turretConfig =
         new TurretConfig()
-            .withRotationKp(10.14)
+            .withRotationKp(15.14)
             .withRotationKi(0)
             .withRotationKd(0)
             .withRotationKs(0.2)
-            .withRotationKv(4)
+            .withRotationKv(1.1415)
             // 51.39646
             .withElevationKp(21)
             .withElevationKi(0)

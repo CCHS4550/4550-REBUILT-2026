@@ -70,12 +70,11 @@ public class RotationIOCTRE implements RotationIO {
     rotationConfig.Slot0.kD = bruinRobotConfig.getTurretConfig().rotationKd;
     rotationConfig.Slot0.kS = bruinRobotConfig.getTurretConfig().rotationKs;
     rotationConfig.Slot0.kV = bruinRobotConfig.getTurretConfig().rotationKv;
-    rotationConfig.Feedback.withFusedCANcoder(rotationEncoder);
+    rotationConfig.Feedback.withRemoteCANcoder(rotationEncoder);
     rotationConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     rotationConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    rotationConfig.MotionMagic.MotionMagicExpo_kV = bruinRobotConfig.getTurretConfig().rotationKv;
-    rotationConfig.MotionMagic.MotionMagicCruiseVelocity = 3;
-    rotationConfig.MotionMagic.MotionMagicAcceleration = 5; // some constant idk
+    rotationConfig.MotionMagic.MotionMagicCruiseVelocity = 33;
+    rotationConfig.MotionMagic.MotionMagicAcceleration = 55; // some constant idk
 
     Phoenix6Util.applyAndCheckConfiguration(rotationMotor, rotationConfig, 5);
 

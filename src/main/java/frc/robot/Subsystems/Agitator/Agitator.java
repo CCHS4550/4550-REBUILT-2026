@@ -127,8 +127,6 @@ public class Agitator extends SubsystemBase {
 
     systemState = handleSystemState();
     applyWantedState();
-
-    System.out.println("Agitator State: " + systemState);
   }
 
   public void setWantedAgitatorState(WantedAgitatorState state) {
@@ -146,8 +144,9 @@ public class Agitator extends SubsystemBase {
         switch (systemState) {
           case IDLE:
             // Entering spin for first time
+            timer.stop();
             timer.restart();
-            return SystemState.BACK_SPIN;
+            return SystemState.IDLE;
 
           case BACK_SPIN:
             if (timer.hasElapsed(0.3)) {
@@ -175,7 +174,7 @@ public class Agitator extends SubsystemBase {
         break;
 
       case SPINNING:
-        agitatorIO.setVoltage(3.0); // forward continuously
+        agitatorIO.setVoltage(4.0); // forward continuously
         break;
     }
   }

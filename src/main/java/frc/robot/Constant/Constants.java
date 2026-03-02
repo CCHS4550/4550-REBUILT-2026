@@ -70,10 +70,10 @@ public final class Constants {
 
     // public static final double ELEVATION_DEFAULT_ENCODER_READING_AT_SHALLOWEST_ANGLE = -0.48;
     public static final double ELEVATION_DEFAULT_ENCODER_READING_AT_SHALLOWEST_ANGLE = 0.35;
-    public static final double SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS = Math.toRadians(49.0);
-    public static final double STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS = Math.toRadians(78);
+    public static final double SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS = Math.toRadians(50.0);
+    public static final double STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS = Math.toRadians(75);
 
-    public static final double SHOOTER_MAX_RADIANS_PER_SEC = 0.0;
+    public static final double SHOOTER_MAX_RADIANS_PER_SEC = 500.0;
 
     public static final double TURRET_HEIGHT_METERS = 0.0;
 

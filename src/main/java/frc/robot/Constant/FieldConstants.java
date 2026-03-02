@@ -3,6 +3,7 @@ package frc.robot.Constant;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 
 @SuppressWarnings("UnusedVariable")
@@ -11,11 +12,11 @@ public class FieldConstants {
   public static final AprilTagFieldLayout FIELD_LAYOUT =
       AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
 
-  public static Pose2d scoringPoseBlue = new Pose2d();
-  public static Pose2d scoringPoseRed = new Pose2d();
+  public static Pose2d scoringPoseBlue = new Pose2d(4.6, 4, new Rotation2d());
+  public static Pose2d scoringPoseRed = new Pose2d(12,4, new Rotation2d());
 
-  public static Pose2d passingPoseBlue = new Pose2d();
-  public static Pose2d passingPoseRed = new Pose2d();
+  public static Pose2d passingPoseBlue = new Pose2d(2.5,4, new Rotation2d());
+  public static Pose2d passingPoseRed = new Pose2d(14.5, 4, new Rotation2d());
 
   public static Pose2d middleStartingPoseBlue = new Pose2d();
 
