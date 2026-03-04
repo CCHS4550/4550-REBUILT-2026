@@ -9,15 +9,14 @@ import frc.robot.Subsystems.Intake.Intake;
 import frc.robot.Subsystems.Intake.Intake.WantedIntakeState;
 import frc.robot.Subsystems.Kicker.Kicker;
 import frc.robot.Subsystems.Kicker.Kicker.KickerWantedState;
-import frc.robot.Subsystems.Turret.Turret;
-import frc.robot.Subsystems.Turret.Turret.TurretWantedState;
+import frc.robot.Subsystems.Shooter.*;
 import org.littletonrobotics.junction.AutoLogOutput;
 
 public class Superstructure extends SubsystemBase {
   private final SwerveSubsystem swerveSubsystem;
   private final Intake intake;
   private final Kicker kicker;
-  private final Turret turret;
+  private final Shooter shooter;
   private final Agitator agitator;
   private boolean INTAKE_ACTIVE = false;
 
@@ -28,12 +27,12 @@ public class Superstructure extends SubsystemBase {
       SwerveSubsystem swerveSubsystem,
       Intake intake,
       Kicker kicker,
-      Turret turret,
+      Shooter shooter,
       Agitator agitator) {
     this.swerveSubsystem = swerveSubsystem;
     this.intake = intake;
     this.kicker = kicker;
-    this.turret = turret;
+    this.shooter = shooter;
     this.agitator = agitator;
   }
 
@@ -58,7 +57,7 @@ public class Superstructure extends SubsystemBase {
       case IDLE:
         intake.setWantedIntakeState(WantedIntakeState.IDLE);
         kicker.setWantedKickerState(KickerWantedState.IDLE);
-        turret.setWantedState(TurretWantedState.IDLE);
+        shooter.setWantedState(TurretWantedState.IDLE);
         agitator.setWantedAgitatorState(WantedAgitatorState.IDLE);
         break;
       case EXTEND_INTAKE:
