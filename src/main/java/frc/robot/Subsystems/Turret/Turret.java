@@ -3,14 +3,8 @@ package frc.robot.Subsystems.Turret;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constant.Constants;
@@ -45,16 +39,13 @@ public class Turret extends SubsystemBase {
   private TurretMeasurables currentTurretMeasurables;
 
   private TurretMeasurables wantedTurretMeasurables; // thing we access to inertia
-  private TurretMeasurables noInertiaMeasurables;
+
   // private TurretMeasurables fieldOrientedMeasureables;
 
   private Pose2d desiredPose;
   private double desiredHeight;
 
   private Pose2d turretPose;
-  private Pose2d predictedTurretPose;
-  private ChassisSpeeds chassisSpeeds;
-  private Vector<N3> robotSpeedVector;
 
   private boolean atGoal;
 
@@ -65,25 +56,23 @@ public class Turret extends SubsystemBase {
   private boolean targetIsInDeadzoneFlag = false;
 
   public enum TurretSystemState {
-    TRACKING_TARGET,
     IDLE,
-    ACTIVE_SHOOTING,
-    ACTIVE_PASSING,
-    STOW,
+    TRACKING_TARGET_HUB,
+    ACTIVE_SHOOTING_HUB,
+    ACTIVE_SHOOTING_PASS,
+    TRACKING_PASS,
     ZERO,
-    TESTING,
-    PRACTICE_SHOOTING
+    STOW
   };
 
   public enum TurretWantedState {
     IDLE,
     SHOOT_SCORE,
     PASS_TO_ALLIANCE,
-    PASSIVE_TRACK,
-    STOW,
+    PASSIVE_TRACK_HUB,
+    PASSIVE_TRACK_PASS,
     ZERO,
-    TESTING,
-    PRACTICE_SHOOTING
+    STOW
   };
 
   @AutoLogOutput private TurretSystemState systemState = TurretSystemState.IDLE;
@@ -112,18 +101,11 @@ public class Turret extends SubsystemBase {
     Logger.processInputs("Subsystems/rotation", rotationInputs);
     Logger.processInputs("Subsystems/shooter", shooterInputs);
 
-    chassisSpeeds = Robotstate.getInstance().getRobotChassisSpeeds();
     turretPose =
         Robotstate.getInstance()
             .getRobotPoseFromSwerveDriveOdometry()
             .transformBy(Constants.TurretConstants.TURRET_TRANSFORM);
-    predictedTurretPose =
-        turretPose.transformBy(
-            new Transform2d(
-                chassisSpeeds.vxMetersPerSecond * ShooterCalculationConstants.TIME_DELAY,
-                chassisSpeeds.vyMetersPerSecond * ShooterCalculationConstants.TIME_DELAY,
-                new Rotation2d(
-                    chassisSpeeds.omegaRadiansPerSecond * ShooterCalculationConstants.TIME_DELAY)));
+
     currentTurretMeasurables =
         new TurretMeasurables(
             elevationInputs.elevationAngle,
@@ -153,17 +135,11 @@ public class Turret extends SubsystemBase {
         } else {
           return TurretSystemState.TRACKING_TARGET;
         }
-      case PASSIVE_TRACK:
+      case PASSIVE_TRACK_HUB:
         return TurretSystemState.TRACKING_TARGET;
 
-      case TESTING:
-        return TurretSystemState.TESTING;
-      case ZERO:
-        return TurretSystemState.ZERO;
       case STOW:
         return TurretSystemState.STOW;
-      case PRACTICE_SHOOTING:
-        return TurretSystemState.PRACTICE_SHOOTING;
 
       default:
         return TurretSystemState.IDLE;
@@ -178,93 +154,57 @@ public class Turret extends SubsystemBase {
         shooterIO.setVoltage(0);
         atGoal = true;
         break;
-      case TRACKING_TARGET:
-        // Rotation2d calculatedAngle = findFieldCentricAngleToTarget(new
-        // Pose2d()).plus(findAngleAdjustmentForRobotInertia());
-        // convertToBoundedTurretAngle(calculatedAngle.getRadians());
+      case TRACKING_TARGET_HUB:
         desiredPose = FieldConstants.getScoringPose();
         desiredHeight = FieldConstants.HUB_HEIGHT;
-        // put calc here
-        // noInertiaMeasurables =
-        //     new TurretMeasurables(
-        //         calculateElevationAngleNoInertia(desiredPose),
-        //         findFieldCentricAngleToTarget(desiredPose),
-        //         Constants.ShooterCalculationConstants.GEOMETRY_VELOCITY);
-        robotSpeedVector =
-            VecBuilder.fill(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond, 0);
 
-        // wantedTurretMeasurables.updateWithCartesianVector(
-        //     noInertiaMeasurables.getVector().minus(robotSpeedVector));
+        Rotation2d desiredElevationAngle = calculateElevationAngleNoInertia(desiredPose);
+        Rotation2d desiredRotationAngle = findFieldCentricAngleToTarget(desiredPose);
 
         wantedTurretMeasurables =
-            new TurretMeasurables(
-                calculateElevationAngleNoInertia(desiredPose),
-                findFieldCentricAngleToTarget(desiredPose),
-                Constants.ShooterCalculationConstants.GEOMETRY_VELOCITY);
-        wantedTurretMeasurables.shooterRadiansPerSec = 1;
-        convertToRobotRelativeNonBounded();
-        System.out.println(wantedTurretMeasurables.rotationAngle.getDegrees());
-        convertToBoundedTurretAngle();
+            new TurretMeasurables(desiredElevationAngle, desiredRotationAngle, 0);
+
         goToWantedState();
 
-        // rotationIO.setVoltage(0);
-        // elevationIO.setVoltage(0);
-        // shooterIO.setVoltage(0);
-        // atGoal = true;
         break;
 
       case ACTIVE_SHOOTING:
-        // Rotation2d calculatedAngle = findFieldCentricAngleToTarget(new
-        // Pose2d()).plus(findAngleAdjustmentForRobotInertia());
-        // convertToBoundedTurretAngle(calculatedAngle.getRadians());
         desiredPose = FieldConstants.getScoringPose();
         desiredHeight = FieldConstants.HUB_HEIGHT;
-        // put calc here
-        noInertiaMeasurables =
+
+        Rotation2d desiredElevationAngle1 = calculateElevationAngleNoInertia(desiredPose);
+        Rotation2d desiredRotationAngle1 = findFieldCentricAngleToTarget(desiredPose);
+
+        wantedTurretMeasurables =
             new TurretMeasurables(
-                calculateElevationAngleNoInertia(desiredPose),
-                findFieldCentricAngleToTarget(desiredPose),
-                Constants.ShooterCalculationConstants.GEOMETRY_VELOCITY);
-        System.out.println(noInertiaMeasurables.rotationAngle.getDegrees());
+                desiredElevationAngle1,
+                desiredRotationAngle1,
+                Constants.TurretConstants.GEOMETRY_VELOCITY);
 
-        robotSpeedVector =
-            VecBuilder.fill(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond, 0);
-
-        wantedTurretMeasurables.updateWithCartesianVector(
-            noInertiaMeasurables.getVector().minus(robotSpeedVector));
         convertToRobotRelativeNonBounded();
         convertToBoundedTurretAngle();
         goToWantedState();
 
         break;
       case ACTIVE_PASSING:
-        // Rotation2d calculatedAngle = findFieldCentricAngleToTarget(new
-        // Pose2d()).plus(findAngleAdjustmentForRobotInertia());
-        // convertToBoundedTurretAngle(calculatedAngle.getRadians());
-        desiredPose = FieldConstants.getScoringPose();
+        desiredPose = FieldConstants.getPassingPose();
         desiredHeight = FieldConstants.HUB_HEIGHT;
-        // put calc here
-        noInertiaMeasurables =
-            new TurretMeasurables(
-                calculateElevationAngleNoInertia(desiredPose),
-                findFieldCentricAngleToTarget(desiredPose),
-                Constants.ShooterCalculationConstants.GEOMETRY_VELOCITY);
-        robotSpeedVector =
-            VecBuilder.fill(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond, 0);
 
-        wantedTurretMeasurables.updateWithCartesianVector(
-            noInertiaMeasurables.getVector().minus(robotSpeedVector));
+        Rotation2d desiredElevationAngle2 = calculateElevationAngleNoInertia(desiredPose);
+        Rotation2d desiredRotationAngle2 = findFieldCentricAngleToTarget(desiredPose);
+
+        wantedTurretMeasurables =
+            new TurretMeasurables(
+                desiredElevationAngle2,
+                desiredRotationAngle2,
+                Constants.TurretConstants.GEOMETRY_VELOCITY);
+
         convertToRobotRelativeNonBounded();
         convertToBoundedTurretAngle();
         goToWantedState();
 
         break;
 
-      case TESTING:
-        wantedTurretMeasurables =
-            new TurretMeasurables(Rotation2d.fromDegrees(70), Rotation2d.fromDegrees(90), 0);
-        goToWantedState();
-        break;
       case ZERO:
         wantedTurretMeasurables =
             new TurretMeasurables(
@@ -282,9 +222,6 @@ public class Turret extends SubsystemBase {
         wantedTurretMeasurables.shooterRadiansPerSec =
             Constants.TurretConstants.SHOOTER_MAX_RADIANS_PER_SEC / 1.6;
         goToWantedState();
-        break;
-      case PRACTICE_SHOOTING:
-        shooterIO.setVelo(RadiansPerSecond.of(30));
         break;
       default:
         break;
@@ -335,16 +272,14 @@ public class Turret extends SubsystemBase {
 
   @AutoLogOutput
   public Rotation2d findFieldCentricAngleToTarget(Pose2d target) {
-    var translationToDesiredPoint =
-        target.getTranslation().minus(predictedTurretPose.getTranslation());
+    var translationToDesiredPoint = target.getTranslation();
 
     return translationToDesiredPoint.getAngle();
   }
 
   @AutoLogOutput
   public Rotation2d calculateElevationAngleNoInertia(Pose2d desiredPose) {
-    double lateralDistance =
-        desiredPose.getTranslation().getDistance(predictedTurretPose.getTranslation());
+    double lateralDistance = desiredPose.getTranslation();
 
     double elevationAngle =
         Math.atan2(
@@ -374,49 +309,41 @@ public class Turret extends SubsystemBase {
     Rotation2d adjustedAngle =
         wantedTurretMeasurables.rotationAngle.minus(
             Robotstate.getInstance().getRobotPoseFromSwerveDriveOdometry().getRotation());
-    wantedTurretMeasurables.rotationAngle =
-        adjustedAngle.plus(
-            Rotation2d.fromRadians(
-                TURRET_POSITION_ERROR_TO_DRIVEBASE_VELOCITY_PROPORTION
-                    * Robotstate.getInstance().getRobotChassisSpeeds().omegaRadiansPerSecond));
   }
 
   public void convertToBoundedTurretAngle() {
-    double currentTotalRadians = (rotationInputs.totalRotationsUnwrapped * 2 * Math.PI);
-    double closestOffset =
+    // --- Turret Rotation (Yaw) ---
+    double currentTotalRotation = rotationInputs.totalRotationsUnwrapped * 2 * Math.PI;
+    double rotationOffset =
         wantedTurretMeasurables.rotationAngle.getRadians()
             - rotationInputs.rotationAngle.getRadians();
-    if (closestOffset > Math.PI) {
 
-      closestOffset -= 2 * Math.PI;
+    // Wrap to shortest path (-π to π)
+    rotationOffset = ((rotationOffset + Math.PI) % (2 * Math.PI)) - Math.PI;
 
-    } else if (closestOffset < -Math.PI) {
-      closestOffset += 2 * Math.PI;
-    }
+    double finalRotation = currentTotalRotation + rotationOffset;
 
-    double finalOffset = currentTotalRadians + closestOffset;
-    if ((currentTotalRadians + closestOffset) % (2 * Math.PI)
-        == (currentTotalRadians - closestOffset)
-            % (2 * Math.PI)) { // If the offset can go either way, go closer to zero
-      if (finalOffset > 0) {
-        finalOffset = currentTotalRadians - Math.abs(closestOffset);
-      } else {
-        finalOffset = currentTotalRadians + Math.abs(closestOffset);
-      }
-    }
-    if (finalOffset > Units.degreesToRadians(MAX_ANGLE)) { // if past upper rotation limit
-      finalOffset -= (2 * Math.PI);
-    } else if (finalOffset < Units.degreesToRadians(MIN_ANGLE)) { // if below lower rotation limit
-      finalOffset += (2 * Math.PI);
-    }
-    wantedTurretMeasurables.rotationAngle = Rotation2d.fromRadians(finalOffset);
+    // Clamp to turret rotation limits
+    finalRotation = Math.max(MIN_ANGLE, Math.min(MAX_ANGLE, finalRotation));
+    wantedTurretMeasurables.rotationAngle = Rotation2d.fromRadians(finalRotation);
 
-    double clampedElevation =
-        MathUtil.clamp(
-            wantedTurretMeasurables.elevationAngle.getDegrees(),
+    // --- Turret Elevation (Pitch) ---
+    double elevationOffset =
+        wantedTurretMeasurables.elevationAngle.getRadians()
+            - elevationInputs.elevationAngle.getRadians();
+
+    // Wrap to shortest path (-π to π)
+    elevationOffset = ((elevationOffset + Math.PI) % (2 * Math.PI)) - Math.PI;
+
+    double finalElevation = elevationInputs.elevationAngle.getRadians() + elevationOffset;
+
+    // Clamp to elevation limits
+    finalElevation =
+        Math.clamp(
             Constants.TurretConstants.SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS,
+            finalElevation,
             Constants.TurretConstants.STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS);
-    wantedTurretMeasurables.elevationAngle = Rotation2d.fromDegrees(clampedElevation);
+    wantedTurretMeasurables.elevationAngle = Rotation2d.fromRadians(finalElevation);
   }
 
   private double normalize(double angle) {
