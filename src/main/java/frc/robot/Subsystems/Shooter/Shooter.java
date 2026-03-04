@@ -32,6 +32,8 @@ public class Shooter extends SubsystemBase {
     IDLE,
     PHYSICS_SHOOT,
     NORMAL_SHOOT,
+    ZERO,
+    STOW
   }
 
   private ShooterState wantedState = ShooterState.IDLE;
@@ -60,6 +62,12 @@ public class Shooter extends SubsystemBase {
     this.wantedState = wantedState;
   }
 
+  public void zero(){
+    setTurretAngle(Rotation2d.fromDegrees(0));
+    moveHoodToAngle(Rotation2d.fromDegrees(Constants.TurretConstants.STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS));
+    setFlywheelRPM(0);
+}
+
   public void setWantedState(ShooterState wantedState, Translation3d trajectorySetpoint) {
     this.wantedState = wantedState;
     this._trajectorySetpoint = trajectorySetpoint;
@@ -80,6 +88,10 @@ public class Shooter extends SubsystemBase {
         return ShooterState.PHYSICS_SHOOT;
       case NORMAL_SHOOT:
         return ShooterState.NORMAL_SHOOT;
+      case ZERO:
+        return ShooterState.ZERO;
+      case STOW:
+        return ShooterState.STOW;
       default:
         return ShooterState.IDLE;
     }
@@ -200,9 +212,9 @@ public class Shooter extends SubsystemBase {
     io.moveHoodToAngle(angle);
   }
 
-  // public void setHoodAngle(Rotation2d angle) {
-  // io.setHoodAngle(angle);
-  // }
+//   public void setHoodAngle(Rotation2d angle) {
+//   io.setHoodAngle(angle);
+//   }
 
   public void setTurretAngle(Rotation2d angle) {
     io.setTurretAngle(getRelativeAngleFromRotation2d(angle));
@@ -295,6 +307,13 @@ public class Shooter extends SubsystemBase {
       case NORMAL_SHOOT:
         normalShoot();
         break;
+      case ZERO:
+        zero();
+        break;
+      case STOW:
+        stow();
+        break;
+        
       default:
         break;
     }
@@ -305,6 +324,12 @@ public class Shooter extends SubsystemBase {
     if (DriverStation.isDisabled()) {
       Logger.recordOutput("Shooter/Shot Log", shotLog.toString());
     }
+  }
+
+  public void stow(){
+    setTurretAngle(Rotation2d.fromDegrees(90));
+    moveHoodToAngle(Rotation2d.fromRadians(Constants.TurretConstants.STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS));
+    setFlywheelRPM(0);
   }
 
   private void trackTarget() {
