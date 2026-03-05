@@ -64,7 +64,6 @@ public class SwerveIOCTRE extends SwerveDrivetrain implements SwerveIO {
     }
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public void registerTelemetryFunction(SwerveIOInputs inputs) {
     this.registerTelemetry(
@@ -109,7 +108,6 @@ public class SwerveIOCTRE extends SwerveDrivetrain implements SwerveIO {
     this.updateSimState(Robot.defaultPeriodSecs, 13.00);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public void addQuestPose(Pose2d pose, double timestamp, Matrix<N3, N1> visionMeasurementStdDevs) {
     this.addVisionMeasurement(pose, timestamp, visionMeasurementStdDevs);

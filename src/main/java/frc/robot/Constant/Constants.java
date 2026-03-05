@@ -70,12 +70,16 @@ public final class Constants {
 
     // public static final double ELEVATION_DEFAULT_ENCODER_READING_AT_SHALLOWEST_ANGLE = -0.48;
     public static final double ELEVATION_DEFAULT_ENCODER_READING_AT_SHALLOWEST_ANGLE = 0.35;
-    public static final double SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS = Math.toRadians(48.0);
-    public static final double STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS = Math.toRadians(75);
+    public static final double SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS = Math.toRadians(45);
+    public static final double STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS = Math.toRadians(78);
 
-    public static final double SHOOTER_MAX_RADIANS_PER_SEC = 500.0;
+    public static final double SHOOTER_CLOSE_RADIANS_PER_SEC = 300.0;
 
-    public static final double TURRET_HEIGHT_METERS = 0.0;
+    public static final double SHOOTER_FAR_RADIANS_PER_SEC = 400;
+
+    public static final double SHOOTER_ULTRA_FAR_RADIANS_PER_SEC = 500;
+
+    public static final double TURRET_HEIGHT_METERS = 0.305;
 
     public static final Transform2d TURRET_TRANSFORM = new Transform2d();
 
@@ -84,6 +88,7 @@ public final class Constants {
     public static final double FORWARD_ROTATION_LIMIT_RADIANS = 0.0;
 
     public static final double BACKWARDS_ROTATION_LIMIT_RADIANS = 0.0;
+    public static final double SHOOTER_PASSING_SLOW_RADIANS_PER_SEC = 421;
   }
 
   public static final class IntakeConstants {
@@ -107,8 +112,13 @@ public final class Constants {
   public static final class ShooterCalculationConstants {
     public static final double GRAVITATION_CONSTANT = 9.81;
     public static final double TIME_DELAY = 0.03;
-    public static final double GEOMETRY_VELOCITY = 6.7;
-    public static final double TURRET_HEIGHT = 0.12;
+    public static final double GEOMETRY_VELOCITY_CLOSE = 7.5;
+    public static final double GEOMETRY_VELOCITY_FAR = 8.5;
+    public static final double GEOMETRY_VELOCITY_PASSING_SLOW = 11;
+    public static final double GEOMETRY_VELOCITY_ULTRA_FAR = 12;
+
+    // need to tune maunually
+    public static final double TURRET_HEIGHT = 0.0305;
     // public static final Pose2d HUB_POSITION = new Pose2d(4.625594,4.034663,new Rotation2d());
 
   }

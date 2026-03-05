@@ -1,101 +1,8 @@
-// package frc.robot.Subsystems.Agitator;
-
-// import edu.wpi.first.wpilibj.Timer;
-// import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
-// public class Agitator extends SubsystemBase {
-//   private Timer timer;
-
-//   public enum WantedAgitatorState {
-//     IDLE,
-//     SPINNING
-//   }
-
-//   public enum SystemState {
-//     IDLE,
-//     SPINNING,
-//     BACK_SPIN
-//   }
-
-//   private SystemState systemState = SystemState.IDLE;
-//   private WantedAgitatorState wantedState = WantedAgitatorState.IDLE;
-
-//   private final AgitatorIO agitatorIO;
-
-//   private AgitatorIOInputsAutoLogged inputs = new AgitatorIOInputsAutoLogged();
-
-//   public Agitator(AgitatorIO agitatorIO) {
-//     this.agitatorIO = agitatorIO;
-//     timer = new Timer();
-//   }
-
-//   @Override
-//   public void periodic() {
-//     agitatorIO.updateInputs(inputs);
-
-//     systemState = handleSystemState();
-//     applyWantedState();
-//     moveOnByTimer();
-//     System.out.println("Agitator State: " + systemState);
-//   }
-
-//   public void setWantedAgitatorState(WantedAgitatorState wantedAgitatorState) {
-//     if (wantedState == WantedAgitatorState.SPINNING
-//         && systemState != SystemState.SPINNING
-//         && systemState != SystemState.BACK_SPIN) {
-//       timer.reset();
-//       timer.start();
-//     }
-//     wantedState = wantedAgitatorState;
-//   }
-
-//   private SystemState handleSystemState() {
-//     switch (wantedState) {
-//       case IDLE:
-//         return SystemState.IDLE;
-//       case SPINNING:
-//         {
-//           if (!timer.isRunning()) {
-//             return SystemState.SPINNING;
-//           }
-//           return SystemState.BACK_SPIN;
-//         }
-//       default:
-//         return SystemState.IDLE;
-//     }
-//   }
-
-//   private void moveOnByTimer() {
-//     if (timer.hasElapsed(0.3)) {
-//       timer.stop();
-//       timer.reset();
-//       systemState = SystemState.SPINNING;
-//     }
-//   }
-
-//   private void applyWantedState() {
-//     switch (systemState) {
-//       case IDLE:
-//         agitatorIO.setVoltage(0.0);
-//         break;
-//       case SPINNING:
-//         agitatorIO.setVoltage(5.0);
-//         break;
-//       case BACK_SPIN:
-//         agitatorIO.setVoltage(-3);
-//         break;
-//     }
-//   }
-
-//   // public void setWantedState(WantedAgitatorState wantedState) {
-//   //   this.wantedState = wantedState;
-//   // }
-// }
-
 package frc.robot.Subsystems.Agitator;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.littletonrobotics.junction.Logger;
 
 public class Agitator extends SubsystemBase {
 
@@ -125,40 +32,46 @@ public class Agitator extends SubsystemBase {
   @Override
   public void periodic() {
     agitatorIO.updateInputs(inputs);
+    Logger.processInputs("Subsystems/Agitator", inputs);
 
     systemState = handleSystemState();
     applyWantedState();
+
+    Logger.recordOutput("Subsystems/Agitator/SystemState", systemState);
+    Logger.recordOutput("Subsystems/Agitator/WantedState", wantedState);
   }
 
   public void setWantedAgitatorState(WantedAgitatorState state) {
+    // Idempotency guard: Superstructure calls this every 20ms.
+    // Without this, the timer resets every loop tick and BACK_SPIN never ends.
+    if (state == this.wantedState) return;
+    this.wantedState = state;
+
+    // Timer lifecycle is managed here on state change, not inside handleSystemState().
     if (state == WantedAgitatorState.SPINNING) {
       timer.reset();
       timer.start();
+    } else {
+      timer.stop();
+      timer.reset();
     }
-    this.wantedState = state;
   }
 
   private SystemState handleSystemState() {
     switch (wantedState) {
       case IDLE:
-        timer.stop();
-        timer.reset();
         return SystemState.IDLE;
-
       case SPINNING:
-        if (!timer.hasElapsed(0.3) && timer.isRunning()) {
+        // Back-spin for 0.3s on entry, then switch to forward spin.
+        if (timer.isRunning() && !timer.hasElapsed(0.3)) {
           return SystemState.BACK_SPIN;
         }
-        timer.stop();
-        timer.reset();
         return SystemState.SPINNING;
       case BACK_SPIN:
-        timer.stop();
-        timer.reset();
         return SystemState.BACK_SPIN;
+      default:
+        return SystemState.IDLE;
     }
-
-    return SystemState.IDLE;
   }
 
   private void applyWantedState() {
@@ -166,13 +79,11 @@ public class Agitator extends SubsystemBase {
       case IDLE:
         agitatorIO.setVoltage(0.0);
         break;
-
       case BACK_SPIN:
-        agitatorIO.setVoltage(-1.0); // reverse for 0.3s
+        agitatorIO.setVoltage(-1.0);
         break;
-
       case SPINNING:
-        agitatorIO.setVoltage(4.0); // forward continuously
+        agitatorIO.setVoltage(4.0);
         break;
     }
   }

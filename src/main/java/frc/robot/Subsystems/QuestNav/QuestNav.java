@@ -54,51 +54,48 @@ public class QuestNav extends SubsystemBase implements Vision.VisionConsumer {
   public void periodic() {
     // unsure whether or not this should be synchronized or not
     io.commandPeriodic();
-    synchronized (inputs) {
-      io.updateInputs(inputs);
-      Logger.processInputs("Questnav", inputs);
+    io.updateInputs(inputs);
+    Logger.processInputs("Questnav", inputs);
 
-      List<Pose3d> allPoseFrames = new LinkedList<>();
-      List<Pose3d> rejectedPoseFrames = new LinkedList<>();
-      List<Pose3d> acceptedPoseFrames = new LinkedList<>();
+    List<Pose3d> allPoseFrames = new LinkedList<>();
+    List<Pose3d> rejectedPoseFrames = new LinkedList<>();
+    List<Pose3d> acceptedPoseFrames = new LinkedList<>();
 
-      // supposed to loop through all available pose frames and mark if they ought to be used
-      // the official implementation simply reads the most recent frame, which may benefit on field
-      // performance
-      for (PoseFrame givenPoseFrame : inputs.unreadPoseFrames) {
-        boolean rejectFrame = !inputs.QuestNavTracking || !inputs.hasEstablishedSetPose;
+    // supposed to loop through all available pose frames and mark if they ought to be used
+    // the official implementation simply reads the most recent frame, which may benefit on field
+    // performance
+    for (PoseFrame givenPoseFrame : inputs.unreadPoseFrames) {
+      boolean rejectFrame = !inputs.QuestNavTracking || !inputs.hasEstablishedSetPose;
 
-        allPoseFrames.add(givenPoseFrame.questPose3d());
-        if (rejectFrame) {
-          rejectedPoseFrames.add(givenPoseFrame.questPose3d());
-        } else {
-          acceptedPoseFrames.add(givenPoseFrame.questPose3d());
+      allPoseFrames.add(givenPoseFrame.questPose3d());
+      if (rejectFrame) {
+        rejectedPoseFrames.add(givenPoseFrame.questPose3d());
+      } else {
+        acceptedPoseFrames.add(givenPoseFrame.questPose3d());
 
-          Pose3d transformedPose =
-              givenPoseFrame.questPose3d().transformBy(inputs.robotToQuest.inverse());
+        Pose3d transformedPose =
+            givenPoseFrame.questPose3d().transformBy(inputs.robotToQuest.inverse());
 
-          consumer.accept(
-              transformedPose.toPose2d(), givenPoseFrame.dataTimestamp(), QUESTNAV_STD_DEVS);
-        }
+        Robotstate.getInstance().addQuestPose(transformedPose.toPose2d());
+        consumer.accept(
+            transformedPose.toPose2d(), givenPoseFrame.dataTimestamp(), QUESTNAV_STD_DEVS);
       }
-
-      // Logger.recordOutput("Questnav", allPoseFrames.get(allPoseFrames.size()));
-      // Logger.recordOutput(
-      //     "Questnav", rejectedPoseFrames.toArray(new Pose2d[rejectedPoseFrames.size()]));
-      // Logger.recordOutput(
-      //     "Questnav", acceptedPoseFrames.toArray(new Pose2d[acceptedPoseFrames.size()]));
-
-      backupOdometrySetter();
-
-      disconnectedAlert.set(!inputs.QuestNavConnected);
-      noTrackingAlert.set(!inputs.QuestNavTracking);
     }
+
+    if (!allPoseFrames.isEmpty()) {
+      Logger.recordOutput("Questnav/LatestPose", allPoseFrames.get(allPoseFrames.size() - 1));
+    }
+    Logger.recordOutput("Questnav/AllPoses", allPoseFrames.toArray(new Pose3d[0]));
+    Logger.recordOutput("Questnav/RejectedPoses", rejectedPoseFrames.toArray(new Pose3d[0]));
+    Logger.recordOutput("Questnav/AcceptedPoses", acceptedPoseFrames.toArray(new Pose3d[0]));
+
+    backupOdometrySetter();
+
+    disconnectedAlert.set(!inputs.QuestNavConnected);
+    noTrackingAlert.set(!inputs.QuestNavTracking);
   }
 
-  public synchronized void setPose(
-      Pose2d
-          pose) { // needs to be synchronized b/c vision & the backup odometry could hypothetically
-    // try to update the pose at same time
+  public void setPose(Pose2d pose) {
     io.setPose(pose);
   }
 
@@ -112,12 +109,20 @@ public class QuestNav extends SubsystemBase implements Vision.VisionConsumer {
       timer.reset();
       timer.start();
     }
+    if (inputs.hasEstablishedSetPose && timer.isRunning()) {
+      timer.stop();
+      timer.reset();
+    }
 
     if (timer.hasElapsed(5)) {
       setPose(Robotstate.getInstance().getRobotPoseFromSwerveDriveOdometry());
       timer.stop();
       timer.reset();
     }
+  }
+
+  public boolean questPoseEstablished() {
+    return inputs.hasEstablishedSetPose;
   }
 
   @FunctionalInterface

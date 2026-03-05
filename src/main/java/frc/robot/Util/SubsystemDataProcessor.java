@@ -11,7 +11,7 @@ public class SubsystemDataProcessor implements Runnable {
     void refreshData();
   }
 
-  public static final int LOOP_TIME = 20;
+  public static final int LOOP_TIME = 10;
 
   public static void createAndStartSubsystemDataProcessor(
       DataReaderAndLogger dataReaderAndLogger, IODataRefresher IODataRefresher) {

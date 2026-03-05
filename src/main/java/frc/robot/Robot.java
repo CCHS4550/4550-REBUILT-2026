@@ -8,6 +8,7 @@
 package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.IterativeRobotBase;
 import edu.wpi.first.wpilibj.Watchdog;
@@ -120,6 +121,14 @@ public class Robot extends LoggedRobot {
   @Override
   public void disabledPeriodic() {
     autoChooser.update();
+    SmartDashboard.putBoolean("Quest Pose Established", robotContainer.questPoseEstablished());
+    SmartDashboard.putBoolean(
+        "At Auto Starting Pose",
+        robotContainer.isAtAutoStartingPose(autoChooser.getStartingPose().orElse(new Pose2d())));
+    SmartDashboard.putBoolean(
+        "At Auto Starting Rotation",
+        robotContainer.isAtAutoStartingRotation(
+            autoChooser.getStartingPose().orElse(new Pose2d()).getRotation()));
   }
 
   /** This autonomous runs the autonomous command selected by your {@link Robotstate} class. */
@@ -128,7 +137,7 @@ public class Robot extends LoggedRobot {
     autonomousCommand = autoChooser.getSelectedCommand().orElse(null);
 
     if (autonomousCommand != null) {
-      autonomousCommand.schedule();
+      CommandScheduler.getInstance().schedule(autonomousCommand);
     }
   }
 

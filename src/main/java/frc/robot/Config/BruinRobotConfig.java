@@ -297,22 +297,22 @@ public class BruinRobotConfig {
     // Turret Constants
     turretConfig =
         new TurretConfig()
-            .withRotationKp(15.14)
+            .withRotationKp(5.14)
             .withRotationKi(0)
             .withRotationKd(0)
-            .withRotationKs(0.2)
-            .withRotationKv(1.1415)
+            .withRotationKs(0.0)
+            .withRotationKv(0)
             // 51.39646
             .withElevationKp(21)
             .withElevationKi(0)
             .withElevationKd(0.1)
-            .withElevationKs(0.33)
+            .withElevationKs(0.0)
             .withElevationKv(0.5)
-            .withShooterKp(10.6)
+            .withShooterKp(5.6)
             .withShooterKi(0)
             .withShooterKd(0)
-            .withShooterKs(0.25)
-            .withShooterKv(0.3);
+            .withShooterKs(0.0)
+            .withShooterKv(0.0);
 
     intakeConfig =
         new IntakeConfig()

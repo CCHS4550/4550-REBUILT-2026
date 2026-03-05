@@ -4,15 +4,12 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N3;
-import frc.robot.Constant.Constants;
 
 public class TurretMeasurables {
-  // instance variables
   public Rotation2d elevationAngle;
   public Rotation2d rotationAngle;
   public double shooterRadiansPerSec;
 
-  // constructor
   public TurretMeasurables(
       Rotation2d elevationAngle, Rotation2d rotationAngle, double shooterRadiansPerSec) {
     this.elevationAngle = elevationAngle;
@@ -20,30 +17,40 @@ public class TurretMeasurables {
     this.shooterRadiansPerSec = shooterRadiansPerSec;
   }
 
-  public TurretMeasurables(Rotation2d elevationAngle, Rotation2d rotationAngle) {
-    this.elevationAngle = elevationAngle;
-    this.rotationAngle = rotationAngle;
-    this.shooterRadiansPerSec = Constants.TurretConstants.SHOOTER_MAX_RADIANS_PER_SEC;
+  public TurretMeasurables() {
+    this(new Rotation2d(), new Rotation2d(), 0.0);
   }
 
+  /**
+   * Converts spherical turret coordinates into a 3D Cartesian velocity vector. X/Y represent the
+   * field grid, Z represents height.
+   */
   public Vector<N3> getVector() {
+    // Find the horizontal shadow (projection) of the vector on the floor
+    double horizontalMag = shooterRadiansPerSec * Math.cos(elevationAngle.getRadians());
+
     return VecBuilder.fill(
-        shooterRadiansPerSec
-            * Math.cos(rotationAngle.getRadians())
-            * Math.sin((Math.PI / 2) - elevationAngle.getRadians()),
-        shooterRadiansPerSec
-            * Math.sin(rotationAngle.getRadians())
-            * Math.cos((Math.PI / 2) - elevationAngle.getRadians()),
-        shooterRadiansPerSec * Math.cos((Math.PI / 2) - elevationAngle.getRadians()));
+        horizontalMag * Math.cos(rotationAngle.getRadians()), // X
+        horizontalMag * Math.sin(rotationAngle.getRadians()), // Y
+        shooterRadiansPerSec * Math.sin(elevationAngle.getRadians()) // Z (Up)
+        );
   }
 
+  /** Re-calculates the turret state from a modified Cartesian velocity vector. */
   public void updateWithCartesianVector(Vector<N3> updateVector) {
-    this.shooterRadiansPerSec =
-        Math.sqrt(
-            Math.pow(updateVector.get(0), 2)
-                + Math.pow(updateVector.get(1), 2)
-                + Math.pow(updateVector.get(2), 2));
-    this.rotationAngle = new Rotation2d(Math.atan2(updateVector.get(1), updateVector.get(0)));
-    this.elevationAngle = new Rotation2d(Math.acos(updateVector.get(2) / shooterRadiansPerSec));
+    double x = updateVector.get(0);
+    double y = updateVector.get(1);
+    double z = updateVector.get(2);
+
+    this.shooterRadiansPerSec = Math.sqrt(x * x + y * y + z * z);
+    // WPILib's Rotation2d handles atan2(y, x) internally
+    this.rotationAngle = new Rotation2d(x, y);
+
+    // Protect against divide-by-zero if speed is completely 0
+    if (this.shooterRadiansPerSec > 1e-6) {
+      this.elevationAngle = new Rotation2d(Math.asin(z / this.shooterRadiansPerSec));
+    } else {
+      this.elevationAngle = new Rotation2d();
+    }
   }
 }

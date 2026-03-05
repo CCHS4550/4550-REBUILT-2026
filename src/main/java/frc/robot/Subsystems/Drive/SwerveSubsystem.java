@@ -29,14 +29,14 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constant.Constants;
 import frc.robot.Constant.FieldConstants;
 import frc.robot.Robotstate;
-import frc.robot.Subsystems.Vision.Vision;
+import frc.robot.Subsystems.QuestNav.QuestNav;
 import frc.robot.Util.SubsystemDataProcessor;
 import frc.robot.Util.SysIdMechanism;
 import java.util.Optional;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
-public class SwerveSubsystem extends SubsystemBase implements Vision.VisionConsumer {
+public class SwerveSubsystem extends SubsystemBase implements QuestNav.QuestConsumer {
   private final PIDController choreoXController = new PIDController(1.14, 0, 0);
   private final PIDController choreoYController = new PIDController(1.14, 0, 0);
   private final PIDController choreoThetaController = new PIDController(0.5, 0, 0);
@@ -109,7 +109,7 @@ public class SwerveSubsystem extends SubsystemBase implements Vision.VisionConsu
   private final double maxVelocity;
   private final double maxAngularVelocity;
 
-  private double teleopVelocityCoefficient = 0.2;
+  private double teleopVelocityCoefficient = 1.0;
   private double rotationVelocityCoefficient = 1.0;
   private double maximumAngularVelocityForDriveToPoint = Double.NaN;
 
@@ -280,6 +280,7 @@ public class SwerveSubsystem extends SubsystemBase implements Vision.VisionConsu
       Logger.processInputs("Subsystems/Drive/Module Data/Back Right", backRightInputs);
     }
 
+    setSpeedModes();
     systemState = handleStateTransition();
 
     Logger.recordOutput("Subsystems/Drive/SystemState", systemState);
@@ -419,13 +420,13 @@ public class SwerveSubsystem extends SubsystemBase implements Vision.VisionConsu
         Logger.recordOutput(
             "Subsystems/Drive/DriveToPoint/desiredPoint", desiredPoseForDriveToPoint);
 
-        Rotation2d desiredRotFlipped180 =
-            desiredPoseForDriveToPoint.getRotation().plus(Rotation2d.k180deg);
-
         if (Double.isNaN(maximumAngularVelocityForDriveToPoint)) {
           error =
               MathUtil.angleModulus(
-                  desiredRotFlipped180.minus(swerveInputs.Pose.getRotation()).getRadians());
+                  desiredPoseForDriveToPoint
+                      .getRotation()
+                      .minus(swerveInputs.Pose.getRotation())
+                      .getRadians());
           System.out.println(error);
 
           ff = 0.5; // example
@@ -440,13 +441,16 @@ public class SwerveSubsystem extends SubsystemBase implements Vision.VisionConsu
               driveAtAngle
                   .withVelocityX(xComponent)
                   .withVelocityY(yComponent)
-                  .withTargetDirection(desiredRotFlipped180)
+                  .withTargetDirection(desiredPoseForDriveToPoint.getRotation())
                   .withHeadingPID(kP, 0.0, 0.00)
                   .withTargetRateFeedforward(ffDirection));
         } else {
           error =
               MathUtil.angleModulus(
-                  desiredRotFlipped180.minus(swerveInputs.Pose.getRotation()).getRadians());
+                  desiredPoseForDriveToPoint
+                      .getRotation()
+                      .minus(swerveInputs.Pose.getRotation())
+                      .getRadians());
           System.out.println(error);
 
           ff = 0.5; // example
@@ -461,12 +465,30 @@ public class SwerveSubsystem extends SubsystemBase implements Vision.VisionConsu
               driveAtAngle
                   .withVelocityX(xComponent)
                   .withVelocityY(yComponent)
-                  .withTargetDirection(desiredRotFlipped180)
+                  .withTargetDirection(desiredPoseForDriveToPoint.getRotation())
                   .withHeadingPID(kP, 0.0, 0.00)
                   .withTargetRateFeedforward(ffDirection)
                   .withMaxAbsRotationalRate(maximumAngularVelocityForDriveToPoint));
         }
         break;
+    }
+  }
+
+  private void setSpeedModes() {
+    // Speed mode selection:
+    //   Right bumper held → slow mode
+    //   Left bumper held  → fast mode
+    //   Neither           → normal mode
+    // If both are somehow held simultaneously, slow mode wins.
+    if (controller.rightBumper().getAsBoolean()) {
+      teleopVelocityCoefficient = 0.3;
+      rotationVelocityCoefficient = 0.3;
+    } else if (controller.leftBumper().getAsBoolean()) {
+      teleopVelocityCoefficient = 1.0;
+      rotationVelocityCoefficient = 1.0;
+    } else {
+      teleopVelocityCoefficient = 0.6;
+      rotationVelocityCoefficient = 0.6;
     }
   }
 
@@ -657,16 +679,16 @@ public class SwerveSubsystem extends SubsystemBase implements Vision.VisionConsu
   }
 
   /** Adds a new timestamped vision measurement. */
-  // @Override
-  // public void accept(
-  //     Pose2d questRobotPoseMeters,
-  //     double timestampSeconds,
-  //     Matrix<N3, N1> questMeasurementStdDevs) {
-  //   // io.addQuestPose(questRobotPoseMeters, timestampSeconds, questMeasurementStdDevs);
-  // }
-
   @Override
-  public void accept(Pose2d pose, double time, Matrix<N3, N1> StdDevs) {
-    this.resetTranslationAndRotation(pose);
+  public void accept(
+      Pose2d questRobotPoseMeters,
+      double timestampSeconds,
+      Matrix<N3, N1> questMeasurementStdDevs) {
+    io.addQuestPose(questRobotPoseMeters, timestampSeconds, questMeasurementStdDevs);
   }
+
+  // @Override
+  // public void accept(Pose2d pose, double time, Matrix<N3, N1> StdDevs) {
+  //   this.resetTranslationAndRotation(pose);
+  // }
 }

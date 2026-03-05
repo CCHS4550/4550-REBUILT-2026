@@ -22,7 +22,7 @@ public class FieldConstants {
 
   public static Pose2d middleStartingPoseRed = new Pose2d();
 
-  public static final double HUB_HEIGHT = 1.8288;
+  public static final double HUB_HEIGHT = 1.905;
 
   public static double SCORE_HEIGHT_METERS = 0.0;
 

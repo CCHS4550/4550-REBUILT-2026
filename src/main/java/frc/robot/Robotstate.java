@@ -16,6 +16,7 @@ public class Robotstate {
 
   private ChassisSpeeds robotSpeeds = new ChassisSpeeds();
   private Pose2d robotToFieldFromSwerveDriveOdometry = new Pose2d();
+  private Pose2d robotToFieldFromQuestNav = new Pose2d();
   private int[] allowedTagPoses = IntStream.range(1, 33).toArray();
 
   public record SwerveDriveObservation(Pose2d robotPose, ChassisSpeeds robotSpeeds) {}
@@ -23,6 +24,10 @@ public class Robotstate {
   public void addPoseObservation(SwerveDriveObservation observation) {
     this.robotToFieldFromSwerveDriveOdometry = observation.robotPose;
     this.robotSpeeds = observation.robotSpeeds;
+  }
+
+  public void addQuestPose(Pose2d questPose) {
+    this.robotToFieldFromQuestNav = questPose;
   }
 
   /** call in order to reset the vision subsystem to doing global pose estimation */

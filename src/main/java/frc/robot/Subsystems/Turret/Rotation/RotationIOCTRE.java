@@ -56,7 +56,7 @@ public class RotationIOCTRE implements RotationIO {
     encoderConfig = new CANcoderConfiguration();
     encoderConfig
         .MagnetSensor
-        .withMagnetOffset(-0.7)
+        .withMagnetOffset(-0.05)
         .withSensorDirection(SensorDirectionValue.Clockwise_Positive);
     rotationEncoder.getConfigurator().apply(encoderConfig);
     // complete this out
@@ -126,11 +126,10 @@ public class RotationIOCTRE implements RotationIO {
   }
 
   @Override
-  public void setRotationAngle(Rotation2d angle) {
+  public void setRotationAngle(double radians) {
     rotationMotor.setControl(
         motionMagicVoltage.withPosition(
-            ((angle.getRadians())
-                / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER)));
+            ((radians)) / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER));
   }
 
   @Override

@@ -26,5 +26,5 @@ public interface RotationIO {
 
   public default void setVoltage(double voltage) {}
 
-  public default void setRotationAngle(Rotation2d angle) {}
+  public default void setRotationAngle(double radians) {}
 }
