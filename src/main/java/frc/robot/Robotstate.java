@@ -63,4 +63,8 @@ public class Robotstate {
   public boolean getIfAllowedTagsSpecified() {
     return getAllowedTagPosesLength() != 32;
   }
+
+  public Pose2d getRobotPoseFromQuestNav() {
+    return robotToFieldFromQuestNav;
+  }
 }

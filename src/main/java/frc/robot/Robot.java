@@ -121,7 +121,7 @@ public class Robot extends LoggedRobot {
   @Override
   public void disabledPeriodic() {
     autoChooser.update();
-    SmartDashboard.putBoolean("Quest Pose Established", robotContainer.questPoseEstablished());
+    // SmartDashboard.putBoolean("Quest Pose Established", robotContainer.questPoseEstablished());
     SmartDashboard.putBoolean(
         "At Auto Starting Pose",
         robotContainer.isAtAutoStartingPose(autoChooser.getStartingPose().orElse(new Pose2d())));
@@ -176,5 +176,7 @@ public class Robot extends LoggedRobot {
   @Override
   public void simulationPeriodic() {
     // robotContainer.getSwerveSubsystem().simulationPeriodic();
+    robotContainer.setTestPose();
+    robotContainer.setTestTurretState();
   }
 }

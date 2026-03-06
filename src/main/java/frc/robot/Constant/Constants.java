@@ -73,11 +73,13 @@ public final class Constants {
     public static final double SHALLOWEST_POSSIBLE_ELEVATION_ANGLE_RADIANS = Math.toRadians(45);
     public static final double STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS = Math.toRadians(78);
 
-    public static final double SHOOTER_CLOSE_RADIANS_PER_SEC = 300.0;
+    public static final double SHOOTER_CLOSE_RADIANS_PER_SEC = 255.0;
 
-    public static final double SHOOTER_FAR_RADIANS_PER_SEC = 400;
+    public static final double SHOOTER_FAR_RADIANS_PER_SEC = 275;
 
-    public static final double SHOOTER_ULTRA_FAR_RADIANS_PER_SEC = 500;
+    public static final double SHOOTER_PASSING_SLOW_RADIANS_PER_SEC = 350;
+    public static final double SHOOTER_MID_RADIANS_PER_SEC = 325;
+    public static final double SHOOTER_ULTRA_FAR_RADIANS_PER_SEC = 375;
 
     public static final double TURRET_HEIGHT_METERS = 0.305;
 
@@ -88,7 +90,6 @@ public final class Constants {
     public static final double FORWARD_ROTATION_LIMIT_RADIANS = 0.0;
 
     public static final double BACKWARDS_ROTATION_LIMIT_RADIANS = 0.0;
-    public static final double SHOOTER_PASSING_SLOW_RADIANS_PER_SEC = 421;
   }
 
   public static final class IntakeConstants {
@@ -105,8 +106,8 @@ public final class Constants {
   public static final class VisionConstants {
     public static final double linearStdDevBaseline = 0.02;
     public static final double angularStdDevBaseline = 0.06;
-    public static final double maxAmbiguity = 0.01;
-    public static final double maxZError = 6.75;
+    public static final double maxAmbiguity = 0.1;
+    public static final double maxZError = 1.75;
   }
 
   public static final class ShooterCalculationConstants {
@@ -115,6 +116,7 @@ public final class Constants {
     public static final double GEOMETRY_VELOCITY_CLOSE = 7.5;
     public static final double GEOMETRY_VELOCITY_FAR = 8.5;
     public static final double GEOMETRY_VELOCITY_PASSING_SLOW = 11;
+    public static final double GEOMETRY_VELOCITY_MID = 10;
     public static final double GEOMETRY_VELOCITY_ULTRA_FAR = 12;
 
     // need to tune maunually

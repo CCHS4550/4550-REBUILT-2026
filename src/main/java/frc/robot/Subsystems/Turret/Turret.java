@@ -33,18 +33,24 @@ public class Turret extends SubsystemBase {
   private static final double ANGLE_EPSILON = 1e-9;
 
   // ─── Setpoint tolerances ─────────────────────────────────────────────────────
-  private static final double SHOOTER_SPEED_TOLERANCE_FRACTION = 0.02; // 2% of setpoint
+  private static final double SHOOTER_SPEED_TOLERANCE_FRACTION = 0.2; // 50% of setpoint
   private static final double ANGLE_SETPOINT_TOLERANCE_RADIANS = 0.1;
 
   // ─── Distance thresholds for shot profile selection (meters) ─────────────────
-  // 0 – CLOSE_RANGE : low arc,  GEOMETRY_VELOCITY_CLOSE / SHOOTER_CLOSE_RADIANS_PER_SEC
-  // CLOSE – FAR     : high arc, GEOMETRY_VELOCITY_FAR   / SHOOTER_FAR_RADIANS_PER_SEC
-  // FAR+            : high arc, GEOMETRY_VELOCITY_ULTRA_FAR / SHOOTER_ULTRA_FAR_RADIANS_PER_SEC
+  // Scoring profiles (all high arc):
+  //   0    – 2m   : dead zone — top-entry impossible, elevationAngleOutOfBounds always fires
+  //   2    – 3m   : CLOSE  7.5 m/s  descent ~51°
+  //   3    – 4m   : FAR    8.5 m/s  descent ~50°
+  //   4    – 6.1m : MID    10  m/s  descent ~47° (marginal flag fires beyond 5m)
+  //   >6.1m       : scoring not attempted — use passing
+  private static final double MIN_SCORING_DISTANCE_METERS = 2.0;
   private static final double CLOSE_RANGE_THRESHOLD_METERS = 3.0;
-  private static final double FAR_RANGE_THRESHOLD_METERS = 5.0;
+  private static final double FAR_RANGE_THRESHOLD_METERS = 4.0;
+  private static final double MAX_SCORING_DISTANCE_METERS = 6.1;
+  private static final double MARGINAL_DESCENT_THRESHOLD_METERS = 5.0;
 
-  // Passing: prefer the slower tier up to this distance; step up beyond it
-  private static final double PASSING_SLOW_MAX_DISTANCE_METERS = 11.0;
+  // Passing: reuse scoring profiles up to FAR, then step through passing tiers
+  private static final double PASSING_SLOW_MAX_DISTANCE_METERS = 10.5;
 
   // ─── Hardware IO ─────────────────────────────────────────────────────────────
   private final ElevationIO elevationIO;
@@ -71,6 +77,13 @@ public class Turret extends SubsystemBase {
    * mechanical limits and must be clamped. Cleared each periodic.
    */
   @AutoLogOutput private boolean elevationAngleOutOfBounds = false;
+
+  /**
+   * True when the robot is in the 5–6.1m marginal scoring zone where descent angle falls below
+   * ~50°, risking near-rim clips. The shot is still attempted but command layer can use this flag
+   * to decide whether to hold fire. Cleared each periodic.
+   */
+  @AutoLogOutput private boolean shallowDescentFlag = false;
 
   // ─── Shot profile ─────────────────────────────────────────────────────────────
   /**
@@ -167,7 +180,8 @@ public class Turret extends SubsystemBase {
             shooterInputs.shooterVelocityRadPerSec);
 
     systemState = handleStateTransitions();
-    elevationAngleOutOfBounds = false; // reset — convertToBoundedTurretAngle sets it if needed
+    elevationAngleOutOfBounds = false; // reset — convertToBoundedTurretAngle sets if needed
+    shallowDescentFlag = false; // reset — selectShotProfile sets if needed
     applyStates();
     atGoal = atSetpoint();
   }
@@ -207,14 +221,14 @@ public class Turret extends SubsystemBase {
 
       case TRACKING_TARGET:
         desiredPose = FieldConstants.getScoringPose();
-        desiredHeight = FieldConstants.HUB_HEIGHT;
+        desiredHeight = FieldConstants.HUB_HEIGHT + getScoringHeightOffset(desiredPose);
         performShootingCalc(selectShotProfile(desiredPose));
         goToWantedState();
         break;
 
       case ACTIVE_SHOOTING:
         desiredPose = FieldConstants.getScoringPose();
-        desiredHeight = FieldConstants.HUB_HEIGHT;
+        desiredHeight = FieldConstants.HUB_HEIGHT + getScoringHeightOffset(desiredPose);
         performShootingCalc(selectShotProfile(desiredPose));
         goToWantedState();
         break;
@@ -224,15 +238,18 @@ public class Turret extends SubsystemBase {
         // selectPassingProfile picks the slowest speed that still reaches the target,
         // saving voltage compared to running at full shooting power.
         // TODO: replace getScoringPose() with a dedicated alliance passing pose.
-        desiredPose = FieldConstants.getScoringPose();
-        desiredHeight = FieldConstants.HUB_HEIGHT;
+        desiredPose = FieldConstants.getPassingPose();
+        desiredHeight = 1;
         performShootingCalc(selectPassingProfile(desiredPose));
         goToWantedState();
         break;
 
       case TESTING:
         wantedTurretMeasurables =
-            new TurretMeasurables(Rotation2d.fromDegrees(70), Rotation2d.fromDegrees(90), 0);
+            new TurretMeasurables(
+                Rotation2d.fromRadians(TurretConstants.STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS),
+                Rotation2d.fromDegrees(0),
+                0);
         goToWantedState();
         break;
 
@@ -250,7 +267,7 @@ public class Turret extends SubsystemBase {
             new TurretMeasurables(
                 Rotation2d.fromRadians(TurretConstants.STEEPEST_POSSIBLE_ELEVATION_ANGLE_RADIANS),
                 Rotation2d.fromDegrees(90),
-                TurretConstants.SHOOTER_CLOSE_RADIANS_PER_SEC);
+                0);
         goToWantedState();
         break;
 
@@ -266,45 +283,50 @@ public class Turret extends SubsystemBase {
   // ─── Shot profile selection ───────────────────────────────────────────────────
 
   /**
-   * Returns the appropriate ShotProfile for the given target pose based on horizontal distance. All
-   * speed values are sourced from Constants so that tuning is done in one place.
+   * Returns the appropriate ShotProfile for a scoring shot based on distance. All tiers use high
+   * arc for top-entry descent angle.
+   *
+   * <p>< 2m : dead zone — elevationAngleOutOfBounds will always fire 2 – 3m : CLOSE 7.5 m/s ~51°
+   * descent 3 – 4m : FAR 8.5 m/s ~50° descent 4 – 6.1m: MID 10 m/s ~47° descent (shallowDescentFlag
+   * fires beyond 5m) > 6.1m : MID profile still used but shallowDescentFlag is set — command layer
+   * should prefer passing at this range
    */
   private ShotProfile selectShotProfile(Pose2d target) {
     double distance = target.getTranslation().getDistance(predictedTurretPose.getTranslation());
 
     Logger.recordOutput("Turret/distanceToTargetMeters", distance);
 
+    // Flag marginal descent zone — command layer decides whether to hold fire
+    shallowDescentFlag = distance > MARGINAL_DESCENT_THRESHOLD_METERS;
+    Logger.recordOutput("Turret/shallowDescentFlag", shallowDescentFlag);
+
     if (distance < CLOSE_RANGE_THRESHOLD_METERS) {
-      Logger.recordOutput("Turret/shotProfile", "CLOSE_LOW_ARC");
+      Logger.recordOutput("Turret/shotProfile", "CLOSE");
       return new ShotProfile(
           ShooterCalculationConstants.GEOMETRY_VELOCITY_CLOSE,
           TurretConstants.SHOOTER_CLOSE_RADIANS_PER_SEC,
-          false);
+          true);
     } else if (distance < FAR_RANGE_THRESHOLD_METERS) {
-      Logger.recordOutput("Turret/shotProfile", "FAR_HIGH_ARC");
+      Logger.recordOutput("Turret/shotProfile", "FAR");
       return new ShotProfile(
           ShooterCalculationConstants.GEOMETRY_VELOCITY_FAR,
           TurretConstants.SHOOTER_FAR_RADIANS_PER_SEC,
           true);
     } else {
-      Logger.recordOutput("Turret/shotProfile", "ULTRA_FAR_HIGH_ARC");
+      Logger.recordOutput("Turret/shotProfile", "MID");
       return new ShotProfile(
-          ShooterCalculationConstants.GEOMETRY_VELOCITY_ULTRA_FAR,
-          TurretConstants.SHOOTER_ULTRA_FAR_RADIANS_PER_SEC,
+          ShooterCalculationConstants.GEOMETRY_VELOCITY_MID,
+          TurretConstants.SHOOTER_MID_RADIANS_PER_SEC,
           true);
     }
   }
 
   /**
-   * Selects the minimum-voltage profile for a passing shot.
+   * Selects the minimum-voltage profile for a passing shot. Reuses scoring profiles at close range
+   * since they are already the cheapest option at those distances.
    *
-   * <p>At short passing distances the standard shooting profiles are actually slower (and therefore
-   * cheaper) than the dedicated passing speeds, so we reuse them rather than always jumping
-   * straight to passing power.
-   *
-   * <p>0 – 3m : shooting CLOSE (7.5 m/s, low arc) — cheapest possible 3 – 5m : shooting FAR (8.5
-   * m/s, high arc) 5 – 11m : passing SLOW (11 m/s, high arc) — first passing-only tier 11m+ :
-   * passing FAST (12 m/s, high arc) — full-field
+   * <p>0 – 3m : CLOSE 7.5 m/s 3 – 4m : FAR 8.5 m/s 4 – 10.5m: PASSING_SLOW 11 m/s 10.5m+ :
+   * PASSING_FAST 12 m/s
    */
   private ShotProfile selectPassingProfile(Pose2d target) {
     double distance = target.getTranslation().getDistance(predictedTurretPose.getTranslation());
@@ -316,7 +338,7 @@ public class Turret extends SubsystemBase {
       return new ShotProfile(
           ShooterCalculationConstants.GEOMETRY_VELOCITY_CLOSE,
           TurretConstants.SHOOTER_CLOSE_RADIANS_PER_SEC,
-          false);
+          true);
     } else if (distance < FAR_RANGE_THRESHOLD_METERS) {
       Logger.recordOutput("Turret/shotProfile", "PASSING_REUSE_FAR");
       return new ShotProfile(
@@ -374,7 +396,6 @@ public class Turret extends SubsystemBase {
 
     convertToRobotRelativeNonBounded();
     convertToBoundedTurretAngle();
-    System.out.println(wantedTurretMeasurables.elevationAngle.getDegrees());
   }
 
   // ─── Output helpers ──────────────────────────────────────────────────────────
@@ -396,18 +417,58 @@ public class Turret extends SubsystemBase {
         Math.max(1.0, Math.abs(wantedTurretMeasurables.shooterRadiansPerSec))
             * SHOOTER_SPEED_TOLERANCE_FRACTION;
 
-    return MathUtil.isNear(
+    Logger.recordOutput(
+        "Turret/Setpoint/currentElevationDeg",
+        currentTurretMeasurables.elevationAngle.getDegrees());
+    Logger.recordOutput(
+        "Turret/Setpoint/wantedElevationDeg", wantedTurretMeasurables.elevationAngle.getDegrees());
+    Logger.recordOutput(
+        "Turret/Setpoint/currentRotationDeg", currentTurretMeasurables.rotationAngle.getDegrees());
+    Logger.recordOutput(
+        "Turret/Setpoint/wantedRotationDeg", wantedTurretMeasurables.rotationAngle.getDegrees());
+    Logger.recordOutput(
+        "Turret/Setpoint/currentShooterRadPs", currentTurretMeasurables.shooterRadiansPerSec);
+    Logger.recordOutput(
+        "Turret/Setpoint/wantedShooterRadPs", wantedTurretMeasurables.shooterRadiansPerSec);
+    Logger.recordOutput("Turret/Setpoint/shooterTolerance", shooterTolerance);
+
+    boolean elevationAtSetpoint =
+        MathUtil.isNear(
             currentTurretMeasurables.elevationAngle.getRadians(),
             wantedTurretMeasurables.elevationAngle.getRadians(),
-            ANGLE_SETPOINT_TOLERANCE_RADIANS)
-        && MathUtil.isNear(
+            ANGLE_SETPOINT_TOLERANCE_RADIANS);
+    boolean rotationAtSetpoint =
+        MathUtil.isNear(
             currentTurretMeasurables.rotationAngle.getRadians(),
             wantedTurretMeasurables.rotationAngle.getRadians(),
-            ANGLE_SETPOINT_TOLERANCE_RADIANS)
-        && MathUtil.isNear(
+            ANGLE_SETPOINT_TOLERANCE_RADIANS);
+    boolean shooterAtSetpoint =
+        MathUtil.isNear(
             currentTurretMeasurables.shooterRadiansPerSec,
             wantedTurretMeasurables.shooterRadiansPerSec,
             shooterTolerance);
+
+    Logger.recordOutput("Turret/Setpoint/elevationAtSetpoint", elevationAtSetpoint);
+    Logger.recordOutput("Turret/Setpoint/rotationAtSetpoint", rotationAtSetpoint);
+    Logger.recordOutput("Turret/Setpoint/shooterAtSetpoint", shooterAtSetpoint);
+    Logger.recordOutput(
+        "Turret/Setpoint/atSetpoint",
+        elevationAtSetpoint && rotationAtSetpoint && shooterAtSetpoint);
+
+    return elevationAtSetpoint && rotationAtSetpoint && shooterAtSetpoint;
+  }
+
+  /**
+   * Returns how far above the physical rim to aim, based on distance. Aiming above the rim ensures
+   * the ball is already descending when it reaches the rim level, improving top-entry angle
+   * consistency. At longer range where descent angle is shallower we aim higher to compensate — but
+   * speed limits mean this has diminishing returns beyond 4m.
+   */
+  private double getScoringHeightOffset(Pose2d target) {
+    double distance = target.getTranslation().getDistance(predictedTurretPose.getTranslation());
+    if (distance < CLOSE_RANGE_THRESHOLD_METERS) return 0.30; // 2–3m
+    if (distance < FAR_RANGE_THRESHOLD_METERS) return 0.35; // 3–4m
+    return 0.40; // 4m+
   }
 
   // ─── Geometry ────────────────────────────────────────────────────────────────
@@ -432,17 +493,15 @@ public class Turret extends SubsystemBase {
     double g = ShooterCalculationConstants.GRAVITATION_CONSTANT;
 
     if (x < 1e-6) {
-      return Rotation2d.fromRadians(
-          Math.PI / 2.0); // directly below — shoot straight up and allow this to be clamped later
+      return Rotation2d.fromDegrees(85); // directly below — shoot straight up
     }
 
     double v2 = v * v;
     double discriminant = v2 * v2 - g * (g * x * x + 2 * y * v2);
 
     if (discriminant < 0) {
-      // Ball cannot reach target at this speed — shoot straight up and allow this to be clamped
-      // later
-      return Rotation2d.fromRadians(Math.PI / 2.0);
+      // Ball cannot reach target at this speed — clamp to steepest allowed angle
+      return Rotation2d.fromDegrees(85);
     }
 
     double sqrt = Math.sqrt(discriminant);
@@ -465,7 +524,10 @@ public class Turret extends SubsystemBase {
   private void convertToRobotRelativeNonBounded() {
     Rotation2d robotRelativeCCW =
         wantedTurretMeasurables.rotationAngle.minus(predictedTurretPose.getRotation());
-    wantedTurretMeasurables.rotationAngle = robotRelativeCCW.unaryMinus();
+    // if (!FieldConstants.isBlueAlliance()) {
+    //   robotRelativeCCW.minus(Rotation2d.fromDegrees(180));
+    // }
+    wantedTurretMeasurables.rotationAngle = robotRelativeCCW.unaryMinus(); // .unaryMinus()
   }
 
   /**
@@ -527,6 +589,10 @@ public class Turret extends SubsystemBase {
 
   public boolean getElevationAngleOutOfBounds() {
     return elevationAngleOutOfBounds;
+  }
+
+  public boolean getShallowDescentFlag() {
+    return shallowDescentFlag;
   }
 
   public void setWantedTurretMeasurables(TurretMeasurables wanted) {

@@ -52,7 +52,7 @@ public class Kicker extends SubsystemBase {
         break;
       case RUNNING:
         // kicking logic
-        kickerIO.setVoltage(5); // change to reasonable voltage
+        kickerIO.setVoltage(3.75); // change to reasonable voltage
         break;
 
       default:

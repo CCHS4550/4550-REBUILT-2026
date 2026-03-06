@@ -2,14 +2,11 @@ package frc.robot.Subsystems.Turret.Rotation;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.signals.SensorDirectionValue;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
@@ -24,9 +21,9 @@ import frc.robot.Util.Phoenix6Util;
 public class RotationIOCTRE implements RotationIO {
 
   private TalonFX rotationMotor;
-  private CANcoder rotationEncoder;
+  // private CANcoder rotationEncoder;
   private TalonFXConfiguration rotationConfig;
-  private CANcoderConfiguration encoderConfig;
+  // private CANcoderConfiguration encoderConfig;
   private MotionMagicVoltage motionMagicVoltage;
   private final StatusSignal<Angle> rotationAngleRotations;
   private final StatusSignal<Angle> totalRotationsUnwrapped;
@@ -45,20 +42,21 @@ public class RotationIOCTRE implements RotationIO {
             bruinRobotConfig.ROTATION_MOTOR.getDeviceNumber(),
             bruinRobotConfig.ROTATION_MOTOR.getBus()); // creates motor
 
-    rotationEncoder =
-        new CANcoder(
-            bruinRobotConfig.ROTATION_CANCODER.getDeviceNumber(),
-            bruinRobotConfig.ROTATION_CANCODER
-                .getBus()); // creates CANCoder, which should be connected to the motor electrically
+    // rotationEncoder =
+    //     new CANcoder(
+    //         bruinRobotConfig.ROTATION_CANCODER.getDeviceNumber(),
+    //         bruinRobotConfig.ROTATION_CANCODER
+    //             .getBus()); // creates CANCoder, which should be connected to the motor
+    // electrically
 
     // I should probably set up these constants in like RobotConfig, but I just want to try and
 
-    encoderConfig = new CANcoderConfiguration();
-    encoderConfig
-        .MagnetSensor
-        .withMagnetOffset(-0.05)
-        .withSensorDirection(SensorDirectionValue.Clockwise_Positive);
-    rotationEncoder.getConfigurator().apply(encoderConfig);
+    // encoderConfig = new CANcoderConfiguration();
+    // encoderConfig
+    //     .MagnetSensor
+    //     .withMagnetOffset(-0.35)
+    //     .withSensorDirection(SensorDirectionValue.Clockwise_Positive);
+    // rotationEncoder.getConfigurator().apply(encoderConfig);
     // complete this out
     rotationConfig = new TalonFXConfiguration();
     rotationConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -71,7 +69,7 @@ public class RotationIOCTRE implements RotationIO {
     rotationConfig.Slot0.kD = bruinRobotConfig.getTurretConfig().rotationKd;
     rotationConfig.Slot0.kS = bruinRobotConfig.getTurretConfig().rotationKs;
     rotationConfig.Slot0.kV = bruinRobotConfig.getTurretConfig().rotationKv;
-    rotationConfig.Feedback.withRemoteCANcoder(rotationEncoder);
+    // rotationConfig.Feedback.withRemoteCANcoder(rotationEncoder);
     rotationConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     rotationConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     rotationConfig.MotionMagic.MotionMagicCruiseVelocity = 13;
@@ -81,14 +79,12 @@ public class RotationIOCTRE implements RotationIO {
 
     // PUT THE TURRET IN STOW BEFORE THE BOT IS TURNED ON
     rotationMotor.setPosition(
-        (rotationEncoder.getPosition().getValueAsDouble()
-                * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER)
-            / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT);
-    rotationAngleRotations = rotationEncoder.getPosition();
+        ((Math.PI / 2) / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT));
+    rotationAngleRotations = rotationMotor.getPosition();
     rotationAppliedVolts = rotationMotor.getMotorVoltage();
     rotationSupplyCurrentAmps = rotationMotor.getSupplyCurrent();
     rotationStatorCurrentAmps = rotationMotor.getStatorCurrent();
-    rotationVelocityRotationsPerSec = rotationEncoder.getVelocity();
+    rotationVelocityRotationsPerSec = rotationMotor.getVelocity();
     rotationAccelerationRotationsPerSecSquared = rotationMotor.getAcceleration();
     rotationMotorTemp = rotationMotor.getDeviceTemp();
     totalRotationsUnwrapped = rotationMotor.getPosition();
@@ -111,7 +107,7 @@ public class RotationIOCTRE implements RotationIO {
 
     inputs.rotationVelocityRadPerSec =
         (rotationVelocityRotationsPerSec.getValueAsDouble()
-            * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER);
+            * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT);
     inputs.rotationAccelRadPerSecSquared =
         ((rotationAccelerationRotationsPerSecSquared.getValueAsDouble()
             * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT));
@@ -119,7 +115,7 @@ public class RotationIOCTRE implements RotationIO {
     inputs.rotationAngle =
         Rotation2d.fromRadians(
             (rotationAngleRotations.getValueAsDouble()
-                * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER));
+                * Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT));
 
     inputs.totalRotationsUnwrapped =
         totalRotationsUnwrapped.getValueAsDouble() * Constants.TurretConstants.ROTATION_GEAR_RATIO;
@@ -129,7 +125,7 @@ public class RotationIOCTRE implements RotationIO {
   public void setRotationAngle(double radians) {
     rotationMotor.setControl(
         motionMagicVoltage.withPosition(
-            ((radians)) / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT_TO_ENCODER));
+            ((radians)) / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT));
   }
 
   @Override

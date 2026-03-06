@@ -2,7 +2,9 @@ package frc.robot.Subsystems.QuestNav;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import frc.robot.Config.VisionConfig;
 import gg.questnav.questnav.PoseFrame;
 import gg.questnav.questnav.QuestNav;
 import java.util.ArrayList;
@@ -19,8 +21,16 @@ public class QuestNavIOQuest implements QuestNavIO {
    *
    * @param robotToQuest The 3D position of the quest relative to the robot.
    */
-  public QuestNavIOQuest(Transform3d robotToQuest) {
-    this.robotToQuest = robotToQuest;
+  public QuestNavIOQuest(VisionConfig config) {
+    this.robotToQuest =
+        new Transform3d(
+            config.visionWidthOffsetMeters,
+            config.visionLengthOffsetMeters,
+            config.visionHeightOffsetMeters,
+            new Rotation3d(
+                config.visionMountingRollRadians,
+                config.visionMountingPitchRadians,
+                config.visionMountingYawRadians));
   }
 
   @Override

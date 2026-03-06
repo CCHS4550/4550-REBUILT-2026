@@ -6,7 +6,6 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Config.BruinRobotConfig;
@@ -18,9 +17,8 @@ import frc.robot.Subsystems.Intake.Intake;
 import frc.robot.Subsystems.Intake.IntakeIOCTRE;
 import frc.robot.Subsystems.Kicker.Kicker;
 import frc.robot.Subsystems.Kicker.KickerIOCTRE;
-import frc.robot.Subsystems.QuestNav.QuestNav;
-import frc.robot.Subsystems.QuestNav.QuestNavIOQuest;
 import frc.robot.Subsystems.Superstructure;
+import frc.robot.Subsystems.Superstructure.WantedSuperstructureState;
 import frc.robot.Subsystems.Turret.Elevation.ElevationIOCTRE;
 import frc.robot.Subsystems.Turret.Rotation.RotationIOCTRE;
 import frc.robot.Subsystems.Turret.Shooter.ShooterIOCTRE;
@@ -33,7 +31,7 @@ public class RobotContainer {
   private final Intake intake;
   private final Turret turret;
   private final Vision vision;
-  private final QuestNav questnav;
+  // private final QuestNav questnav;
 
   private final Superstructure superstructure;
   private final SwerveSubsystem swerveSubsystem;
@@ -54,13 +52,14 @@ public class RobotContainer {
             moduleConstants[0].SpeedAt12Volts,
             moduleConstants[0].SpeedAt12Volts
                 / Math.hypot(moduleConstants[0].LocationX, moduleConstants[0].LocationY));
-    // swerveSubsystem =
-    //     new SwerveSubsystem(
-    //         new SwerveIOCTRE(config.getSwerveDrivetrainConstants(), config.getModuleConstants()),
-    //         config.geRobotConfig(),
-    //         controller,
-    //         0.5,
-    //         0.5 / Math.hypot(moduleConstants[0].LocationX, moduleConstants[0].LocationY));
+    //  swerveSubsystem =
+    //      new SwerveSubsystem(
+    //          new SwerveIOCTRE(config.getSwerveDrivetrainConstants(),
+    // config.getModuleConstants()),
+    //          config.geRobotConfig(),
+    //          controller,
+    //          0.5,
+    //          0.5 / Math.hypot(moduleConstants[0].LocationX, moduleConstants[0].LocationY));
     intake = new Intake(new IntakeIOCTRE(config));
     kicker = new Kicker(new KickerIOCTRE(config));
     agitator = new Agitator(new AgitatorIOCTRE(config));
@@ -70,10 +69,12 @@ public class RobotContainer {
     // turret = new Turret(new ElevationIOTest(), new RotationIOTest(), new ShooterIOTest());
 
     superstructure = new Superstructure(swerveSubsystem, intake, kicker, turret, agitator);
-    questnav = new QuestNav(swerveSubsystem, new QuestNavIOQuest(Transform3d.kZero));
+    // questnav =
+    //     new QuestNav(swerveSubsystem, new
+    // QuestNavIOQuest(config.getVisionConfigurations().get(1)));
     vision =
         new Vision(
-            questnav,
+            swerveSubsystem,
             new VisionIOPhotonvision("photonvision", config.getVisionConfigurations().get(0)));
 
     // controller
@@ -172,11 +173,11 @@ public class RobotContainer {
     //             }));
 
     // actual button bindings!
-    controller
-        .a()
-        .onTrue(
-            new InstantCommand(
-                () -> swerveSubsystem.resetRotation(swerveSubsystem.getSwerveRotation())));
+    // controller
+    //     .a()
+    //     .onTrue(
+    //         new InstantCommand(
+    //             () -> swerveSubsystem.resetRotation(swerveSubsystem.getSwerveRotation())));
 
     // actual button bindings!
     // controller
@@ -200,23 +201,31 @@ public class RobotContainer {
     //                 () ->
     //                     superstructure.setWantedSuperstructureState(
     //                         WantedSuperstructureState.IDLE, false)));
-    //     controller
-    //         .leftBumper()
-    //         .whileTrue(
-    //             new InstantCommand(
-    //                 () ->
-    //                     superstructure.setWantedSuperstructureState(
-    //                         WantedSuperstructureState.STOW, false)))
-    //         .whileFalse(
-    //             new InstantCommand(
-    //                 () ->
-    //                     superstructure.setWantedSuperstructureState(
-    //                         WantedSuperstructureState.IDLE, false)));
+    controller
+        .leftTrigger()
+        .whileTrue(
+            new InstantCommand(
+                () ->
+                    superstructure.setWantedSuperstructureState(
+                        WantedSuperstructureState.ZERO, true)))
+        .onFalse(
+            new InstantCommand(
+                () ->
+                    superstructure.setWantedSuperstructureState(
+                        WantedSuperstructureState.IDLE, false)));
 
     controller
-        .rightBumper()
-        .whileTrue(new InstantCommand(() -> turret.setWantedState(TurretWantedState.SHOOT_SCORE)))
-        .whileFalse(new InstantCommand(() -> turret.setWantedState(TurretWantedState.IDLE)));
+        .rightTrigger()
+        .whileTrue(
+            new InstantCommand(
+                () ->
+                    superstructure.setWantedSuperstructureState(
+                        WantedSuperstructureState.ACTIVE_SHOOT, false)))
+        .onFalse(
+            new InstantCommand(
+                () ->
+                    superstructure.setWantedSuperstructureState(
+                        WantedSuperstructureState.IDLE, false)));
   }
 
   public SwerveSubsystem getSwerveSubsystem() {
@@ -228,12 +237,12 @@ public class RobotContainer {
   }
 
   public void setTestPose() {
-    swerveSubsystem.resetTranslationAndRotation(new Pose2d(3, 3, new Rotation2d()));
+    swerveSubsystem.resetTranslationAndRotation(new Pose2d(14, 3, new Rotation2d()));
   }
 
-  public boolean questPoseEstablished() {
-    return questnav.questPoseEstablished();
-  }
+  //   public boolean questPoseEstablished() {
+  //     return questnav.questPoseEstablished();
+  //   }
 
   public boolean isAtAutoStartingPose(Pose2d AutoStartingPose) {
     var distance =

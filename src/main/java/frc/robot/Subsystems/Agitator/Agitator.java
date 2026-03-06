@@ -50,7 +50,7 @@ public class Agitator extends SubsystemBase {
     // Timer lifecycle is managed here on state change, not inside handleSystemState().
     if (state == WantedAgitatorState.SPINNING) {
       timer.reset();
-      timer.start();
+      // timer.start();
     } else {
       timer.stop();
       timer.reset();
@@ -63,9 +63,9 @@ public class Agitator extends SubsystemBase {
         return SystemState.IDLE;
       case SPINNING:
         // Back-spin for 0.3s on entry, then switch to forward spin.
-        if (timer.isRunning() && !timer.hasElapsed(0.3)) {
-          return SystemState.BACK_SPIN;
-        }
+        // if (timer.isRunning() && !timer.hasElapsed(0.0)) {
+        //   return SystemState.BACK_SPIN;
+        // }
         return SystemState.SPINNING;
       case BACK_SPIN:
         return SystemState.BACK_SPIN;
@@ -83,7 +83,7 @@ public class Agitator extends SubsystemBase {
         agitatorIO.setVoltage(-1.0);
         break;
       case SPINNING:
-        agitatorIO.setVoltage(4.0);
+        agitatorIO.setVoltage(3.5);
         break;
     }
   }

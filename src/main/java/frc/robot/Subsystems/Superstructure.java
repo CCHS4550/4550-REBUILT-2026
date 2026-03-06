@@ -80,7 +80,7 @@ public class Superstructure extends SubsystemBase {
         agitator.setWantedAgitatorState(WantedAgitatorState.IDLE);
         break;
       case STOW:
-        intake.setWantedIntakeState(WantedIntakeState.STOWED);
+        intake.setWantedIntakeState(WantedIntakeState.IDLE);
         kicker.setWantedKickerState(KickerWantedState.IDLE);
         turret.setWantedState(TurretWantedState.STOW);
         agitator.setWantedAgitatorState(WantedAgitatorState.IDLE);
