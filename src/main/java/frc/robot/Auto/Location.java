@@ -8,5 +8,8 @@ public enum Location {
   RIGHT_TRENCH,
   LEFT_RAMP,
   RIGHT_RAMP,
+  NEUTRAL_ZONE,
+  DEPOT,
+  OUTPOST,
   MIDDLE_CHECKPOINT
 }

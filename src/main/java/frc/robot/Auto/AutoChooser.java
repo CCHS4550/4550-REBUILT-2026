@@ -38,7 +38,10 @@ public class AutoChooser extends SendableChooser<Auto> {
   private static final List<AutoProgram> AUTO_PROGRAMS =
       List.of(
           new AutoProgram(Auto.IDLE, "IDLE", AutoFactory::createIdleCommand),
-          new AutoProgram(Auto.TEST, "TEST", AutoFactory::createTestAuto));
+          new AutoProgram(Auto.TEST, "TEST", AutoFactory::createTestAuto),
+          new AutoProgram(Auto.LEFT_TRENCH_TO_NEUTRAL_ZONE_TO_RIGHT_TRENCH_SHOOT, "LEFT_TRENCH_TO_NEUTRAL_ZONE_TO_RIGHT_TRENCH_SHOOT", AutoFactory::createLeftTrenchToNeutralZoneToRightTrenchShoot),
+          new AutoProgram(Auto.SHOOT_PRELOAD, "SHOOT_PRELOAD", AutoFactory::createShootPreload));
+
 
   /**
    * Create a new <code>AutoChooser</code>
