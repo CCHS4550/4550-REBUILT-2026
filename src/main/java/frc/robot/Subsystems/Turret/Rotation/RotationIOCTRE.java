@@ -72,8 +72,8 @@ public class RotationIOCTRE implements RotationIO {
     // rotationConfig.Feedback.withRemoteCANcoder(rotationEncoder);
     rotationConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     rotationConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    rotationConfig.MotionMagic.MotionMagicCruiseVelocity = 13;
-    rotationConfig.MotionMagic.MotionMagicAcceleration = 15; // some constant idk
+    rotationConfig.MotionMagic.MotionMagicCruiseVelocity = 33;
+    rotationConfig.MotionMagic.MotionMagicAcceleration = 35; // some constant idk
 
     Phoenix6Util.applyAndCheckConfiguration(rotationMotor, rotationConfig, 5);
 

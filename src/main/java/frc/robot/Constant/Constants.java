@@ -81,7 +81,7 @@ public final class Constants {
     public static final double SHOOTER_MID_RADIANS_PER_SEC = 325;
     public static final double SHOOTER_ULTRA_FAR_RADIANS_PER_SEC = 375;
 
-    public static final double TURRET_HEIGHT_METERS = 0.305;
+    public static final double TURRET_HEIGHT_METERS = 0.432;
 
     public static final Transform2d TURRET_TRANSFORM = new Transform2d();
 
@@ -120,7 +120,7 @@ public final class Constants {
     public static final double GEOMETRY_VELOCITY_ULTRA_FAR = 12;
 
     // need to tune maunually
-    public static final double TURRET_HEIGHT = 0.0305;
+    public static final double TURRET_HEIGHT = 0.432;
     // public static final Pose2d HUB_POSITION = new Pose2d(4.625594,4.034663,new Rotation2d());
 
   }

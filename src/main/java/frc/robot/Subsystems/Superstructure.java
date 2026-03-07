@@ -92,7 +92,7 @@ public class Superstructure extends SubsystemBase {
         agitator.setWantedAgitatorState(WantedAgitatorState.IDLE);
         break;
       case TRACKING_PASS:
-        intake.setWantedIntakeState(WantedIntakeState.EXTENDED_PASSIVE);
+        intake.setWantedIntakeState(WantedIntakeState.PUMPING);
         kicker.setWantedKickerState(KickerWantedState.IDLE);
         turret.setWantedState(TurretWantedState.PASS_TO_ALLIANCE);
         agitator.setWantedAgitatorState(WantedAgitatorState.IDLE);
@@ -116,13 +116,13 @@ public class Superstructure extends SubsystemBase {
         agitator.setWantedAgitatorState(WantedAgitatorState.IDLE);
         break;
       case TRACKING_SHOOT:
-        intake.setWantedIntakeState(WantedIntakeState.EXTENDED_PASSIVE);
+        intake.setWantedIntakeState(WantedIntakeState.PUMPING);
         kicker.setWantedKickerState(KickerWantedState.IDLE);
         turret.setWantedState(TurretWantedState.SHOOT_SCORE);
         agitator.setWantedAgitatorState(WantedAgitatorState.IDLE);
         break;
       case INTAKING_ACTIVE_SHOOT:
-        intake.setWantedIntakeState(WantedIntakeState.PUMPING);
+        intake.setWantedIntakeState(WantedIntakeState.EXTENDED_INTAKING);
         kicker.setWantedKickerState(KickerWantedState.RUNNING);
         turret.setWantedState(TurretWantedState.SHOOT_SCORE);
         agitator.setWantedAgitatorState(WantedAgitatorState.SPINNING);
@@ -231,7 +231,7 @@ public class Superstructure extends SubsystemBase {
     TESTING
   }
 
-  private boolean isPassingZone(double x) {
+  public boolean isPassingZone(double x) {
     return FieldConstants.isBlueAlliance() ? x > 4.75 : x < 11.75;
   }
 

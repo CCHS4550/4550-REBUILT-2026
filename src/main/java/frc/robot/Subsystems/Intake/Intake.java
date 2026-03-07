@@ -61,7 +61,7 @@ public class Intake extends SubsystemBase {
     switch (systemState) {
       case EXTENDED_INTAKING:
         intakeIO.setExtensionVoltage(0.0);
-        intakeIO.setSpinnerVoltage(6.0);
+        intakeIO.setSpinnerVoltage(5.0);
         break;
       case MOVING_TO_EXTENSION_ACTIVE:
         intakeIO.setExtensionVoltage(-3.0);
@@ -78,12 +78,12 @@ public class Intake extends SubsystemBase {
         // FIX #1: All cases below were missing break statements, causing fall-through
         // to default (0V) and motors never running for pump/transition states.
       case MOVING_TO_UPPER_PUMP:
-        intakeIO.setExtensionVoltage(2.0);
-        intakeIO.setSpinnerVoltage(0.0);
+        intakeIO.setExtensionVoltage(3.0);
+        intakeIO.setSpinnerVoltage(0.5);
         break;
       case MOVING_TO_LOWER_PUMP:
-        intakeIO.setExtensionVoltage(-2.0);
-        intakeIO.setSpinnerVoltage(0.0);
+        intakeIO.setExtensionVoltage(-3.0);
+        intakeIO.setSpinnerVoltage(0.5);
         break;
       case UPPER_PUMP_TO_STOW:
         intakeIO.setExtensionVoltage(3.0);
@@ -272,7 +272,7 @@ public class Intake extends SubsystemBase {
         // setWantedIntakeState() call (now unblocked by the idempotency guard)
         // can start the correct exit transition from the right location.
       case MOVING_TO_LOWER_PUMP:
-        if (timer.hasElapsed(0.39)) {
+        if (timer.hasElapsed(0.35)) {
           timer.reset();
           location = Location.LOWER_PUMP;
           if (wantedState == WantedIntakeState.PUMPING) {

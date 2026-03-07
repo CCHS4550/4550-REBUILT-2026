@@ -512,7 +512,7 @@ public class SwerveSubsystem extends SubsystemBase implements Vision.VisionConsu
   public void setDesiredPoseForDriveToPoint(Pose2d pose) {
     this.desiredPoseForDriveToPoint = pose;
     this.wantedState = WantedState.DRIVE_TO_POINT;
-    this.maxVelocityOutputForDriveToPoint = Units.feetToMeters(10.0);
+    this.maxVelocityOutputForDriveToPoint = Units.feetToMeters(13.0);
     this.maximumAngularVelocityForDriveToPoint = Double.NaN;
   }
 

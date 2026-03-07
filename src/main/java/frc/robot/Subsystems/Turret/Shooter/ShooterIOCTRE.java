@@ -64,7 +64,7 @@ public class ShooterIOCTRE implements ShooterIO {
     shooterConfig.MotionMagic.MotionMagicCruiseVelocity = 100;
     shooterConfig.MotionMagic.MotionMagicAcceleration = 50;
 
-    shooterConfig.MotionMagic.MotionMagicExpo_kV = 8.0;
+    shooterConfig.MotionMagic.MotionMagicExpo_kV = 0.01;
 
     Phoenix6Util.applyAndCheckConfiguration(shooterMotor, shooterConfig, 5);
     Phoenix6Util.applyAndCheckConfiguration(shooterMotor2, shooterConfig, 5);
@@ -81,13 +81,6 @@ public class ShooterIOCTRE implements ShooterIO {
 
   @Override
   public void updateInputs(ShooterIOInputs inputs) {
-    BaseStatusSignal.refreshAll(
-        shooterAppliedVoltage,
-        shooterSupplyCurrent,
-        shooterStatorCurrent,
-        shooterVelocityRotationsPerSec,
-        shooterAccelerationRotationsPerSecSquared,
-        shooterMotorTemperature);
 
     inputs.shooterVoltage = shooterAppliedVoltage.getValueAsDouble();
     inputs.shooterSupplyCurrent = shooterSupplyCurrent.getValueAsDouble();
@@ -114,5 +107,16 @@ public class ShooterIOCTRE implements ShooterIO {
 
     shooterMotor.setControl(
         motionMagicVelocityVoltage.withVelocity(velo).withSlot(0).withEnableFOC(true));
+  }
+
+  @Override
+  public void refreshData() {
+      BaseStatusSignal.refreshAll(
+        shooterAppliedVoltage,
+        shooterSupplyCurrent,
+        shooterStatorCurrent,
+        shooterVelocityRotationsPerSec,
+        shooterAccelerationRotationsPerSecSquared,
+        shooterMotorTemperature);
   }
 }
