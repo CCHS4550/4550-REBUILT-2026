@@ -30,8 +30,6 @@ public class FieldConstants {
   public static Pose2d leftTrenchRedZone = new Pose2d(13.3, 0.6, new Rotation2d());
   public static Pose2d RightTrenchRedZone = new Pose2d(13.3, 7.4, new Rotation2d());
 
-
-
   public static Pose2d middleStartingPoseBlue = new Pose2d();
 
   public static Pose2d middleStartingPoseRed = new Pose2d();
@@ -59,19 +57,19 @@ public class FieldConstants {
     return isBlueAlliance() ? middleStartingPoseBlue : middleStartingPoseRed;
   }
 
-  public static Pose2d getLeftNeutralZoneTrench(){
+  public static Pose2d getLeftNeutralZoneTrench() {
     return isBlueAlliance() ? leftTrenchBlueNeutralZone : leftTrenchRedNeutralZone;
   }
 
-  public static Pose2d getRightNeutralZoneTrench(){
+  public static Pose2d getRightNeutralZoneTrench() {
     return isBlueAlliance() ? RightTrenchBlueNeutralZone : RightTrenchRedNeutralZone;
   }
 
-  public static Pose2d getLeftAllianceZoneTrench(){
+  public static Pose2d getLeftAllianceZoneTrench() {
     return isBlueAlliance() ? leftTrenchBlueZone : leftTrenchRedZone;
   }
 
-  public static Pose2d getRightAllianceZoneTrench(){
+  public static Pose2d getRightAllianceZoneTrench() {
     return isBlueAlliance() ? RightTrenchBlueZone : RightTrenchRedZone;
   }
 }

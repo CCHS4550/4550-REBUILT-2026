@@ -111,7 +111,7 @@ public class ShooterIOCTRE implements ShooterIO {
 
   @Override
   public void refreshData() {
-      BaseStatusSignal.refreshAll(
+    BaseStatusSignal.refreshAll(
         shooterAppliedVoltage,
         shooterSupplyCurrent,
         shooterStatorCurrent,

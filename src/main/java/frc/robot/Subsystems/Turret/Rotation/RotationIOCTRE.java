@@ -79,7 +79,7 @@ public class RotationIOCTRE implements RotationIO {
 
     // PUT THE TURRET IN STOW BEFORE THE BOT IS TURNED ON
     rotationMotor.setPosition(
-        ((Math.PI / 2) / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT));
+        ((-Math.PI / 2) / Constants.TurretConstants.ROTATION_POSITION_COEFFICIENT));
     rotationAngleRotations = rotationMotor.getPosition();
     rotationAppliedVolts = rotationMotor.getMotorVoltage();
     rotationSupplyCurrentAmps = rotationMotor.getSupplyCurrent();

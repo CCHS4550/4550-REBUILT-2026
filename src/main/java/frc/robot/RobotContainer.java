@@ -79,31 +79,28 @@ public class RobotContainer {
             swerveSubsystem,
             new VisionIOPhotonvision("photonvision", config.getVisionConfigurations().get(0)));
 
+    controller
+        .povLeft()
+        .onTrue(
+            new InstantCommand(
+                () -> swerveSubsystem.setDesiredPoseForDriveToPoint(getLeftTrenchPose())))
+        .onFalse(
+            new InstantCommand(() -> swerveSubsystem.setWantedState(WantedState.TELEOP_DRIVE)));
+    controller
+        .povRight()
+        .onTrue(
+            new InstantCommand(
+                () -> swerveSubsystem.setDesiredPoseForDriveToPoint(getRightTrenchPose())))
+        .onFalse(
+            new InstantCommand(() -> swerveSubsystem.setWantedState(WantedState.TELEOP_DRIVE)));
 
-    controller.povLeft().onTrue(
-            new InstantCommand(
-                () ->
-                    swerveSubsystem.setDesiredPoseForDriveToPoint(getLeftTrenchPose())))
-        .onFalse(
-            new InstantCommand(
-                () ->
-                    swerveSubsystem.setWantedState(WantedState.TELEOP_DRIVE)));
-    controller.povRight().onTrue(
-            new InstantCommand(
-                () ->
-                    swerveSubsystem.setDesiredPoseForDriveToPoint(getRightTrenchPose())))
-        .onFalse(
-            new InstantCommand(
-                () ->
-                    swerveSubsystem.setWantedState(WantedState.TELEOP_DRIVE)));
-    
     controller
         .leftTrigger()
         .whileTrue(
             new InstantCommand(
                 () ->
                     superstructure.setWantedSuperstructureState(
-                        WantedSuperstructureState.ZERO, true)))
+                        WantedSuperstructureState.ZERO_HUB, true)))
         .onFalse(
             new InstantCommand(
                 () ->
@@ -122,33 +119,78 @@ public class RobotContainer {
                 () ->
                     superstructure.setWantedSuperstructureState(
                         WantedSuperstructureState.IDLE, false)));
-    controller.rightTrigger().and(controller.leftTrigger()).whileTrue(new InstantCommand(
+    controller
+        .rightTrigger()
+        .and(controller.leftTrigger())
+        .whileTrue(
+            new InstantCommand(
                 () ->
                     superstructure.setWantedSuperstructureState(
-                        WantedSuperstructureState.ACTIVE_DECISION, true))).onFalse(new InstantCommand(
+                        WantedSuperstructureState.ACTIVE_DECISION, true)))
+        .onFalse(
+            new InstantCommand(
+                () ->
+                    superstructure.setWantedSuperstructureState(
+                        WantedSuperstructureState.IDLE, false)));
+
+    controller
+        .leftBumper()
+        .whileTrue(
+            new InstantCommand(
+                () ->
+                    superstructure.setWantedSuperstructureState(
+                        WantedSuperstructureState.ZERO_PASSING, true)))
+        .onFalse(
+            new InstantCommand(
+                () ->
+                    superstructure.setWantedSuperstructureState(
+                        WantedSuperstructureState.IDLE, false)));
+
+    controller
+        .rightBumper()
+        .whileTrue(
+            new InstantCommand(
+                () ->
+                    superstructure.setWantedSuperstructureState(
+                        WantedSuperstructureState.ACTIVE_DECISION, false)))
+        .onFalse(
+            new InstantCommand(
+                () ->
+                    superstructure.setWantedSuperstructureState(
+                        WantedSuperstructureState.IDLE, false)));
+    controller
+        .rightBumper()
+        .and(controller.leftBumper())
+        .whileTrue(
+            new InstantCommand(
+                () ->
+                    superstructure.setWantedSuperstructureState(
+                        WantedSuperstructureState.ACTIVE_DECISION, true)))
+        .onFalse(
+            new InstantCommand(
                 () ->
                     superstructure.setWantedSuperstructureState(
                         WantedSuperstructureState.IDLE, false)));
   }
 
-
-  private Pose2d getLeftTrenchPose(){
-    if(superstructure.isPassingZone(Robotstate.getInstance().getRobotPoseFromSwerveDriveOdometry().getX())){
-        return FieldConstants.getLeftNeutralZoneTrench();
+  private Pose2d getLeftTrenchPose() {
+    if (superstructure.isPassingZone(
+        Robotstate.getInstance().getRobotPoseFromSwerveDriveOdometry().getX())) {
+      return FieldConstants.getLeftNeutralZoneTrench();
+    } else {
+      return FieldConstants.getLeftAllianceZoneTrench();
     }
-    else{
-        return FieldConstants.getLeftAllianceZoneTrench();
+  }
+
+  private Pose2d getRightTrenchPose() {
+    if (superstructure.isPassingZone(
+        Robotstate.getInstance().getRobotPoseFromSwerveDriveOdometry().getX())) {
+      return FieldConstants.getLeftNeutralZoneTrench();
+    } else {
+      return FieldConstants.getLeftAllianceZoneTrench();
     }
   }
 
-  private Pose2d getRightTrenchPose(){
-    if(superstructure.isPassingZone(Robotstate.getInstance().getRobotPoseFromSwerveDriveOdometry().getX())){
-        return FieldConstants.getLeftNeutralZoneTrench();
-    }
-    else{
-        return FieldConstants.getLeftAllianceZoneTrench();
-    }
-  }
   public SwerveSubsystem getSwerveSubsystem() {
     return swerveSubsystem;
   }
@@ -179,5 +221,4 @@ public class RobotContainer {
         AutoStartingRotation.getDegrees(),
         2);
   }
-
 }

@@ -67,20 +67,27 @@ public class Superstructure extends SubsystemBase {
       case EXTEND_INTAKE:
         intake.setWantedIntakeState(WantedIntakeState.EXTENDED_PASSIVE);
         break;
-      case ZERO:
+      case ZERO_HUB:
         intake.setWantedIntakeState(WantedIntakeState.EXTENDED_PASSIVE);
         kicker.setWantedKickerState(KickerWantedState.IDLE);
-        turret.setWantedState(TurretWantedState.ZERO);
+        turret.setWantedState(TurretWantedState.ZERO_HUB);
         agitator.setWantedAgitatorState(WantedAgitatorState.IDLE);
         break;
-      case INTAKING_ZERO:
+      case INTAKING_ZERO_HUB:
         intake.setWantedIntakeState(WantedIntakeState.EXTENDED_INTAKING);
         kicker.setWantedKickerState(KickerWantedState.IDLE);
-        turret.setWantedState(TurretWantedState.ZERO);
+        turret.setWantedState(TurretWantedState.ZERO_HUB);
         agitator.setWantedAgitatorState(WantedAgitatorState.IDLE);
         break;
+      case ZERO_PASSING:
+        intake.setWantedIntakeState(WantedIntakeState.EXTENDED_PASSIVE);
+        kicker.setWantedKickerState(KickerWantedState.IDLE);
+        turret.setWantedState(TurretWantedState.ZERO_PASSING);
+        agitator.setWantedAgitatorState(WantedAgitatorState.IDLE);
+        break;
+
       case STOW:
-        intake.setWantedIntakeState(WantedIntakeState.IDLE);
+        intake.setWantedIntakeState(WantedIntakeState.STOWED);
         kicker.setWantedKickerState(KickerWantedState.IDLE);
         turret.setWantedState(TurretWantedState.STOW);
         agitator.setWantedAgitatorState(WantedAgitatorState.IDLE);
@@ -92,7 +99,7 @@ public class Superstructure extends SubsystemBase {
         agitator.setWantedAgitatorState(WantedAgitatorState.IDLE);
         break;
       case TRACKING_PASS:
-        intake.setWantedIntakeState(WantedIntakeState.PUMPING);
+        intake.setWantedIntakeState(WantedIntakeState.EXTENDED_PASSIVE);
         kicker.setWantedKickerState(KickerWantedState.IDLE);
         turret.setWantedState(TurretWantedState.PASS_TO_ALLIANCE);
         agitator.setWantedAgitatorState(WantedAgitatorState.IDLE);
@@ -116,13 +123,13 @@ public class Superstructure extends SubsystemBase {
         agitator.setWantedAgitatorState(WantedAgitatorState.IDLE);
         break;
       case TRACKING_SHOOT:
-        intake.setWantedIntakeState(WantedIntakeState.PUMPING);
+        intake.setWantedIntakeState(WantedIntakeState.EXTENDED_PASSIVE);
         kicker.setWantedKickerState(KickerWantedState.IDLE);
         turret.setWantedState(TurretWantedState.SHOOT_SCORE);
         agitator.setWantedAgitatorState(WantedAgitatorState.IDLE);
         break;
       case INTAKING_ACTIVE_SHOOT:
-        intake.setWantedIntakeState(WantedIntakeState.EXTENDED_INTAKING);
+        intake.setWantedIntakeState(WantedIntakeState.PUMPING);
         kicker.setWantedKickerState(KickerWantedState.RUNNING);
         turret.setWantedState(TurretWantedState.SHOOT_SCORE);
         agitator.setWantedAgitatorState(WantedAgitatorState.SPINNING);
@@ -149,23 +156,28 @@ public class Superstructure extends SubsystemBase {
   }
 
   private SystemState handleStateTransitions() {
-    if (handleTrenchSafety()) {
-      if (INTAKE_ACTIVE) {
-        return SystemState.INTAKING_ZERO;
-      } else {
-        return SystemState.ZERO;
-      }
-    }
+    // if (handleTrenchSafety()) {
+    //   if (INTAKE_ACTIVE) {
+    //     return SystemState.INTAKING_ZERO;
+    //   } else {
+    //     return SystemState.ZERO;
+    //   }
+    // }
     switch (wantedState1) {
       case IDLE:
         return SystemState.IDLE;
       case STOW:
         return SystemState.STOW;
-      case ZERO:
+      case ZERO_PASSING:
         if (INTAKE_ACTIVE) {
-          return SystemState.INTAKING_ZERO;
+          return SystemState.INTAKING_ZERO_PASSING;
         }
-        return SystemState.ZERO;
+        return SystemState.ZERO_PASSING;
+      case ZERO_HUB:
+        if (INTAKE_ACTIVE) {
+          return SystemState.INTAKING_ZERO_HUB;
+        }
+        return SystemState.ZERO_PASSING;
       case EXTEND_INTAKE:
         return SystemState.EXTEND_INTAKE;
       case PASSIVE_TRACKING:
@@ -203,21 +215,25 @@ public class Superstructure extends SubsystemBase {
   public enum WantedSuperstructureState {
     IDLE,
     STOW,
-    ZERO,
+    ZERO_PASSING,
+    ZERO_HUB,
     EXTEND_INTAKE,
     PASSIVE_TRACKING,
     ACTIVE_SHOOT,
     ACTIVE_PASS,
     ACTIVE_DECISION,
     PRACTICE_INDEXING,
+
     TESTING
   }
 
   private enum SystemState {
     IDLE,
     STOW,
-    INTAKING_ZERO,
-    ZERO,
+    ZERO_HUB,
+    ZERO_PASSING,
+    INTAKING_ZERO_HUB,
+    INTAKING_ZERO_PASSING,
     EXTEND_INTAKE,
     INTAKING_TRACKING_PASS,
     TRACKING_PASS,
@@ -231,7 +247,7 @@ public class Superstructure extends SubsystemBase {
     TESTING
   }
 
-  public boolean isPassingZone(double x) {
+  private boolean isPassingZone(double x) {
     return FieldConstants.isBlueAlliance() ? x > 4.75 : x < 11.75;
   }
 

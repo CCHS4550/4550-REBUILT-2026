@@ -2,14 +2,12 @@ package frc.robot.Subsystems.Turret.Shooter;
 
 import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.Util.SubsystemDataProcessor;
-
 import org.littletonrobotics.junction.AutoLog;
-import frc.robot.Util.SubsystemDataProcessor;
 
-public interface ShooterIO extends SubsystemDataProcessor.IODataRefresher{
+public interface ShooterIO extends SubsystemDataProcessor.IODataRefresher {
 
   @AutoLog
-  public class ShooterIOInputs{
+  public class ShooterIOInputs {
     // assuming there's only 1 shooter motor 4 now
     public double shooterVoltage = 0.0;
     public double shooterSupplyCurrent = 0.0;
